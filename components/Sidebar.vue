@@ -4,10 +4,10 @@ import { categories } from "~~/data";
 
 <template>
   <div class="sidebar">
-    <div class="sidebar__logo">
+    <a href="#" class="sidebar__logo">
       <span class="material-icons-outlined md-36">camera</span>
       <h1 class="sidebar__logo-text">We<span>Share</span></h1>
-    </div>
+    </a>
     <ul class="sidebar__list">
       <li class="sidebar__item sidebar__item--home active">
         <span class="material-icons md-24">home</span>Odkrywaj
@@ -33,15 +33,16 @@ import { categories } from "~~/data";
 
 <style lang="scss" scoped>
 .sidebar {
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
-  position: sticky;
   width: 100%;
   height: 100vh;
   max-width: 15rem;
   background-color: var(--bg-color-secondary);
   box-shadow: 0 0 8px 0 #2020203d;
-
+  transition: 0.2s ease-in-out;
   padding-top: 0.5rem;
 
   &__logo {
@@ -50,6 +51,7 @@ import { categories } from "~~/data";
     margin-bottom: 1rem;
     margin-top: 0.5rem;
     margin-left: 1rem;
+    cursor: pointer;
 
     &-text {
       font-size: 1.8rem;
@@ -75,7 +77,6 @@ import { categories } from "~~/data";
     height: 2rem;
     border-radius: 50%;
     margin-right: 0.75rem;
-    box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.5);
   }
 
   &__item {

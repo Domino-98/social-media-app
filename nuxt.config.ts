@@ -4,6 +4,9 @@ import { defineNuxtConfig } from "nuxt";
 export default defineNuxtConfig({
   css: ["assets/styles/main.scss", "assets/styles/reset.scss"],
   modules: ["@nuxtjs/color-mode"],
+  publicRuntimeConfig: {
+    UNSPLASH_API_KEY: process.env.UNSPLASH_API_KEY,
+  },
   meta: {
     link: [
       {

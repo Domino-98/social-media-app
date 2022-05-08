@@ -20,8 +20,6 @@ const toggleMode = () => {
   console.log(colorMode.value);
   return colorMode.value;
 };
-
-// const notificationsOpened = ref<boolean>(false);
 </script>
 
 <template>
@@ -39,36 +37,37 @@ const toggleMode = () => {
       />
       <span class="slider round"></span>
     </label>
-    <div class="topbar__notifications active">
+    <button class="topbar__notifications">
       <span class="material-icons md-30">notifications</span>
       <!-- <span class="topbar__notifications-number">3</span> -->
-      <!-- <ul v-if="notificationsOpened" class="topbar__notifications-menu">
-        <li class="topbar__notifications-menu-item">Brak powiadomień</li>
-      </ul> -->
-    </div>
-    <button class="topbar__add-btn">
-      <span class="material-icons md-30">add</span>Dodaj zdjęcie
+      <!-- <Transition>
+        <div class="topbar__notifications-dropdown">
+          <p>Brak powiadomień</p>
+        </div>
+      </Transition> -->
+    </button>
+    <button class="topbar__add">
+      <span class="material-icons md-30">add</span>
     </button>
 
-    <!-- If not logged in -->
-    <div class="topbar__profile">
+    <button class="topbar__profile">
       <span class="material-icons md-30">person</span>
-      <!-- Dropdown menu -->
-    </div>
-    <!-- If logged in -->
-    <!-- <div class="topbar__profile">
-      <img
+      <!-- If logged in -->
+      <!-- <img
         class="topbar__profile-img"
         src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
         alt="Profile page"
-      />
-      <img
+      /> -->
+      <!-- <img
         class="topbar__profile-img"
         src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
         alt="Profile page"
-      />
-      Dropdown menu
-    </div> -->
+      /> -->
+    </button>
+    <!-- If logged in -->
+    <!-- <button class="topbar__logout" data-customTooltip="Wyloguj się">
+      <span class="material-icons md-30">logout</span>
+    </button> -->
   </nav>
 </template>
 
@@ -120,22 +119,24 @@ const toggleMode = () => {
   }
 
   &__notifications,
-  &__profile {
+  &__add,
+  &__profile,
+  &__logout {
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 1rem;
+    margin-right: 0.75rem;
     width: 2.8rem;
     height: 2.8rem;
     background-color: var(--bg-color-secondary);
     border-radius: 50%;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     cursor: pointer;
     transition: all 0.2s;
 
     &:hover .material-icons {
-      color: var(--primary-color);
+      filter: brightness(150%);
     }
 
     &-number {
@@ -154,46 +155,21 @@ const toggleMode = () => {
       font-weight: 500;
     }
 
-    &-menu {
+    &-dropdown {
       position: absolute;
+      right: 0;
       bottom: -3.6rem;
       margin-top: 2rem;
       background-color: var(--bg-color-secondary);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
       padding: 0.5rem;
       font-size: 0.9rem;
+      border-radius: 0.5rem;
       text-align: center;
     }
   }
 
   &__profile {
-    margin-right: 0;
-  }
-
-  &__add-btn {
-    display: flex;
-    align-items: center;
-    padding: 0.25rem 0.5rem;
-    margin-right: 1rem;
-    font-size: 1rem;
-    border-radius: 1rem;
-    background-color: var(--bg-color-secondary);
-    color: var(--font-color);
-    box-shadow: 0 0 2px rgba(0, 0, 0, 0.6);
-    cursor: pointer;
-    transition: all 0.2s;
-
-    &:hover,
-    &:hover span {
-      color: var(--primary-color);
-    }
-  }
-
-  &__profile {
-    &:hover .material-icons {
-      color: var(--primary-color);
-    }
-
     &-img {
       width: 3rem;
       border-radius: 50%;
@@ -201,6 +177,10 @@ const toggleMode = () => {
       box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
     }
   }
+}
+
+nav button:last-child {
+  margin-right: 0;
 }
 
 /* The switch - the box around the slider */

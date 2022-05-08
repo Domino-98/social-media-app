@@ -16,10 +16,11 @@
 :root {
   --primary-color: #20c0ff;
   --font-color: #444444;
-  --bg-color-primary: #eee;
-  --bg-color-secondary: #f6f6f6;
+  --bg-color-primary: #f0f0f0;
+  --bg-color-secondary: #f9f9f9;
   --heading-color: #2c2c2c;
   --icon-color: #3d3d3d;
+  --opacity-color: 0, 0, 0;
 }
 
 .dark-mode {
@@ -29,12 +30,13 @@
   --bg-color-secondary: #2d2d2d;
   --heading-color: #eee;
   --icon-color: #eee;
+  --opacity-color: 255, 255, 255;
 }
 
 body {
   background-color: var(--bg-color-primary);
   font-family: "Roboto", sans-serif;
-  transition: all 0.2s;
+  transition: 0.2s ease-in-out;
 }
 
 .wrapper {
