@@ -50,20 +50,23 @@ const toggleMode = () => {
       <span class="material-icons md-30">add</span>
     </button>
 
-    <button class="topbar__profile">
-      <span class="material-icons md-30">person</span>
-      <!-- If logged in -->
-      <!-- <img
+    <NuxtLink to="/auth">
+      <button class="topbar__profile">
+        <span class="material-icons md-30">person</span>
+        <!-- If logged in -->
+        <!-- <img
         class="topbar__profile-img"
         src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
         alt="Profile page"
       /> -->
-      <!-- <img
+        <!-- <img
         class="topbar__profile-img"
         src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
         alt="Profile page"
       /> -->
-    </button>
+      </button>
+    </NuxtLink>
+
     <!-- If logged in -->
     <!-- <button class="topbar__logout" data-customTooltip="Wyloguj się">
       <span class="material-icons md-30">logout</span>
@@ -73,11 +76,11 @@ const toggleMode = () => {
 
 <style lang="scss" scoped>
 .topbar {
+  z-index: 10;
   align-self: end;
   display: flex;
   align-items: center;
   width: 100%;
-  z-index: 10;
   height: 4rem;
   padding: 0.5rem 2rem;
 
@@ -90,30 +93,30 @@ const toggleMode = () => {
 
   &__search {
     position: relative;
+    flex: 1;
     display: flex;
     align-items: center;
     margin-right: 2rem;
-    flex: 1;
 
     & .material-icons {
       position: absolute;
-      pointer-events: none;
       left: 0.5rem;
+      pointer-events: none;
     }
 
     &-input {
+      transition: all 0.2s;
       width: 100%;
-      box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.3);
+      box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
       padding: 0.5rem;
       padding-left: 2.5rem;
-      font-size: 1rem;
       border-radius: 1rem;
       background-color: var(--bg-color-secondary);
+      font-size: 1rem;
       color: var(--font-color);
-      transition: all 0.2s;
 
       &:focus {
-        box-shadow: 1px 1px 6px rgba(0, 0, 0, 0.3);
+        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
       }
     }
   }
@@ -126,14 +129,14 @@ const toggleMode = () => {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-right: 0.75rem;
+    transition: all 0.2s;
     width: 2.8rem;
     height: 2.8rem;
-    background-color: var(--bg-color-secondary);
+    margin-right: 0.75rem;
     border-radius: 50%;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-color-secondary);
     cursor: pointer;
-    transition: all 0.2s;
 
     &:hover .material-icons {
       filter: brightness(150%);
@@ -148,9 +151,9 @@ const toggleMode = () => {
       justify-content: center;
       width: 1.25rem;
       height: 1.25rem;
+      border-radius: 50%;
       background-color: var(--primary-color);
       color: var(--font-color);
-      border-radius: 50%;
       font-size: 0.8rem;
       font-weight: 500;
     }
@@ -160,11 +163,11 @@ const toggleMode = () => {
       right: 0;
       bottom: -3.6rem;
       margin-top: 2rem;
-      background-color: var(--bg-color-secondary);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
       padding: 0.5rem;
-      font-size: 0.9rem;
       border-radius: 0.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+      background-color: var(--bg-color-secondary);
+      font-size: 0.9rem;
       text-align: center;
     }
   }
@@ -173,8 +176,8 @@ const toggleMode = () => {
     &-img {
       width: 3rem;
       border-radius: 50%;
-      cursor: pointer;
       box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+      cursor: pointer;
     }
   }
 }
