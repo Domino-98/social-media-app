@@ -4,13 +4,14 @@ import { categories } from "~~/data";
 
 <template>
   <div class="sidebar">
-    <a href="#" class="sidebar__logo">
+    <NuxtLink to="/" class="sidebar__logo">
       <span class="material-icons-outlined md-36">camera</span>
       <h1 class="sidebar__logo-text">We<span>Share</span></h1>
-    </a>
+    </NuxtLink>
     <ul class="sidebar__list">
       <li class="sidebar__item sidebar__item--home active">
-        <span class="material-icons md-24">home</span>Strona główna
+        <span class="material-icons md-24">home</span>
+        <NuxtLink to="/">Strona główna</NuxtLink>
       </li>
       <li class="sidebar__item sidebar__item--popular">
         <span class="material-icons md-24">whatshot</span>
@@ -41,7 +42,7 @@ import { categories } from "~~/data";
   width: 100%;
   height: 100vh;
   max-width: 15rem;
-  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
   padding-top: 0.5rem;
   background-color: var(--bg-color-secondary);
 
@@ -54,15 +55,15 @@ import { categories } from "~~/data";
     text-transform: uppercase;
     cursor: pointer;
 
+    & span {
+      color: var(--font-color);
+    }
+
     &-text {
       font-family: "Rubik", "sans-serif";
       font-size: 1.5rem;
       color: var(--primary-color);
       font-weight: 500;
-
-      & span {
-        color: var(--font-color);
-      }
     }
   }
 

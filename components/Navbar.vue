@@ -46,25 +46,24 @@ const toggleMode = () => {
         </div>
       </Transition> -->
     </button>
-    <button class="topbar__add">
-      <span class="material-icons md-30">add</span>
-    </button>
 
-    <NuxtLink to="/auth">
-      <button class="topbar__profile">
-        <span class="material-icons md-30">person</span>
-        <!-- If logged in -->
-        <!-- <img
+    <NuxtLink to="/pin/add" class="topbar__add">
+      <span class="material-icons md-30">add</span>
+    </NuxtLink>
+
+    <NuxtLink to="/auth" class="topbar__profile">
+      <span class="material-icons md-30">person</span>
+      <!-- If logged in -->
+      <!-- <img
         class="topbar__profile-img"
         src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
         alt="Profile page"
       /> -->
-        <!-- <img
+      <!-- <img
         class="topbar__profile-img"
         src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
         alt="Profile page"
       /> -->
-      </button>
     </NuxtLink>
 
     <!-- If logged in -->
@@ -107,8 +106,8 @@ const toggleMode = () => {
     &-input {
       transition: all 0.2s;
       width: 100%;
-      box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-      padding: 0.5rem;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      padding: 0.6rem;
       padding-left: 2.5rem;
       border-radius: 1rem;
       background-color: var(--bg-color-secondary);

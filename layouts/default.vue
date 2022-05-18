@@ -11,17 +11,19 @@
 
 :root {
   --primary-color: #20c0ff;
-  --font-color: #444444;
-  --bg-color-primary: #eee;
-  --bg-color-secondary: #ffffff;
-  --heading-color: #2c2c2c;
+  --font-color: #363636;
+  --bg-color-primary: rgb(247 248 249);
+  --bg-color-secondary: #fff;
+  --heading-color: #252525;
   --icon-color: #3d3d3d;
+  --btn-bg: #7b7b7b;
+  --btn-color: #fff;
   --opacity-color: 0, 0, 0;
 }
 
 .dark-mode {
   --primary-color: #bd53ff;
-  --font-color: #f0e1ff;
+  --font-color: #ececec;
   --bg-color-primary: #1b1b1b;
   --bg-color-secondary: #2d2d2d;
   --heading-color: #eee;

@@ -104,6 +104,7 @@ const toggleAuthState = (state) => {
       padding-left: 2rem;
       border-radius: 0.25rem;
       background-color: var(--bg-color-primary);
+      box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
       color: var(--font-color);
       font-family: inherit;
 

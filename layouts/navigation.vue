@@ -2,7 +2,7 @@
   <div class="wrapper">
     <Sidebar />
     <main class="wrapper-inner">
-      <Topbar />
+      <Navbar />
       <slot />
     </main>
   </div>
