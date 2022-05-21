@@ -54,7 +54,7 @@ definePageMeta({
       <NuxtLink to="/profile/john" class="pin__profile">
         <img
           class="pin__profile-avatar"
-          src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
+          src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
           alt=""
         />
         <span class="pin__profile-name">John</span>
@@ -84,8 +84,8 @@ definePageMeta({
               alt=""
             />
             <div class="pin__comments-info">
-              <span class="pin__comments-name">John</span>
-              <p class="pin__comments-text">asdasd</p>
+              <span class="pin__comments-name">Olivia</span>
+              <p class="pin__comments-text">Great!</p>
             </div>
           </div>
           <div class="pin__comments-item">
@@ -95,8 +95,8 @@ definePageMeta({
               alt=""
             />
             <div class="pin__comments-info">
-              <span class="pin__comments-name">John</span>
-              <p class="pin__comments-text">asdasd</p>
+              <span class="pin__comments-name">Robert</span>
+              <p class="pin__comments-text">Nice photo!</p>
             </div>
           </div>
           <div class="pin__comments-item"></div>
@@ -104,7 +104,7 @@ definePageMeta({
         <div class="pin__comments-add">
           <img
             class="pin__comments-avatar pin__comments-avatar"
-            src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
+            src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
             alt=""
           />
           <input class="pin__comments-input" placeholder="Dodaj komentarz" />
@@ -117,20 +117,31 @@ definePageMeta({
 
 <style lang="scss" scoped>
 .pin {
+  position: relative;
   display: flex;
   overflow: hidden;
   width: 100%;
   max-width: 62.5rem;
-  margin: 0.5rem auto;
+  margin-top: 0.5rem;
   border-radius: 2rem;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   background-color: var(--bg-color-secondary);
   color: var(--font-color);
 
+  @media only screen and (max-width: 37.5em) {
+    flex-direction: column;
+    margin-left: 2rem;
+    margin-right: 2rem;
+  }
+
   &__img {
     align-self: flex-start;
     display: block;
-    max-width: 50%;
+    width: 50%;
+
+    @media only screen and (max-width: 37.5em) {
+      width: 100%;
+    }
   }
 
   &__info {
@@ -140,6 +151,10 @@ definePageMeta({
     width: 50%;
     gap: 0.5rem;
     padding: 1.5rem;
+
+    @media only screen and (max-width: 37.5em) {
+      width: 100%;
+    }
   }
 
   &__btns {
@@ -326,5 +341,11 @@ definePageMeta({
   max-width: calc(50% - 1rem);
   margin: 1rem;
   border-radius: 1rem;
+
+  @media only screen and (max-width: 37.5em) {
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
 }
 </style>

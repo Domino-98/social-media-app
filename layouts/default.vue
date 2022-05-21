@@ -26,7 +26,7 @@
   --font-color: #ececec;
   --bg-color-primary: #1b1b1b;
   --bg-color-secondary: #2d2d2d;
-  --heading-color: #eee;
+  --heading-color: #f5f5f5;
   --icon-color: #eee;
   --opacity-color: 255, 255, 255;
 }
@@ -35,6 +35,16 @@ body {
   transition: 0.2s ease-in-out;
   background-color: var(--bg-color-primary);
   font-family: "Roboto", sans-serif;
+}
+
+html {
+  @media only screen and (max-width: 62.5em) {
+    font-size: 92.5%;
+  }
+
+  @media only screen and (max-width: 37.5em) {
+    font-size: 85%;
+  }
 }
 
 .material-icons,

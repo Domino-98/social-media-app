@@ -22,7 +22,7 @@ const props = defineProps<Image>();
       <img class="photo__img" :src="image.urls.regular"
     /></NuxtLink>
 
-    <div class="photo__profile">
+    <NuxtLink to="/profile/john" class="photo__profile">
       <img
         class="photo__profile-img"
         src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
@@ -40,9 +40,9 @@ const props = defineProps<Image>();
         <span class="material-icons md-18">ios_share</span>
       </button>
       <button class="photo__like">
-        <span class="material-icons md-30">favorite_border</span>
+        <span class="material-icons md-24">favorite_border</span>
       </button>
-    </div>
+    </NuxtLink>
   </div>
 </template>
 
@@ -70,6 +70,10 @@ const props = defineProps<Image>();
     &:hover {
       background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
     }
+
+    @media only screen and (max-width: 37.5em) {
+      padding: 0.75rem 1.5rem;
+    }
   }
 
   &__delete,
@@ -89,6 +93,11 @@ const props = defineProps<Image>();
 
     &:hover span {
       color: var(--primary-color);
+    }
+
+    @media only screen and (max-width: 37.5em) {
+      width: 2.5rem;
+      height: 2.5rem;
     }
   }
 
@@ -111,11 +120,16 @@ const props = defineProps<Image>();
     left: 50%;
     top: 50%;
     transform: translate(-50%, -75%);
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
 
     & span {
       color: var(--primary-color);
+    }
+
+    @media only screen and (max-width: 37.5em) {
+      width: 3rem;
+      height: 3rem;
     }
   }
 
@@ -144,6 +158,7 @@ const props = defineProps<Image>();
     display: flex;
     align-items: center;
     margin-top: 0.25rem;
+    cursor: pointer;
 
     &-img {
       width: 1.75rem;

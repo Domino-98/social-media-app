@@ -41,7 +41,7 @@ definePageMeta({
 </script>
 
 <template>
-  <div>
+  <main>
     <PinDetails v-if="image" :image="image" />
 
     <div class="pins">
@@ -50,10 +50,21 @@ definePageMeta({
         <PinCard v-for="image in images" :key="image.id" :image="image" />
       </div>
     </div>
-  </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2rem;
+
+  @media only screen and (max-width: 50em) {
+    margin: 0 1rem;
+  }
+}
 .pins {
   margin-top: 2rem;
 
@@ -65,11 +76,26 @@ definePageMeta({
   }
 
   &__container {
-    margin: auto;
-    padding: 2rem;
+    margin: 2rem 0;
     columns: 5;
     column-gap: 1rem;
     font-size: 1.2rem;
+
+    @media only screen and (max-width: 87.5em) {
+      columns: 4;
+    }
+
+    @media only screen and (max-width: 75em) {
+      columns: 3;
+    }
+
+    @media only screen and (max-width: 37.5em) {
+      columns: 2;
+    }
+
+    @media only screen and (max-width: 25em) {
+      columns: 1;
+    }
   }
 }
 </style>

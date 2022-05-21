@@ -9,17 +9,19 @@ const toggleAuthState = (state) => {
 </script>
 
 <template>
-  <video id="background-video" autoplay loop muted>
-    <source src="~/assets/background.mp4" type="video/mp4" />
-  </video>
-  <NuxtLink to="/" class="logo">
-    <span class="material-icons-outlined md-42">camera</span>
-    <h1 class="logo-text">We<span>Share</span></h1>
-  </NuxtLink>
-  <div class="auth">
-    <AuthLogin v-if="authState === 'login'" @auth-state="toggleAuthState" />
-    <AuthRegister v-else @auth-state="toggleAuthState" />
-  </div>
+  <main class="auth-container">
+    <video id="background-video" autoplay loop muted>
+      <source src="~/assets/background.mp4" type="video/mp4" />
+    </video>
+    <NuxtLink to="/" class="logo">
+      <span class="material-icons-outlined md-42">camera</span>
+      <h1 class="logo-text">We<span>Share</span></h1>
+    </NuxtLink>
+    <div class="auth">
+      <AuthLogin v-if="authState === 'login'" @auth-state="toggleAuthState" />
+      <AuthRegister v-else @auth-state="toggleAuthState" />
+    </div>
+  </main>
 </template>
 
 <style lang="scss">
@@ -48,9 +50,21 @@ const toggleAuthState = (state) => {
   filter: brightness(50%);
 }
 
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+
+  @media only screen and (max-width: 37.5em) {
+    margin: 0 1rem;
+  }
+}
+
 .auth {
   max-width: 22.5rem;
-  margin: 1rem auto;
+  width: 100%;
   padding: 2rem;
   border-radius: 0.5rem;
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.7);

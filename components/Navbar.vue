@@ -20,13 +20,46 @@ const toggleMode = () => {
   console.log(colorMode.value);
   return colorMode.value;
 };
+
+type dropdownTab = "notifications" | "profile";
+let dropdownTab = ref<dropdownTab>();
+let showDropdown = ref<boolean>(false);
+
+function openDropdown(tab: dropdownTab) {
+  if (tab != dropdownTab.value && showDropdown.value) {
+    dropdownTab.value = tab;
+  } else {
+    dropdownTab.value = tab;
+    showDropdown.value = !showDropdown.value;
+  }
+}
+
+let notificationsDropdown = ref();
+let profileDropdown = ref();
+
+function closeDropdown(e) {
+  if (
+    !notificationsDropdown.value.contains(e.target) &&
+    !profileDropdown.value.contains(e.target)
+  ) {
+    showDropdown.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener("click", closeDropdown);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", closeDropdown);
+});
 </script>
 
 <template>
-  <nav class="topbar">
-    <form class="topbar__search">
+  <nav class="navbar">
+    <form class="navbar__search">
       <span class="material-icons md-24">search</span>
-      <input type="text" class="topbar__search-input" placeholder="Szukaj" />
+      <input type="text" class="navbar__search-input" placeholder="Szukaj" />
     </form>
     <label id="switch" class="switch">
       <input
@@ -37,44 +70,69 @@ const toggleMode = () => {
       />
       <span class="slider round"></span>
     </label>
-    <button class="topbar__notifications">
-      <span class="material-icons md-30">notifications</span>
-      <!-- <span class="topbar__notifications-number">3</span> -->
-      <!-- <Transition>
-        <div class="topbar__notifications-dropdown">
-          <p>Brak powiadomień</p>
+    <button
+      @click="openDropdown('notifications')"
+      class="navbar__notifications"
+      ref="notificationsDropdown"
+    >
+      <span class="material-icons md-30 icon">notifications</span>
+      <!-- <span class="navbar__notifications-number">3</span> -->
+      <Transition name="scale">
+        <div
+          v-if="showDropdown && dropdownTab === 'notifications'"
+          class="navbar__notifications-dropdown"
+        >
+          <p class="navbar__notifications-item">Brak powiadomień</p>
         </div>
-      </Transition> -->
+      </Transition>
     </button>
 
-    <NuxtLink to="/pin/add" class="topbar__add">
-      <span class="material-icons md-30">add</span>
+    <NuxtLink to="/pin/add" class="navbar__add">
+      <span class="material-icons md-30 icon">add</span>
     </NuxtLink>
 
-    <NuxtLink to="/auth" class="topbar__profile">
-      <span class="material-icons md-30">person</span>
-      <!-- If logged in -->
+    <!-- <NuxtLink to="/auth" class="navbar__auth">
+      <span class="material-icons md-30 icon">person</span>
+    </NuxtLink> -->
+    <!-- If logged in -->
+    <div
+      @click="openDropdown('profile')"
+      class="navbar__profile"
+      ref="profileDropdown"
+    >
+      <img
+        class="navbar__profile-img"
+        src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
+      />
       <!-- <img
-        class="topbar__profile-img"
-        src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
-        alt="Profile page"
-      /> -->
-      <!-- <img
-        class="topbar__profile-img"
+        class="navbar__profile-img"
         src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
         alt="Profile page"
       /> -->
-    </NuxtLink>
-
-    <!-- If logged in -->
-    <!-- <button class="topbar__logout" data-customTooltip="Wyloguj się">
-      <span class="material-icons md-30">logout</span>
-    </button> -->
+      <Transition name="scale">
+        <div
+          v-if="showDropdown && dropdownTab === 'profile'"
+          class="navbar__profile-dropdown"
+        >
+          <NuxtLink to="/profile/test" class="navbar__profile-item"
+            ><span class="material-icons-outlined">account_circle</span>Przejdź
+            do profilu</NuxtLink
+          >
+          <NuxtLink to="/settings" class="navbar__profile-item"
+            ><span class="material-icons-outlined">manage_accounts</span>Edytuj
+            profil</NuxtLink
+          >
+          <button class="navbar__profile-item">
+            <span class="material-icons-outlined">logout</span>Wyloguj się
+          </button>
+        </div>
+      </Transition>
+    </div>
   </nav>
 </template>
 
 <style lang="scss" scoped>
-.topbar {
+.navbar {
   z-index: 10;
   align-self: end;
   display: flex;
@@ -82,6 +140,10 @@ const toggleMode = () => {
   width: 100%;
   height: 4rem;
   padding: 0.5rem 2rem;
+
+  @media only screen and (max-width: 50em) {
+    padding: 0.5rem 1rem;
+  }
 
   &__logo {
     margin-right: auto;
@@ -118,27 +180,57 @@ const toggleMode = () => {
         box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
       }
     }
+
+    @media only screen and (max-width: 50em) {
+      margin-right: 1rem;
+    }
+
+    @media only screen and (max-width: 37.5em) {
+      margin-right: 0.5rem;
+    }
   }
 
   &__notifications,
   &__add,
+  &__auth,
   &__profile,
   &__logout {
     position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: all 0.2s;
+    transition: all 0.3s;
     width: 2.8rem;
     height: 2.8rem;
     margin-right: 0.75rem;
     border-radius: 50%;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-    background-color: var(--bg-color-secondary);
+    background-color: var(--heading-color);
     cursor: pointer;
 
-    &:hover .material-icons {
-      filter: brightness(150%);
+    & span {
+      color: var(--bg-color-secondary);
+
+      @media only screen and (max-width: 37.5em) {
+        font-size: 24px;
+      }
+    }
+
+    &:hover .icon {
+      color: var(--primary-color);
+    }
+
+    &-img {
+      display: block;
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
+
+    &:last-child {
+      margin-right: 0;
     }
 
     &-number {
@@ -157,26 +249,77 @@ const toggleMode = () => {
       font-weight: 500;
     }
 
+    @media only screen and (max-width: 50em) {
+      padding: 1rem;
+    }
+  }
+
+  &__notifications,
+  &__profile {
     &-dropdown {
       position: absolute;
       right: 0;
-      bottom: -3.6rem;
+      top: 1rem;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      width: 12rem;
       margin-top: 2rem;
-      padding: 0.5rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+      overflow: hidden;
+      border-radius: 1rem 0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
       background-color: var(--bg-color-secondary);
       font-size: 0.9rem;
       text-align: center;
     }
+
+    &-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: all 0.3s;
+      padding: 0.75rem;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--font-color);
+
+      & span {
+        color: var(--icon-color);
+      }
+
+      &:hover {
+        background-color: rgba(var(--opacity-color), 0.1);
+      }
+    }
   }
 
+  &__notifications {
+    &-item {
+      justify-content: center;
+    }
+  }
+
+  &__auth,
   &__profile {
-    &-img {
-      width: 3rem;
-      border-radius: 50%;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
-      cursor: pointer;
+    @media only screen and (max-width: 50em) {
+      position: fixed;
+      top: 0.2rem;
+      right: 0.7rem;
+      z-index: 100;
+
+      &-img {
+        position: fixed;
+      }
+    }
+
+    @media only screen and (max-width: 37.5em) {
+      top: 0.35rem;
+    }
+  }
+
+  &__add {
+    @media only screen and (max-width: 50em) {
+      margin-right: 0;
     }
   }
 }
@@ -192,6 +335,15 @@ nav button:last-child {
   margin-right: 1.5rem;
   width: 60px;
   height: 26px;
+
+  @media only screen and (max-width: 50em) {
+    margin-right: 1rem;
+  }
+
+  @media only screen and (max-width: 37.5em) {
+    transform: scale(0.8);
+    margin-right: 0.5rem;
+  }
 }
 
 /* Hide default HTML checkbox */

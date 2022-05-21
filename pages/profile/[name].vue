@@ -47,7 +47,7 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="container">
+  <main>
     <!-- <div v-if="showModal">
       <h1>Modal</h1>
       <button @click="hidePinModal">Hide pin modal</button>
@@ -57,7 +57,7 @@ definePageMeta({
       <div class="profile__background"></div>
       <img
         class="profile__avatar"
-        src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
+        src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
         alt="Profile page"
       />
       <h2 class="profile__name">John</h2>
@@ -73,10 +73,10 @@ definePageMeta({
         <button class="profile__btns-saved">Zapisane</button>
       </div>
     </div>
-    <div class="photos">
+    <div class="pins">
       <PinCard v-for="image in images" :key="image.id" :image="image" />
     </div>
-  </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>
@@ -97,15 +97,23 @@ definePageMeta({
   }
 }
 
-.container {
-  width: 100%;
-  padding: 0 2rem;
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2rem;
+
+  @media only screen and (max-width: 50em) {
+    margin: 0 1rem;
+  }
 }
 
 .profile {
   display: flex;
   flex-direction: column;
   align-items: center;
+  width: 100%;
   margin-top: 0.5rem;
 
   &__background {
@@ -114,7 +122,7 @@ definePageMeta({
     height: 22.5rem;
     border-radius: 2rem;
     box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
-    background-image: url("https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1332&q=80");
+    background-image: url("https://images.unsplash.com/photo-1510784722466-f2aa9c52fff6?crop=entropy&cs=tinysrgb&fm=jpg&ixlib=rb-1.2.1&q=80&raw_url=true&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170");
     background-repeat: no-repeat;
     background-position: center;
     background-size: cover;
@@ -175,10 +183,26 @@ definePageMeta({
   }
 }
 
-.photos {
+.pins {
   margin: 2rem auto;
   columns: 5;
   column-gap: 1rem;
   font-size: 1.2rem;
+
+  @media only screen and (max-width: 87.5em) {
+    columns: 4;
+  }
+
+  @media only screen and (max-width: 75em) {
+    columns: 3;
+  }
+
+  @media only screen and (max-width: 37.5em) {
+    columns: 2;
+  }
+
+  @media only screen and (max-width: 25em) {
+    columns: 1;
+  }
 }
 </style>

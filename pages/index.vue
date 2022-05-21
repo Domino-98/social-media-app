@@ -39,7 +39,6 @@ const { data: images } = useAsyncData("images", async () => {
 //     next();
 //   }
 // });
-
 definePageMeta({
   layout: "navigation",
 });
@@ -58,10 +57,31 @@ definePageMeta({
 
 <style lang="scss" scoped>
 .container {
+  position: relative;
   margin: auto;
-  padding: 2rem;
+  margin: 1rem 2rem;
   columns: 5;
   column-gap: 1rem;
   font-size: 1.2rem;
+
+  @media only screen and (max-width: 87.5em) {
+    columns: 4;
+  }
+
+  @media only screen and (max-width: 75em) {
+    columns: 3;
+  }
+
+  @media only screen and (max-width: 50em) {
+    margin: 1rem;
+  }
+
+  @media only screen and (max-width: 37.5em) {
+    columns: 2;
+  }
+
+  @media only screen and (max-width: 25em) {
+    columns: 1;
+  }
 }
 </style>

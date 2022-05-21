@@ -31,91 +31,123 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="add">
-    <form class="add__form">
-      <div class="add__form-photo">
-        <div v-if="file" class="add__form-photo-img">
-          <img :src="file.fileUrl" />
-          <button @click.prevent="deleteFile" class="add__form-photo-delete">
-            <span class="material-icons md-18">delete</span>
-          </button>
+  <main>
+    <div class="add">
+      <form class="add__form">
+        <div class="add__form-photo">
+          <div v-if="file" class="add__form-photo-img">
+            <img :src="file.fileUrl" />
+            <button @click.prevent="deleteFile" class="add__form-photo-delete">
+              <span class="material-icons md-24">delete</span>
+            </button>
+          </div>
+          <div v-else @drop="dragFile" class="add__form-photo-upload">
+            <span class="material-icons-outlined md-30">cloud_upload</span>
+            <p class="add__form-photo-text">
+              Przeciągnij i upuść lub kliknij, aby przesłać
+            </p>
+            <p class="add__form-photo-text add__form-photo-text--mobile">
+              Prześlij zdjęcie / gif
+            </p>
+            <p class="add__form-photo-info">
+              Zalecenie: Użyj wysokiej jakości obrazów o rozmiarze mniejszym niż
+              20MB
+            </p>
+          </div>
+          <input ref="fileupload" type="file" @change="uploadFile" />
         </div>
-        <div v-else @drop="dragFile" class="add__form-photo-upload">
-          <span class="material-icons-outlined md-30">cloud_upload</span>
-          <p class="add__form-photo-info">
-            Przeciągnij i upuść lub kliknij, aby przesłać
-          </p>
+        <div class="add__form-info">
+          <div class="add__form-group">
+            <input
+              class="add__form-input add__form-input--big"
+              type="text"
+              placeholder="Dodaj tytuł"
+            />
+          </div>
+          <div class="add__form-profile">
+            <img
+              class="add__form-profile-img"
+              src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
+              alt=""
+            />
+            <span class="add__form-profile-name">John</span>
+          </div>
+          <div class="add__form-group">
+            <input
+              class="add__form-input"
+              type="text"
+              placeholder="O czym jest twój pin?"
+            />
+          </div>
+          <div class="add__form-group">
+            <input
+              class="add__form-input"
+              type="text"
+              placeholder="Dodaj link docelowy"
+            />
+          </div>
+          <div class="add__form-group">
+            <label for="" class="add__form-label">Wybierz kategorię pina</label>
+            <select class="add__form-select" name="" id="">
+              <option value="" selected disabled>Wybierz kategorię</option>
+              <option value="Samochody">Samochody</option>
+              <option value="Fitness">Fitness</option>
+              <option value="Tapety">Tapety</option>
+              <option value="Jedzenie">Jedzenie</option>
+              <option value="Natura">Natura</option>
+              <option value="Sztuka">Sztuka</option>
+              <option value="Web designs">Web designs</option>
+              <option value="Podróże">Podróże</option>
+              <option value="Cytaty">Cytaty</option>
+              <option value="Koty">Koty</option>
+              <option value="Psy">Psy</option>
+            </select>
+            <span class="material-icons-outlined">expand_more</span>
+          </div>
+          <button class="add__form-save">Zapisz Pina</button>
         </div>
-        <input ref="fileupload" type="file" @change="uploadFile" />
-      </div>
-      <div class="add__form-info">
-        <div class="add__form-group">
-          <input
-            class="add__form-input add__form-input--big"
-            type="text"
-            placeholder="Dodaj tytuł"
-          />
-        </div>
-        <div class="add__form-profile">
-          <img
-            class="add__form-profile-img"
-            src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
-            alt=""
-          />
-          <span class="add__form-profile-name">John</span>
-        </div>
-        <div class="add__form-group">
-          <input
-            class="add__form-input"
-            type="text"
-            placeholder="O czym jest twój pin?"
-          />
-        </div>
-        <div class="add__form-group">
-          <input
-            class="add__form-input"
-            type="text"
-            placeholder="Dodaj link docelowy"
-          />
-        </div>
-        <div class="add__form-group">
-          <label for="" class="add__form-label">Wybierz kategorię</label>
-          <select class="add__form-select" name="" id="">
-            <option value="Samochody">Samochody</option>
-            <option value="Fitness">Fitness</option>
-            <option value="Tapety">Tapety</option>
-            <option value="Jedzenie">Jedzenie</option>
-            <option value="Natura">Natura</option>
-            <option value="Sztuka">Sztuka</option>
-            <option value="Web designs">Web designs</option>
-            <option value="Podróże">Podróże</option>
-            <option value="Cytaty">Cytaty</option>
-            <option value="Koty">Koty</option>
-            <option value="Psy">Psy</option>
-          </select>
-          <span class="material-icons-outlined">expand_more</span>
-        </div>
-        <button class="add__form-save">Zapisz Pina</button>
-      </div>
-    </form>
-  </div>
+      </form>
+    </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>
+main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media only screen and (max-width: 75em) {
+    margin: 2rem;
+  }
+
+  @media only screen and (max-width: 50em) {
+    margin: 0 1rem;
+  }
+}
+
 .add {
   display: flex;
   width: 100%;
   max-width: 55rem;
-  margin: 0.5rem auto;
-  padding: 2.5rem;
+  margin-top: 0.5rem;
+  padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   background-color: var(--bg-color-secondary);
   color: var(--font-color);
 
+  @media only screen and (max-width: 37.5em) {
+    padding: 1.5rem;
+  }
+
   &__form {
     display: flex;
     width: 100%;
+
+    @media only screen and (max-width: 62.5em) {
+      flex-direction: column;
+    }
 
     &-photo {
       position: relative;
@@ -126,12 +158,17 @@ definePageMeta({
       border-radius: 0.5rem;
       background-color: rgba(var(--opacity-color), 0.075);
 
+      @media only screen and (max-width: 62.5em) {
+        margin-right: 0;
+      }
+
       &-upload {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         height: 100%;
+        padding: 1rem;
         border: 2px dashed rgba(var(--opacity-color), 0.2);
         border-radius: 0.5rem;
       }
@@ -144,8 +181,8 @@ definePageMeta({
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 2rem;
-        height: 2rem;
+        width: 2.5rem;
+        height: 2.5rem;
         border-radius: 50%;
         background-color: var(--bg-color-secondary);
         color: #252525;
@@ -161,12 +198,38 @@ definePageMeta({
         height: 100%;
       }
 
-      &-info {
-        width: 80%;
+      &-text {
         margin-top: 0.5rem;
         color: var(--font-color);
         text-align: center;
         font-size: 0.9rem;
+
+        @media only screen and (max-width: 37.5em) {
+          display: none;
+        }
+
+        &--mobile {
+          display: none;
+
+          @media only screen and (max-width: 37.5em) {
+            display: block;
+          }
+        }
+      }
+
+      &-info {
+        position: absolute;
+        bottom: 2rem;
+        padding: 0 2rem;
+        text-align: center;
+        font-size: 0.8rem;
+        color: rgba(var(--opacity-color), 0.5);
+
+        @media only screen and (max-width: 62.5em) {
+          position: static;
+          margin-top: 0.5rem;
+          padding: 0;
+        }
       }
 
       & input {
@@ -205,6 +268,7 @@ definePageMeta({
 
       &-name {
         margin-left: 0.5rem;
+        font-weight: 500;
       }
 
       &-img {

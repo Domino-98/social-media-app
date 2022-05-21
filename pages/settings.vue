@@ -5,72 +5,81 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="settings">
-    <h1 class="settings__header">Edycja profilu</h1>
-    <form class="settings__form">
-      <div class="settings__form-group">
-        <label for="" class="settings__form-label">Tło</label>
-        <div class="settings__form-bg">
-          <img
-            src="https://images.unsplash.com/photo-1497436072909-60f360e1d4b1?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1332&q=80"
-            alt=""
-            class="settings__form-bg-img"
-          />
-          <div class="settings__form-bg-btns">
-            <button class="settings__form-bg-btn">Zmień</button>
-            <button class="settings__form-bg-btn">Usuń</button>
+  <main>
+    <div class="settings">
+      <h1 class="settings__header">Edycja profilu</h1>
+      <form class="settings__form">
+        <div class="settings__form-group">
+          <label for="" class="settings__form-label">Tło</label>
+          <div class="settings__form-bg">
+            <img
+              src="https://images.unsplash.com/photo-1510784722466-f2aa9c52fff6?crop=entropy&cs=tinysrgb&fm=jpg&ixlib=rb-1.2.1&q=80&raw_url=true&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1170"
+              alt=""
+              class="settings__form-bg-img"
+            />
+            <div class="settings__form-bg-btns">
+              <button class="settings__form-bg-btn">Zmień</button>
+              <button class="settings__form-bg-btn">Usuń</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="settings__form-group">
-        <label for="" class="settings__form-label">Avatar</label>
-        <div class="settings__form-avatar">
-          <img
-            src="https://images.unsplash.com/photo-1542909168-82c3e7fdca5c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=580&q=80"
-            alt=""
-            class="settings__form-avatar-img"
+        <div class="settings__form-group">
+          <label for="" class="settings__form-label">Avatar</label>
+          <div class="settings__form-avatar">
+            <img
+              src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
+              alt=""
+              class="settings__form-avatar-img"
+            />
+            <button class="settings__form-avatar-btn">Zmień</button>
+          </div>
+        </div>
+        <div class="settings__form-name">
+          <div class="settings__form-group">
+            <label for="" class="settings__form-label">Imię</label>
+            <input type="text" class="settings__form-input" />
+          </div>
+          <div class="settings__form-group">
+            <label for="" class="settings__form-label">Nazwisko</label>
+            <input type="text" class="settings__form-input" />
+          </div>
+        </div>
+        <div class="settings__form-group">
+          <label for="" class="settings__form-label">O mnie</label>
+          <textarea
+            class="settings__form-input"
+            id=""
+            cols="20"
+            rows="3"
+            placeholder="Opowiedz coś o sobie"
+          ></textarea>
+        </div>
+        <div class="settings__form-group">
+          <label for="" class="settings__form-label">Nazwa użytkownika</label>
+          <input type="text" class="settings__form-input" value="John" />
+        </div>
+        <div class="settings__form-group">
+          <label for="" class="settings__form-label">Witryna / Portfolio</label>
+          <input
+            type="text"
+            class="settings__form-input"
+            placeholder="https://"
           />
-          <button class="settings__form-avatar-btn">Zmień</button>
         </div>
-      </div>
-      <div class="settings__form-name">
-        <div class="settings__form-group">
-          <label for="" class="settings__form-label">Imię</label>
-          <input type="text" class="settings__form-input" />
-        </div>
-        <div class="settings__form-group">
-          <label for="" class="settings__form-label">Nazwisko</label>
-          <input type="text" class="settings__form-input" />
-        </div>
-      </div>
-      <div class="settings__form-group">
-        <label for="" class="settings__form-label">O mnie</label>
-        <textarea
-          class="settings__form-input"
-          id=""
-          cols="20"
-          rows="3"
-          placeholder="Opowiedz coś o sobie"
-        ></textarea>
-      </div>
-      <div class="settings__form-group">
-        <label for="" class="settings__form-label">Nazwa użytkownika</label>
-        <input type="text" class="settings__form-input" value="John" />
-      </div>
-      <div class="settings__form-group">
-        <label for="" class="settings__form-label">Witryna / Portfolio</label>
-        <input
-          type="text"
-          class="settings__form-input"
-          placeholder="https://"
-        />
-      </div>
-      <button class="settings__save-btn">Zapisz</button>
-    </form>
-  </div>
+        <button class="settings__save-btn">Zapisz</button>
+      </form>
+    </div>
+  </main>
 </template>
 
 <style lang="scss" scoped>
+main {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 1rem;
+}
+
 .settings {
   display: flex;
   flex-direction: column;
@@ -78,11 +87,15 @@ definePageMeta({
   justify-content: center;
   width: 100%;
   max-width: 30rem;
-  margin: 0.5rem auto;
+  margin-top: 0.5rem;
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   background-color: var(--bg-color-secondary);
+
+  @media only screen and (max-width: 37.5em) {
+    padding: 1rem;
+  }
 
   &__header {
     font-size: 1.6rem;
