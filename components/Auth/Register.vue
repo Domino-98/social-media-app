@@ -1,56 +1,167 @@
+<script setup lang="ts">
+import * as yup from "yup";
+import { useToast } from "vue-toastification";
+import { TYPE } from "vue-toastification";
+
+const toast = useToast();
+
+const client = useSupabaseClient();
+const router = useRouter();
+
+// Validation schema
+const registerSchema = yup.object({
+  username: yup
+    .string()
+    .required("Nazwa użytkownika jest wymagana")
+    .min(3, "Minimalna ilość znaków: 3")
+    .max(20, "Maksymalna ilość znaków: 20"),
+  email: yup
+    .string()
+    .required("Adres email jest wymagany")
+    .email("Adres email musi być prawidłowy"),
+  password: yup
+    .string()
+    .required("Hasło jest wymagane")
+    .min(8, "Minimalna ilość znaków: 8"),
+  passwordConfirmation: yup
+    .string()
+    .oneOf([yup.ref("password"), null], "Hasła muszą do siebie pasować"),
+});
+
+let isLoading = ref<boolean>(false);
+
+// Register user
+const handleRegister = async (values, { resetForm }): Promise<void> => {
+  isLoading.value = true;
+  const { email, password, username } = values;
+  try {
+    const { error } = await client.auth.signUp(
+      {
+        email,
+        password,
+      },
+      {
+        data: {
+          username,
+        },
+      }
+    );
+
+    if (error) {
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
+      throw error;
+    }
+
+    toast("Potwierdź swój adres email, aby aktywować konto!", {
+      type: TYPE.INFO,
+      timeout: 5000,
+    });
+    resetForm();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const providerLogin = async (provider: "google" | "facebook") => {
+  try {
+    const { error } = await client.auth.signIn({ provider });
+
+    if (error) {
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
+      throw error;
+    }
+
+    router.push("/");
+  } catch (error) {
+    console.error(error.message);
+  }
+};
+
+let passVisible = ref<boolean>(false);
+let passConfirmVisible = ref<boolean>(false);
+</script>
+
 <template>
   <div>
     <h1 class="auth__header">Zarejestruj się</h1>
-    <form action="" class="auth__form">
+
+    <VForm
+      @submit="handleRegister"
+      :validation-schema="registerSchema"
+      class="auth__form"
+    >
       <div class="auth__form-group">
-        <input
+        <VField
+          name="username"
           type="text"
-          id="name"
+          id="username"
           class="auth__form-input"
           placeholder=" "
-          required
         />
         <span class="material-icons-outlined md-18 icon">person</span>
-        <label for="name" class="auth__form-label">Nazwa użytkownika</label>
+        <label for="username" class="auth__form-label">Nazwa użytkownika</label>
+        <VErrorMessage name="username" class="error" />
       </div>
       <div class="auth__form-group">
-        <input
+        <VField
+          name="email"
           type="email"
           id="email"
           class="auth__form-input"
           placeholder=" "
-          required
         />
         <span class="material-icons-outlined md-18 icon">email</span>
         <label for="email" class="auth__form-label">Email</label>
+        <VErrorMessage name="email" class="error" />
       </div>
       <div class="auth__form-group">
-        <input
-          type="password"
+        <VField
+          ref="pass"
+          name="password"
+          :type="passVisible ? 'text' : 'password'"
           id="password"
           class="auth__form-input"
           placeholder=" "
-          required
         />
         <span class="material-icons-outlined md-18 icon">lock</span>
+        <span
+          @click="passVisible = !passVisible"
+          class="material-icons-outlined md-18 icon icon--visibility"
+          >{{ passVisible ? "visibility" : "visibility_off" }}</span
+        >
         <label for="password" class="auth__form-label">Hasło</label>
+        <VErrorMessage name="password" class="error" />
       </div>
       <div class="auth__form-group">
-        <input
-          type="password"
+        <VField
+          ref="pass2"
+          name="passwordConfirmation"
+          :type="passConfirmVisible ? 'text' : 'password'"
           id="password2"
           class="auth__form-input"
           placeholder=" "
-          required
         />
         <span class="material-icons-outlined md-18 icon">lock</span>
+        <span
+          @click="passConfirmVisible = !passConfirmVisible"
+          class="material-icons-outlined md-18 icon icon--visibility"
+          >{{ passConfirmVisible ? "visibility" : "visibility_off" }}</span
+        >
         <label for="password2" class="auth__form-label">Powtórz hasło</label>
+        <VErrorMessage name="passwordConfirmation" class="error" />
       </div>
-      <button class="auth__form-btn">Zarejestruj się</button>
-    </form>
+      <button :disabled="isLoading" class="auth__form-btn">Zarejestruj się</button>
+    </VForm>
     <p class="auth__providers-text">Lub zarejestruj się za pomocą</p>
     <div class="auth__providers">
       <svg
+        @click.prevent="providerLogin('google')"
         class="auth__providers-google"
         xmlns="http://www.w3.org/2000/svg"
         x="0px"
@@ -65,6 +176,7 @@
         ></path>
       </svg>
       <svg
+        @click.prevent="providerLogin('facebook')"
         class="auth__providers-facebook"
         xmlns="http://www.w3.org/2000/svg"
         data-name="Layer 1"
@@ -80,9 +192,7 @@
     </div>
     <div class="auth__signup">
       <p class="auth__signup-text">Masz już konto?</p>
-      <a @click="$emit('auth-state', 'login')" class="auth__signup-switch"
-        >Zaloguj się</a
-      >
+      <a @click="$emit('auth-state', 'login')" class="auth__signup-switch">Zaloguj się</a>
     </div>
   </div>
 </template>

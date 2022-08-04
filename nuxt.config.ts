@@ -3,7 +3,7 @@ import { defineNuxtConfig } from "nuxt";
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
   css: ["assets/styles/main.scss", "assets/styles/reset.scss"],
-  modules: ["@nuxtjs/color-mode"],
+  modules: ["@nuxtjs/color-mode", "@nuxtjs/supabase"],
   publicRuntimeConfig: {
     UNSPLASH_API_KEY: process.env.UNSPLASH_API_KEY,
   },
@@ -13,6 +13,10 @@ export default defineNuxtConfig({
         href: "https://fonts.googleapis.com/css?family=Material+Icons|Material+Icons|Material+Icons+Outlined|Material+Icons+Two+Tone|Material+Icons+Round|Material+Icons+Sharp",
         rel: "stylesheet",
       },
+      { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
     ],
+  },
+  alias: {
+    yup: "yup/lib/index.js",
   },
 });

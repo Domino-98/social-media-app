@@ -1,9 +1,9 @@
 <script setup lang="ts">
-type authState = "login" | "register";
+type AuthState = "login" | "register";
 
-let authState = ref<authState>("login");
+let authState = ref<AuthState>("login");
 
-const toggleAuthState = (state) => {
+const toggleAuthState = (state: AuthState) => {
   authState.value = state;
 };
 </script>
@@ -25,7 +25,7 @@ const toggleAuthState = (state) => {
 </template>
 
 <style lang="scss">
-@mixin providers {
+@mixin providers($color) {
   padding: 0.5rem;
   border-radius: 50%;
   cursor: pointer;
@@ -33,7 +33,7 @@ const toggleAuthState = (state) => {
   transition: all 0.3s;
 
   &:hover {
-    background-color: #1b1b1b;
+    background-color: darken($color, 15%);
   }
 }
 
@@ -98,7 +98,15 @@ const toggleAuthState = (state) => {
         position: absolute;
         left: 0.5rem;
         top: 0.7rem;
+        pointer-events: none;
         color: var(--icon-color);
+
+        &--visibility {
+          left: unset;
+          right: 0.5rem;
+          top: 0.7rem;
+          pointer-events: all;
+        }
       }
     }
 
@@ -116,6 +124,7 @@ const toggleAuthState = (state) => {
       transition: all 0.3s;
       padding: 0.6rem 0.25rem;
       padding-left: 2rem;
+      padding-right: 2rem;
       border-radius: 0.25rem;
       background-color: var(--bg-color-primary);
       box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
@@ -144,7 +153,7 @@ const toggleAuthState = (state) => {
       border: 2px solid var(--primary-color);
       border-radius: 2rem;
       background-color: var(--primary-color);
-      color: #eee;
+      color: #fff;
       font-weight: 500;
       text-transform: uppercase;
       font-size: 0.8rem;
@@ -180,12 +189,12 @@ const toggleAuthState = (state) => {
     &-google {
       margin-right: 0.5rem;
       background-color: #db4437;
-      @include providers;
+      @include providers(#db4437);
     }
 
     &-facebook {
       background-color: #1877f2;
-      @include providers;
+      @include providers(#1877f2);
     }
   }
 
@@ -239,5 +248,17 @@ const toggleAuthState = (state) => {
       color: #f0e1ff;
     }
   }
+}
+
+button:disabled,
+button[disabled] {
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+.error {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #ff4040;
 }
 </style>

@@ -1,57 +1,70 @@
 <script setup lang="ts">
-import { react } from "@babel/types";
+import { useToast } from "vue-toastification";
+
+const toast = useToast();
+
+const user = useSupabaseUser();
+const client = useSupabaseClient();
+const router = useRouter();
 
 let colorMode = useColorMode();
-
 let darkMode = ref<boolean>(false);
 
-if (process.client) {
-  colorMode.value === "dark"
-    ? (darkMode.value = false)
-    : (darkMode.value = true);
-}
-
-const toggleMode = () => {
-  if (colorMode.value === "light") {
-    colorMode.value = "dark";
+const toggleMode = (): void => {
+  if (colorMode.preference === "light") {
+    colorMode.preference = "dark";
   } else {
-    colorMode.value = "light";
+    colorMode.preference = "light";
   }
-  console.log(colorMode.value);
-  return colorMode.value;
 };
 
-type dropdownTab = "notifications" | "profile";
-let dropdownTab = ref<dropdownTab>();
-let showDropdown = ref<boolean>(false);
+const profileId = ref<number>();
 
-function openDropdown(tab: dropdownTab) {
-  if (tab != dropdownTab.value && showDropdown.value) {
-    dropdownTab.value = tab;
-  } else {
-    dropdownTab.value = tab;
-    showDropdown.value = !showDropdown.value;
+const getUserId = async () => {
+  const {
+    data: { profile_id },
+    error,
+  } = await client
+    .from("profiles")
+    .select("profile_id")
+    .match({ id: user.value.id })
+    .single();
+
+  profileId.value = profile_id;
+};
+
+let notificationsVisible = ref<boolean>(false);
+let profileVisible = ref<boolean>(false);
+
+const toggleNotifications = (): void => {
+  notificationsVisible.value = !notificationsVisible.value;
+};
+const toggleProfile = (): void => {
+  profileVisible.value = !profileVisible.value;
+};
+
+// Logout
+const handleLogout = async (): Promise<void> => {
+  try {
+    const { error } = await client.auth.signOut();
+    if (error) throw error;
+
+    toast("Pomyślnie wylogowano!");
+    router.push("/auth");
+  } catch (error) {
+    console.error(error);
   }
-}
-
-let notificationsDropdown = ref();
-let profileDropdown = ref();
-
-function closeDropdown(e) {
-  if (
-    !notificationsDropdown.value.contains(e.target) &&
-    !profileDropdown.value.contains(e.target)
-  ) {
-    showDropdown.value = false;
-  }
-}
+};
 
 onMounted(() => {
-  document.addEventListener("click", closeDropdown);
+  colorMode.value === "dark" ? (darkMode.value = false) : (darkMode.value = true);
+  if (user.value) {
+    getUserId();
+  }
 });
 
-onBeforeUnmount(() => {
-  document.removeEventListener("click", closeDropdown);
+watch(colorMode, (color) => {
+  color.preference === "dark" ? (darkMode.value = false) : (darkMode.value = true);
 });
 </script>
 
@@ -62,71 +75,75 @@ onBeforeUnmount(() => {
       <input type="text" class="navbar__search-input" placeholder="Szukaj" />
     </form>
     <label id="switch" class="switch">
-      <input
-        type="checkbox"
-        @click="$colorMode.preference = toggleMode()"
-        v-model="darkMode"
-        id="slider"
-      />
+      <input type="checkbox" @click="toggleMode()" v-model="darkMode" id="slider" />
       <span class="slider round"></span>
     </label>
-    <button
-      @click="openDropdown('notifications')"
-      class="navbar__notifications"
-      ref="notificationsDropdown"
-    >
-      <span class="material-icons md-30 icon">notifications</span>
-      <!-- <span class="navbar__notifications-number">3</span> -->
-      <Transition name="scale">
-        <div
-          v-if="showDropdown && dropdownTab === 'notifications'"
-          class="navbar__notifications-dropdown"
-        >
-          <p class="navbar__notifications-item">Brak powiadomień</p>
-        </div>
-      </Transition>
-    </button>
 
-    <NuxtLink to="/pin/add" class="navbar__add">
-      <span class="material-icons md-30 icon">add</span>
-    </NuxtLink>
-
-    <!-- <NuxtLink to="/auth" class="navbar__auth">
-      <span class="material-icons md-30 icon">person</span>
-    </NuxtLink> -->
-    <!-- If logged in -->
-    <div
-      @click="openDropdown('profile')"
-      class="navbar__profile"
-      ref="profileDropdown"
-    >
-      <img
-        class="navbar__profile-img"
-        src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
-      />
-      <!-- <img
-        class="navbar__profile-img"
-        src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-        alt="Profile page"
-      /> -->
-      <Transition name="scale">
-        <div
-          v-if="showDropdown && dropdownTab === 'profile'"
-          class="navbar__profile-dropdown"
-        >
-          <NuxtLink to="/profile/test" class="navbar__profile-item"
-            ><span class="material-icons-outlined">account_circle</span>Przejdź
-            do profilu</NuxtLink
-          >
-          <NuxtLink to="/settings" class="navbar__profile-item"
-            ><span class="material-icons-outlined">manage_accounts</span>Edytuj
-            profil</NuxtLink
-          >
-          <button class="navbar__profile-item">
-            <span class="material-icons-outlined">logout</span>Wyloguj się
+    <div class="navbar__buttons">
+      <div ref="notificationsEl" class="navbar__dropdown navbar__dropdown--notifications">
+        <tippy content="Powiadomienia">
+          <button @click="toggleNotifications" class="navbar__toggle">
+            <span class="material-icons md-30 icon">notifications</span>
           </button>
-        </div>
-      </Transition>
+        </tippy>
+
+        <!-- <span class="navbar__badge">3</span> -->
+        <Transition name="scale">
+          <div
+            v-if="notificationsVisible"
+            v-click-outside="toggleNotifications"
+            class="navbar__dropdown-menu"
+          >
+            <p class="info">Brak powiadomień</p>
+            <!-- <div class="navbar__dropdown-item"></div> -->
+          </div>
+        </Transition>
+      </div>
+
+      <tippy content="Dodaj pina">
+        <NuxtLink ref="addPinEl" to="/pin/add" class="navbar__add">
+          <span class="material-icons md-30 icon">add</span>
+        </NuxtLink>
+      </tippy>
+
+      <tippy v-if="!user" content="Logowanie / Rejestracja">
+        <NuxtLink ref="authEl" to="/auth" class="navbar__auth">
+          <span class="material-icons md-30 icon">person</span>
+        </NuxtLink>
+      </tippy>
+
+      <!-- If logged in -->
+      <div
+        v-else
+        @click="toggleProfile"
+        class="navbar__dropdown navbar__dropdown--profile"
+      >
+        <img
+          class="navbar__profile-img"
+          :src="
+            user?.user_metadata.avatar_to_display ||
+            'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+          "
+        />
+        <Transition name="scale">
+          <div
+            v-click-outside="toggleProfile"
+            v-if="profileVisible"
+            class="navbar__dropdown-menu"
+          >
+            <NuxtLink :to="`/profile/${profileId}`" class="navbar__dropdown-item">
+              <span class="material-icons-outlined">account_circle</span>Przejdź do
+              profilu
+            </NuxtLink>
+            <NuxtLink to="/settings" class="navbar__dropdown-item"
+              ><span class="material-icons-outlined">manage_accounts</span>Edytuj profil
+            </NuxtLink>
+            <button @click.prevent="handleLogout" class="navbar__dropdown-item">
+              <span class="material-icons-outlined">logout</span>Wyloguj się
+            </button>
+          </div>
+        </Transition>
+      </div>
     </div>
   </nav>
 </template>
@@ -190,73 +207,16 @@ onBeforeUnmount(() => {
     }
   }
 
-  &__notifications,
-  &__add,
-  &__auth,
-  &__profile,
-  &__logout {
-    position: relative;
+  &__buttons {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.3s;
-    width: 2.8rem;
-    height: 2.8rem;
-    margin-right: 0.75rem;
-    border-radius: 50%;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-    background-color: var(--heading-color);
-    cursor: pointer;
-
-    & span {
-      color: var(--bg-color-secondary);
-
-      @media only screen and (max-width: 37.5em) {
-        font-size: 24px;
-      }
-    }
-
-    &:hover .icon {
-      color: var(--primary-color);
-    }
-
-    &-img {
-      display: block;
-      width: 2.8rem;
-      height: 2.8rem;
-      border-radius: 50%;
-      box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-      cursor: pointer;
-    }
-
-    &:last-child {
-      margin-right: 0;
-    }
-
-    &-number {
-      position: absolute;
-      top: -0.25rem;
-      right: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 1.25rem;
-      height: 1.25rem;
-      border-radius: 50%;
-      background-color: var(--primary-color);
-      color: var(--font-color);
-      font-size: 0.8rem;
-      font-weight: 500;
-    }
-
-    @media only screen and (max-width: 50em) {
-      padding: 1rem;
-    }
+    gap: 0.5rem;
   }
 
-  &__notifications,
-  &__profile {
-    &-dropdown {
+  &__dropdown {
+    position: relative;
+    color: var(--font-color);
+
+    &-menu {
       position: absolute;
       right: 0;
       top: 1rem;
@@ -281,26 +241,78 @@ onBeforeUnmount(() => {
       padding: 0.75rem;
       font-size: 1rem;
       font-weight: 500;
-      color: var(--font-color);
-
-      & span {
-        color: var(--icon-color);
-      }
+      cursor: pointer;
 
       &:hover {
         background-color: rgba(var(--opacity-color), 0.1);
       }
+
+      &--center {
+        text-align: center;
+      }
+    }
+
+    & .info {
+      padding: 0.75rem;
+      font-style: italic;
+      font-size: 0.9rem;
     }
   }
 
-  &__notifications {
-    &-item {
-      justify-content: center;
+  &__toggle,
+  &__add,
+  &__auth {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+
+    background-color: var(--heading-color);
+    cursor: pointer;
+
+    & span {
+      color: var(--bg-color-secondary);
+
+      @media only screen and (max-width: 37.5em) {
+        font-size: 24px;
+      }
     }
+
+    @media only screen and (max-width: 50em) {
+      padding: 1rem;
+    }
+  }
+
+  &__profile-img {
+    display: block;
+    width: 2.8rem;
+    height: 2.8rem;
+    border-radius: 50%;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+  }
+
+  &__badge {
+    position: absolute;
+    top: -0.25rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: var(--font-color);
+    font-size: 0.8rem;
+    font-weight: 500;
   }
 
   &__auth,
-  &__profile {
+  &__dropdown--profile {
     @media only screen and (max-width: 50em) {
       position: fixed;
       top: 0.2rem;

@@ -1,28 +1,104 @@
+<script setup lang="ts">
+import * as yup from "yup";
+import { useToast } from "vue-toastification";
+import { TYPE } from "vue-toastification";
+
+const toast = useToast();
+
+const client = useSupabaseClient();
+const router = useRouter();
+
+const loginSchema = yup.object({
+  email: yup
+    .string()
+    .required("Adres email jest wymagany")
+    .email("Adres email musi być prawidłowy"),
+  password: yup.string().required("Hasło jest wymagane"),
+});
+
+let isLoading = ref<boolean>(false);
+
+// Login user
+const handleLogin = async (values): Promise<void> => {
+  isLoading.value = true;
+  const { email, password } = values;
+  try {
+    const { error } = await client.auth.signIn({
+      email,
+      password,
+    });
+
+    if (error) {
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
+      throw error;
+    }
+
+    toast("Pomyślnie zalogowano!");
+    router.push("/");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const providerLogin = async (provider: "google" | "facebook") => {
+  try {
+    const { error } = await client.auth.signIn({ provider });
+
+    if (error) {
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
+      throw error;
+    }
+
+    router.push("/");
+  } catch (error) {
+    console.error(error.message);
+  }
+};
+
+let passVisible = ref<boolean>(false);
+</script>
+
 <template>
   <div>
     <h1 class="auth__header">Zaloguj się</h1>
-    <form action="" class="auth__form">
+    <VForm @submit="handleLogin" :validation-schema="loginSchema" class="auth__form">
       <div class="auth__form-group">
-        <input type="email" class="auth__form-input" placeholder=" " required />
+        <VField name="email" type="email" class="auth__form-input" placeholder=" " />
         <span class="material-icons-outlined md-18 icon">email</span>
         <label for="login" class="auth__form-label">Email</label>
+        <VErrorMessage name="email" class="error" />
       </div>
       <div class="auth__form-group">
-        <input
-          type="password"
+        <VField
+          name="password"
+          :type="passVisible ? 'text' : 'password'"
           class="auth__form-input"
           placeholder=" "
-          required
         />
         <span class="material-icons-outlined md-18 icon">lock</span>
+        <span
+          @click="passVisible = !passVisible"
+          class="material-icons-outlined md-18 icon icon--visibility"
+          >{{ passVisible ? "visibility" : "visibility_off" }}</span
+        >
         <label for="login" class="auth__form-label">Hasło</label>
+        <VErrorMessage name="password" class="error" />
       </div>
-      <p class="auth__forgot">Zapomniałeś hasła?</p>
-      <button class="auth__form-btn">Zaloguj się</button>
-    </form>
+      <p class="auth__forgot">
+        <NuxtLink to="/auth/forgot">Zapomniałeś hasła?</NuxtLink>
+      </p>
+      <button :disabled="isLoading" class="auth__form-btn">Zaloguj się</button>
+    </VForm>
     <p class="auth__providers-text">Lub zaloguj się za pomocą</p>
     <div class="auth__providers">
       <svg
+        @click.prevent="providerLogin('google')"
         class="auth__providers-google"
         xmlns="http://www.w3.org/2000/svg"
         x="0px"
@@ -37,6 +113,7 @@
         ></path>
       </svg>
       <svg
+        @click.prevent="providerLogin('facebook')"
         class="auth__providers-facebook"
         xmlns="http://www.w3.org/2000/svg"
         data-name="Layer 1"
