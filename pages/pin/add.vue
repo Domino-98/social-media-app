@@ -1,32 +1,17 @@
 <script setup lang="ts">
-let file = ref();
-let fileupload = ref();
+import { useToast } from "vue-toastification";
+import { TYPE } from "vue-toastification";
+import { User } from "~~/models/user";
 
-const uploadFile = (e) => {
-  if (e.target.files[0]) {
-    file.value = e.target.files[0];
-    console.log(file.value);
-    file.value.fileUrl = URL.createObjectURL(file.value);
-    console.log(file.value);
-  }
-};
+const toast = useToast();
+const user = useSupabaseUser();
+const client = useSupabaseClient();
 
-const dragFile = (e) => {
-  if (e.dataTransfer.files[0]) {
-    file.value = e.dataTransfer.files[0];
-    console.log(file.value);
-    file.value.fileUrl = URL.createObjectURL(file.value);
-  }
-};
-
-const deleteFile = () => {
-  console.log(fileupload.value.value);
-  file.value = null;
-  fileupload.value.value = "";
-};
+let imgFile = ref<File>();
 
 definePageMeta({
   layout: "navigation",
+  middleware: "auth",
 });
 </script>
 
@@ -34,28 +19,8 @@ definePageMeta({
   <main>
     <div class="add">
       <form class="add__form">
-        <div class="add__form-photo">
-          <div v-if="file" class="add__form-photo-img">
-            <img :src="file.fileUrl" />
-            <button @click.prevent="deleteFile" class="add__form-photo-delete">
-              <span class="material-icons md-24">delete</span>
-            </button>
-          </div>
-          <div v-else @drop="dragFile" class="add__form-photo-upload">
-            <span class="material-icons-outlined md-30">cloud_upload</span>
-            <p class="add__form-photo-text">
-              Przeciągnij i upuść lub kliknij, aby przesłać
-            </p>
-            <p class="add__form-photo-text add__form-photo-text--mobile">
-              Prześlij zdjęcie / gif
-            </p>
-            <p class="add__form-photo-info">
-              Zalecenie: Użyj wysokiej jakości obrazów o rozmiarze mniejszym niż
-              20MB
-            </p>
-          </div>
-          <input ref="fileupload" type="file" @change="uploadFile" />
-        </div>
+        <PinUpload @update-file="(file) => (imgFile = file)" />
+
         <div class="add__form-info">
           <div class="add__form-group">
             <input
@@ -67,7 +32,7 @@ definePageMeta({
           <div class="add__form-profile">
             <img
               class="add__form-profile-img"
-              src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
+              :src="user?.user_metadata.avatar_to_display"
               alt=""
             />
             <span class="add__form-profile-name">John</span>
@@ -129,7 +94,7 @@ main {
 .add {
   display: flex;
   width: 100%;
-  max-width: 55rem;
+  max-width: 60rem;
   margin-top: 0.5rem;
   padding: 2rem;
   border-radius: 1rem;
@@ -143,113 +108,11 @@ main {
 
   &__form {
     display: flex;
+    gap: 1.5rem;
     width: 100%;
 
     @media only screen and (max-width: 62.5em) {
       flex-direction: column;
-    }
-
-    &-photo {
-      position: relative;
-      flex: 2;
-      height: 100%;
-      margin-right: 2rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      background-color: rgba(var(--opacity-color), 0.075);
-
-      @media only screen and (max-width: 62.5em) {
-        margin-right: 0;
-      }
-
-      &-upload {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100%;
-        padding: 1rem;
-        border: 2px dashed rgba(var(--opacity-color), 0.2);
-        border-radius: 0.5rem;
-      }
-
-      &-delete {
-        z-index: 10;
-        position: absolute;
-        bottom: 0.5rem;
-        right: 0.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 2.5rem;
-        height: 2.5rem;
-        border-radius: 50%;
-        background-color: var(--bg-color-secondary);
-        color: #252525;
-        cursor: pointer;
-
-        &:hover span {
-          color: var(--primary-color);
-        }
-      }
-
-      &-img {
-        position: relative;
-        height: 100%;
-      }
-
-      &-text {
-        margin-top: 0.5rem;
-        color: var(--font-color);
-        text-align: center;
-        font-size: 0.9rem;
-
-        @media only screen and (max-width: 37.5em) {
-          display: none;
-        }
-
-        &--mobile {
-          display: none;
-
-          @media only screen and (max-width: 37.5em) {
-            display: block;
-          }
-        }
-      }
-
-      &-info {
-        position: absolute;
-        bottom: 2rem;
-        padding: 0 2rem;
-        text-align: center;
-        font-size: 0.8rem;
-        color: rgba(var(--opacity-color), 0.5);
-
-        @media only screen and (max-width: 62.5em) {
-          position: static;
-          margin-top: 0.5rem;
-          padding: 0;
-        }
-      }
-
-      & input {
-        position: absolute;
-        opacity: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        left: 0;
-        width: 100%;
-        cursor: pointer;
-
-        &::-webkit-file-upload-button {
-          cursor: pointer;
-        }
-      }
-
-      & img {
-        border-radius: 0.5rem;
-      }
     }
 
     &-info {
@@ -288,7 +151,7 @@ main {
       &:nth-child(5) {
         position: relative;
         align-self: flex-start;
-        max-width: 15rem;
+        max-width: 20rem;
         width: 100%;
 
         & span {
