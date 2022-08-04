@@ -1,1 +1,114 @@
-@import 'variables';
+body {
+  transition: 0.2s ease-in-out;
+  background-color: var(--bg-color-primary);
+  font-family: "Roboto", sans-serif;
+}
+
+html {
+  @media only screen and (max-width: 62.5em) {
+    font-size: 92.5%;
+  }
+
+  @media only screen and (max-width: 37.5em) {
+    font-size: 85%;
+  }
+}
+
+.material-icons,
+.material-icons-outlined {
+  transition: all 0.2s;
+  color: var(--icon-color);
+  user-select: none;
+
+  &.md-14 {
+    font-size: 14px;
+  }
+
+  &.md-18 {
+    font-size: 18px;
+  }
+  &.md-24 {
+    font-size: 24px;
+  }
+  &.md-30 {
+    font-size: 30px;
+  }
+  &.md-36 {
+    font-size: 36px;
+  }
+  &.md-42 {
+    font-size: 42px;
+  }
+}
+
+.Vue-Toastification__toast.custom-toast-style {
+  min-height: 2rem;
+  padding: 1rem 1.5rem;
+}
+
+.Vue-Toastification__toast--default.custom-toast-style {
+  background-color: rgb(61, 203, 61);
+}
+
+.Vue-Toastification__toast-body.custom-toast-style {
+  font-size: 1.1rem;
+}
+
+* > .tippy-box[data-theme~="custom"] {
+  background-color: rgba(var(--opacity-color), 0.8);
+  color: var(--bg-color-primary);
+}
+
+.tippy-box[data-theme~="custom"][data-placement^="bottom"]
+  > .tippy-arrow::before {
+  border-bottom-color: rgba(var(--opacity-color), 0.8);
+}
+
+.loading-spinner {
+  display: inline-block;
+  width: 50px;
+  height: 50px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+  -webkit-animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+@-webkit-keyframes spin {
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+.btn-gray {
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  background-color: var(--btn-bg);
+  color: var(--btn-color);
+  cursor: pointer;
+
+  &:hover {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
+  }
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s;
+}
+.page-enter,
+.page-leave-to {
+  opacity: 0;
+}
