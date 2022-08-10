@@ -1,24 +1,116 @@
 <script setup lang="ts">
-interface Image {
-  image: {
-    id: string;
-    urls: {
-      regular: string;
-    };
-  };
-}
+import { Pin } from "~~/models/pin";
+import { Comment } from "~~/models/comment";
+import { useToast } from "vue-toastification";
+import { TYPE } from "vue-toastification";
 
-const props = defineProps<Image>();
+const props = defineProps<{
+  pin: Pin;
+}>();
 
-let infoEl = ref();
-let imgEl = ref();
+const client = useSupabaseClient();
+const user = useSupabaseUser();
+const { addToSaved, removeFromSaved, isPinSaved } = usePins();
+const toast = useToast();
+
+let infoEl = ref<HTMLDivElement>();
+let imgEl = ref<HTMLImageElement>();
 let imgHeight = ref<number>();
 
-function setHeight() {
-  imgHeight.value = imgEl.value?.clientHeight;
-}
+const setImgHeight = () => {
+  setTimeout(() => {
+    imgHeight.value = imgEl.value?.clientHeight;
+  }, 100);
+};
 
+let comment = ref<Comment>();
+let comments = ref<Comment[]>([]);
 let showComments = ref<boolean>(true);
+let isLoading = ref<boolean>();
+
+const getComments = async () => {
+  isLoading.value = true;
+  try {
+    const { data, error } = await client
+      .from<Comment>("comments")
+      .select(
+        `
+    *,
+    author:profiles (
+      profile_id,
+      avatar_url,
+      username,
+      full_name
+    )
+  `
+      )
+      .match({ pin_id: props.pin.id });
+
+    console.log(data);
+    comments.value = data;
+    console.log(client.auth.user());
+  } catch (error) {
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const addComment = async () => {
+  if (comment.value) {
+    const { data, error } = await client.from("comments").insert({
+      message: comment.value,
+      pin_id: props.pin.id,
+      user_id: client.auth.user().id,
+    });
+
+    if (error) throw error;
+
+    console.log(data);
+    comments.value.push({
+      ...data[0],
+      author: {
+        user_id: client.auth.user().id,
+        avatar_url: client.auth.user().user_metadata.avatar_to_display,
+        username:
+          client.auth.user().user_metadata.username ||
+          client.auth.user().user_metadata.full_name,
+      },
+    });
+    comment.value = null;
+  }
+};
+
+let isSaved = ref<boolean>(
+  user.value ? await isPinSaved(props.pin.id, user.value.id) : false
+);
+
+const addPinToSaved = async () => {
+  if (user.value) {
+    try {
+      await addToSaved(props.pin.id, user.value.id);
+      toast("Dodano Pina do zapisanych");
+      isSaved.value = true;
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    toast("Zaloguj się, by dodać Pina do zapisanych", { type: TYPE.ERROR });
+  }
+};
+
+const removePinFromSaved = async () => {
+  try {
+    await removeFromSaved(props.pin.id, user.value.id);
+    toast("Usunięto Pina z zapisanych");
+    isSaved.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+onMounted(() => {
+  getComments();
+});
 
 definePageMeta({
   layout: "navigation",
@@ -28,12 +120,13 @@ definePageMeta({
 <template>
   <div class="pin">
     <img
+      id="img1"
       ref="imgEl"
       class="pin__img"
       :class="{ rounded: infoEl?.clientHeight > imgHeight }"
-      :src="image.urls.regular"
+      :src="pin.pin_url"
       alt=""
-      @load="setHeight()"
+      @load="setImgHeight()"
     />
     <div class="pin__info" ref="infoEl">
       <div class="pin__btns">
@@ -44,71 +137,58 @@ definePageMeta({
           <span>5</span>
         </div>
 
-        <button class="pin__save">Zapisz</button>
+        <button v-if="!isSaved" @click="addPinToSaved" class="pin__save">Zapisz</button>
+        <button v-else @click="removePinFromSaved" class="pin__save">Zapisano</button>
       </div>
-      <a href="#" class="pin__link">link.com</a>
-      <h1 class="pin__title">Pin Title</h1>
+      <a href="#" class="pin__link">{{ pin.destination_url }}</a>
+      <h1 class="pin__title">{{ pin.title }}</h1>
       <p class="pin__description">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Totam, dolorem?
+        {{ pin.description }}
       </p>
-      <NuxtLink to="/profile/john" class="pin__profile">
-        <img
-          class="pin__profile-avatar"
-          src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
-          alt=""
-        />
-        <span class="pin__profile-name">John</span>
+      <NuxtLink :to="`/profile/${props.pin.author.profile_id}`" class="pin__profile">
+        <img class="pin__profile-avatar" :src="pin.author.avatar_url" alt="" />
+        <span class="pin__profile-name">{{
+          pin.author?.username || pin.author?.full_name
+        }}</span>
         <div class="pin__profile-follow">Obserwuj</div>
       </NuxtLink>
       <div class="pin__comments">
-        <h2 class="pin__comments-header">2 Komentarze</h2>
+        <h2 class="pin__comments-header">
+          {{ comments.length }}{{ comments.length === 1 ? " komentarz" : " komentarzy" }}
+        </h2>
         <span
-          v-if="showComments"
-          @click="showComments = !showComments"
+          v-if="comments.length"
+          @click="(showComments = !showComments), setImgHeight()"
           class="material-icons-outlined md-30"
         >
-          expand_more
+          {{ showComments ? "expand_less" : "expand_more" }}
         </span>
-        <span
-          v-else
-          @click="showComments = !showComments"
-          class="material-icons-outlined md-30"
-        >
-          expand_less
-        </span>
-        <div v-if="showComments" class="pin__comments-list">
-          <div class="pin__comments-item">
-            <img
-              class="pin__comments-avatar"
-              src="https://www.coolgenerator.com/Pic/Face//female/female1023241532165.jpg"
-              alt=""
-            />
+        <div v-if="showComments && comments.length" class="pin__comments-list">
+          <div v-for="comment in comments" :key="comment.id" class="pin__comments-item">
+            <img class="pin__comments-avatar" :src="comment.author.avatar_url" alt="" />
             <div class="pin__comments-info">
-              <span class="pin__comments-name">Olivia</span>
-              <p class="pin__comments-text">Great!</p>
+              <span class="pin__comments-name">{{
+                comment.author.username || comment.author.full_name
+              }}</span>
+              <p class="pin__comments-text">{{ comment.message }}</p>
             </div>
           </div>
-          <div class="pin__comments-item">
-            <img
-              class="pin__comments-avatar"
-              src="https://www.coolgenerator.com/Pic/Face//male/male1084956637451.jpg"
-              alt=""
-            />
-            <div class="pin__comments-info">
-              <span class="pin__comments-name">Robert</span>
-              <p class="pin__comments-text">Nice photo!</p>
-            </div>
-          </div>
-          <div class="pin__comments-item"></div>
         </div>
         <div class="pin__comments-add">
           <img
             class="pin__comments-avatar pin__comments-avatar"
-            src="https://www.coolgenerator.com/Pic/Face//male/male2016108666040345.jpg"
+            :src="pin.author.avatar_url"
             alt=""
           />
-          <input class="pin__comments-input" placeholder="Dodaj komentarz" />
-          <span class="material-icons-outlined pin__comments-btn">send</span>
+          <input
+            @keyup.enter="addComment"
+            v-model="comment"
+            class="pin__comments-input"
+            placeholder="Dodaj komentarz"
+          />
+          <button @click="addComment" class="pin__comments-btn" :disabled="!comment">
+            <span class="material-icons-outlined">send</span>
+          </button>
         </div>
       </div>
     </div>
@@ -189,10 +269,6 @@ definePageMeta({
     }
   }
 
-  &__like {
-    color: var(--primary-color);
-  }
-
   &__link {
     margin-top: 0.5rem;
     font-size: 0.9rem;
@@ -266,10 +342,6 @@ definePageMeta({
       }
     }
 
-    &-list {
-      margin-bottom: 1rem;
-    }
-
     &-item {
       display: flex;
       gap: 0.5rem;
@@ -300,6 +372,8 @@ definePageMeta({
       display: flex;
       align-items: center;
       gap: 1rem;
+
+      margin-top: 1rem;
     }
 
     &-input {
@@ -311,13 +385,18 @@ definePageMeta({
       font-size: 0.9rem;
     }
 
-    &-btn {
+    &-btn span {
       transition: all 0.3s;
       cursor: pointer;
+    }
 
-      &:hover {
-        color: var(--primary-color);
-      }
+    &-btn:hover span {
+      color: var(--primary-color);
+    }
+
+    &-btn:disabled span {
+      color: #a3a3a3;
+      cursor: not-allowed;
     }
   }
 
@@ -326,7 +405,7 @@ definePageMeta({
     padding: 0.5rem 1rem;
     border-radius: 2rem;
     background-color: var(--primary-color);
-    color: #eee;
+    color: #fff;
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
@@ -339,7 +418,7 @@ definePageMeta({
 
 .rounded {
   max-width: calc(50% - 1rem);
-  margin: 1rem;
+  margin: 1rem 0 1rem 1rem;
   border-radius: 1rem;
 
   @media only screen and (max-width: 37.5em) {

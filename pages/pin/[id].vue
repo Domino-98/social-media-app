@@ -1,38 +1,45 @@
 <script setup lang="ts">
-const config = useRuntimeConfig();
+import { Pin } from "~~/models/pin";
+
+const client = useSupabaseClient();
 const route = useRoute();
+const pinId = route.params.id;
+
+const pin = ref<Pin>();
+let isLoading = ref<boolean>();
+
+const getPin = async () => {
+  isLoading.value = true;
+  try {
+    const { data, error } = await client
+      .from<Pin>("pins")
+      .select(
+        `
+    *,
+    author:profiles (
+      profile_id,
+      avatar_url,
+      username,
+      full_name
+    )
+  `
+      )
+      .match({ id: pinId })
+      .single();
+
+    if (error) throw error;
+
+    pin.value = data;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 onMounted(() => {
+  getPin();
   window.scrollTo(0, 0);
-});
-
-const id = route.params.id;
-const image = ref();
-
-const URL = `https://api.unsplash.com/photos/${id}?client_id=${config.UNSPLASH_API_KEY}`;
-
-async function getImage() {
-  const data = await fetch(URL);
-  const json = await data.json();
-  image.value = json;
-}
-
-getImage();
-
-// Fetch images
-const { data: images } = useAsyncData("similarImages", async () => {
-  let response: any;
-  try {
-    response = $fetch(`https://api.unsplash.com/photos/random`, {
-      params: {
-        count: 20,
-        client_id: config.UNSPLASH_API_KEY,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-  }
-  return response;
 });
 
 definePageMeta({
@@ -42,12 +49,12 @@ definePageMeta({
 
 <template>
   <main>
-    <PinDetails v-if="image" :image="image" />
+    <PinDetails v-if="pin" :pin="pin" />
 
     <div class="pins">
       <h2 class="pins__header">Więcej podobnych</h2>
       <div class="pins__container">
-        <PinCard v-for="image in images" :key="image.id" :image="image" />
+        <!-- <PinCard v-for="image in images" :key="image.id" :image="image" /> -->
       </div>
     </div>
   </main>
