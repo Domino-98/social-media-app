@@ -20,7 +20,7 @@ const toggleMode = (): void => {
 
 const profileId = ref<number>();
 
-const getUserId = async () => {
+const getProfileId = async () => {
   const {
     data: { profile_id },
     error,
@@ -59,13 +59,18 @@ const handleLogout = async (): Promise<void> => {
 onMounted(() => {
   colorMode.value === "dark" ? (darkMode.value = false) : (darkMode.value = true);
   if (user.value) {
-    getUserId();
+    getProfileId();
   }
 });
 
 watch(colorMode, (color) => {
   color.preference === "dark" ? (darkMode.value = false) : (darkMode.value = true);
 });
+
+watch(
+  () => user?.value?.id,
+  () => getProfileId()
+);
 </script>
 
 <template>
@@ -80,7 +85,11 @@ watch(colorMode, (color) => {
     </label>
 
     <div class="navbar__buttons">
-      <div ref="notificationsEl" class="navbar__dropdown navbar__dropdown--notifications">
+      <div
+        v-if="user"
+        ref="notificationsEl"
+        class="navbar__dropdown navbar__dropdown--notifications"
+      >
         <tippy content="Powiadomienia">
           <button @click="toggleNotifications" class="navbar__toggle">
             <span class="material-icons md-30 icon">notifications</span>
