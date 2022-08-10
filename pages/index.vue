@@ -1,23 +1,14 @@
 <script setup lang="ts">
 import { onBeforeRouteLeave } from "vue-router";
+import { Pin } from "~~/models/pin";
 
 const config = useRuntimeConfig();
 const route = useRoute();
+const client = useSupabaseClient();
 
-const { data: images } = useAsyncData("images", async () => {
-  let response: any;
-  try {
-    response = $fetch(`https://api.unsplash.com/photos/random`, {
-      params: {
-        count: 20,
-        client_id: config.UNSPLASH_API_KEY,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-  }
-  return response;
-});
+const isLoading = ref<boolean>();
+
+const { fetchAllPins, pins, pinsLoading } = usePins();
 
 // let showModal = ref();
 
@@ -39,6 +30,11 @@ const { data: images } = useAsyncData("images", async () => {
 //     next();
 //   }
 // });
+
+onMounted(() => {
+  fetchAllPins();
+});
+
 definePageMeta({
   layout: "navigation",
 });
@@ -51,7 +47,7 @@ definePageMeta({
       <button @click="hidePinModal">Hide pin modal</button>
     </div> -->
 
-    <PinCard v-for="image in images" :key="image.id" :image="image" />
+    <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
   </div>
 </template>
 
