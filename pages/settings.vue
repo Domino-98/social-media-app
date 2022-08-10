@@ -10,7 +10,9 @@ const firstName = ref<string>("");
 const lastName = ref<string>("");
 const fullName = computed((): string => firstName.value + " " + lastName.value);
 
-const userInfo = reactive<User>({
+type UserToUpdate = Partial<User>;
+
+const userInfo = reactive<UserToUpdate>({
   avatar_url: "",
   full_name: fullName.value,
   username: "",
@@ -19,8 +21,8 @@ const userInfo = reactive<User>({
   background_url: "",
 });
 
-const validWebsite = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
-const regex = new RegExp(validWebsite);
+const validUrl = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+const regex = new RegExp(validUrl);
 
 const getUserInfo = async () => {
   const { data: profile, error } = await client
