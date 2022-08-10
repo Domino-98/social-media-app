@@ -1,13 +1,72 @@
 <script setup lang="ts">
+import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
-import { User } from "~~/models/user";
+import { Pin } from "~~/models/pin";
+
+const validUrl = /^((http|https):\/\/)?(www.)?(?!.*(http|https|www.))[a-zA-Z0-9_-]+(\.[a-zA-Z]+)+(\/)?.([\w\?[a-zA-Z-_%\/@?]+)*([^\/\w\?[a-zA-Z0-9_-]+=\w+(&[a-zA-Z0-9_]+=\w+)*)?$/;
+
+const pinSchema = yup.object({
+  title: yup.string().required("Tytuł jest wymagany"),
+  destination_url: yup.lazy((value) =>
+    !value ? yup.string() : yup.string().matches(validUrl, "Adres URL jest nieprawidłowy")
+  ),
+  category: yup.string().required("Wybierz kategorię"),
+});
 
 const toast = useToast();
 const user = useSupabaseUser();
 const client = useSupabaseClient();
 
 let imgFile = ref<File>();
+
+let isLoading = ref<boolean>();
+
+const handlePinSubmit = async (values) => {
+  const { title, description, destination_url, category } = values;
+  isLoading.value = true;
+  try {
+    if (imgFile.value) {
+      const { error: uploadError } = await client.storage
+        .from("pins")
+        .upload(`${client.auth.user().id}/${imgFile.value.name}`, imgFile.value);
+
+      if (uploadError) throw new Error("Wystąpił błąd podczas przesyłania pliku");
+
+      const { publicURL, error } = client.storage
+        .from("pins")
+        .getPublicUrl(`${client.auth.user().id}/${imgFile.value.name}`);
+
+      if (error) throw new Error("Wystąpił błąd podczas pobierania adresu URL");
+
+      console.log(publicURL);
+
+      const { error: insertError } = await client.from("pins").insert({
+        title: title,
+        description: description,
+        pin_url: publicURL,
+        destination_url: destination_url,
+        category: category,
+        user_id: client.auth.user().id,
+      });
+
+      if (insertError) throw new Error("Wystąpił błąd podczas dodawania obrazu");
+
+      toast("Pomyślnie dodano pina!");
+      return navigateTo("/");
+    } else {
+      toast("Do utworzenia Pina wymagany jest obraz", {
+        type: TYPE.ERROR,
+      });
+    }
+  } catch (error) {
+    toast(error.message, {
+      type: TYPE.ERROR,
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
 
 definePageMeta({
   layout: "navigation",
@@ -18,16 +77,26 @@ definePageMeta({
 <template>
   <main>
     <div class="add">
-      <form class="add__form">
+      <VForm @submit="handlePinSubmit" :validation-schema="pinSchema" class="add__form">
         <PinUpload @update-file="(file) => (imgFile = file)" />
 
         <div class="add__form-info">
           <div class="add__form-group">
-            <input
-              class="add__form-input add__form-input--big"
-              type="text"
-              placeholder="Dodaj tytuł"
-            />
+            <VField
+              v-slot="{ field, errors }"
+              label="tytuł"
+              name="title"
+              :validateOnBlur="false"
+            >
+              <input
+                v-bind="field"
+                class="add__form-input add__form-input--big"
+                type="text"
+                placeholder="Dodaj tytuł"
+                :class="{ invalid: errors[0] }"
+              />
+              <span class="error">{{ errors[0] }}</span>
+            </VField>
           </div>
           <div class="add__form-profile">
             <img
@@ -38,40 +107,55 @@ definePageMeta({
             <span class="add__form-profile-name">John</span>
           </div>
           <div class="add__form-group">
-            <input
+            <VField
+              name="description"
               class="add__form-input"
               type="text"
               placeholder="O czym jest twój pin?"
             />
           </div>
           <div class="add__form-group">
-            <input
-              class="add__form-input"
-              type="text"
-              placeholder="Dodaj link docelowy"
-            />
+            <VField v-slot="{ field, errors }" name="destination_url">
+              <input
+                v-bind="field"
+                class="add__form-input"
+                type="text"
+                placeholder="Dodaj link docelowy"
+                :class="{ invalid: errors[0] }"
+              />
+            </VField>
+            <VErrorMessage name="destination_url" class="error" />
           </div>
           <div class="add__form-group">
             <label for="" class="add__form-label">Wybierz kategorię pina</label>
-            <select class="add__form-select" name="" id="">
+            <VField
+              name="category"
+              as="select"
+              :validateOnBlur="false"
+              class="add__form-select"
+            >
               <option value="" selected disabled>Wybierz kategorię</option>
-              <option value="Samochody">Samochody</option>
-              <option value="Fitness">Fitness</option>
-              <option value="Tapety">Tapety</option>
-              <option value="Jedzenie">Jedzenie</option>
-              <option value="Natura">Natura</option>
-              <option value="Sztuka">Sztuka</option>
-              <option value="Web designs">Web designs</option>
-              <option value="Podróże">Podróże</option>
-              <option value="Cytaty">Cytaty</option>
-              <option value="Koty">Koty</option>
-              <option value="Psy">Psy</option>
-            </select>
+              <option value="cars">Samochody</option>
+              <option value="fitness">Fitness</option>
+              <option value="wallpapers">Tapety</option>
+              <option value="food">Jedzenie</option>
+              <option value="nature">Natura</option>
+              <option value="art">Sztuka</option>
+              <option value="web-designs">Web designs</option>
+              <option value="travels">Podróże</option>
+              <option value="quotes">Cytaty</option>
+              <option value="cats">Koty</option>
+              <option value="dogs">Psy</option>
+            </VField>
             <span class="material-icons-outlined">expand_more</span>
           </div>
-          <button class="add__form-save">Zapisz Pina</button>
+          <VErrorMessage name="category" class="error" />
+          <button :disabled="isLoading" class="add__form-save">
+            <span v-show="isLoading" class="loading-spinner"></span>
+            <span>{{ isLoading ? "Zapisywanie Pina" : "Zapisz Pina" }}</span>
+          </button>
         </div>
-      </form>
+      </VForm>
     </div>
   </main>
 </template>
@@ -208,6 +292,9 @@ main {
 
     &-save {
       align-self: end;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       margin-top: 1rem;
       padding: 0.75rem;
       border-radius: 2rem;
@@ -222,5 +309,20 @@ main {
       }
     }
   }
+}
+
+.invalid {
+  border-bottom: 2px solid #ff5151 !important;
+}
+
+.loading-spinner {
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(50%);
 }
 </style>
