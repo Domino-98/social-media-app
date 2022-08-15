@@ -7,4 +7,5 @@ export type User = {
   website?: string;
   background_url?: string;
   email: string;
+  profile_id: number;
 };

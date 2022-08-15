@@ -7,6 +7,7 @@ const user = useSupabaseUser();
 const client = useSupabaseClient();
 const router = useRouter();
 
+let userProfile = useUser();
 let colorMode = useColorMode();
 let darkMode = ref<boolean>(false);
 
@@ -18,19 +19,14 @@ const toggleMode = (): void => {
   }
 };
 
-const profileId = ref<number>();
-
-const getProfileId = async () => {
-  const {
-    data: { profile_id },
-    error,
-  } = await client
+const setUserProfile = async () => {
+  const { data: profile, error } = await client
     .from("profiles")
-    .select("profile_id")
+    .select()
     .match({ id: user.value.id })
     .single();
 
-  profileId.value = profile_id;
+  userProfile.value = profile;
 };
 
 let notificationsVisible = ref<boolean>(false);
@@ -59,7 +55,7 @@ const handleLogout = async (): Promise<void> => {
 onMounted(() => {
   colorMode.value === "dark" ? (darkMode.value = false) : (darkMode.value = true);
   if (user.value) {
-    getProfileId();
+    setUserProfile();
   }
 });
 
@@ -69,14 +65,16 @@ watch(colorMode, (color) => {
 
 watch(
   () => user?.value?.id,
-  () => getProfileId()
+  () => {
+    if (user.value) setUserProfile();
+  }
 );
 </script>
 
 <template>
   <nav class="navbar">
     <form class="navbar__search">
-      <span class="material-icons md-24">search</span>
+      <!-- <font-awesome-icon icon="fa-solid fa-magnifying-glass" size="lg" /> -->
       <input type="text" class="navbar__search-input" placeholder="Szukaj" />
     </form>
     <label id="switch" class="switch">
@@ -90,11 +88,14 @@ watch(
         ref="notificationsEl"
         class="navbar__dropdown navbar__dropdown--notifications"
       >
-        <tippy content="Powiadomienia">
-          <button @click="toggleNotifications" class="navbar__toggle">
-            <span class="material-icons md-30 icon">notifications</span>
-          </button>
-        </tippy>
+        <button
+          @click="toggleNotifications"
+          class="navbar__toggle"
+          content="Powiadomienia"
+          v-tippy
+        >
+          <!-- <font-awesome-icon icon="fa-solid fa-bell" size="xl" /> -->
+        </button>
 
         <!-- <span class="navbar__badge">3</span> -->
         <Transition name="scale">
@@ -109,17 +110,26 @@ watch(
         </Transition>
       </div>
 
-      <tippy content="Dodaj pina">
-        <NuxtLink ref="addPinEl" to="/pin/add" class="navbar__add">
-          <span class="material-icons md-30 icon">add</span>
-        </NuxtLink>
-      </tippy>
+      <NuxtLink
+        ref="addPinEl"
+        to="/pin/add"
+        class="navbar__add"
+        content="Dodaj Pina"
+        v-tippy
+      >
+        <!-- <font-awesome-icon icon="fa-solid fa-plus" size="xl" /> -->
+      </NuxtLink>
 
-      <tippy v-if="!user" content="Logowanie / Rejestracja">
-        <NuxtLink ref="authEl" to="/auth" class="navbar__auth">
-          <span class="material-icons md-30 icon">person</span>
-        </NuxtLink>
-      </tippy>
+      <NuxtLink
+        v-if="!user"
+        ref="authEl"
+        to="/auth"
+        class="navbar__auth"
+        content="Logowanie / Rejestracja"
+        v-tippy
+      >
+        <!-- <font-awesome-icon icon="fa-solid fa-user" size="xl" /> -->
+      </NuxtLink>
 
       <!-- If logged in -->
       <div
@@ -140,15 +150,33 @@ watch(
             v-if="profileVisible"
             class="navbar__dropdown-menu"
           >
-            <NuxtLink :to="`/profile/${profileId}`" class="navbar__dropdown-item">
-              <span class="material-icons-outlined">account_circle</span>Przejdź do
-              profilu
+            <NuxtLink
+              :to="`/profile/${userProfile.profile_id}`"
+              class="navbar__dropdown-item"
+            >
+              <!-- <font-awesome-icon
+                icon="fa-solid fa-circle-user"
+                size="xl"
+                fixed-width
+              /> -->
+              Przejdź do profilu
             </NuxtLink>
-            <NuxtLink to="/settings" class="navbar__dropdown-item"
-              ><span class="material-icons-outlined">manage_accounts</span>Edytuj profil
+            <NuxtLink to="/settings" class="navbar__dropdown-item">
+              <!-- <font-awesome-icon
+                icon="fa-solid fa-user-gear"
+                size="xl"
+                fixed-width
+              /> -->
+              Edytuj profil
             </NuxtLink>
             <button @click.prevent="handleLogout" class="navbar__dropdown-item">
-              <span class="material-icons-outlined">logout</span>Wyloguj się
+              <!-- <font-awesome-icon
+                icon="fa-solid fa-right-from-bracket"
+                size="xl"
+                fixed-width
+              />
+               -->
+              Wyloguj się
             </button>
           </div>
         </Transition>
@@ -185,9 +213,10 @@ watch(
     align-items: center;
     margin-right: 2rem;
 
-    & .material-icons {
+    & svg {
       position: absolute;
-      left: 0.5rem;
+      left: 0.75rem;
+      color: var(--icon-color);
       pointer-events: none;
     }
 
@@ -196,7 +225,7 @@ watch(
       width: 100%;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
       padding: 0.6rem;
-      padding-left: 2.5rem;
+      padding-left: 2.4rem;
       border-radius: 1rem;
       background-color: var(--bg-color-secondary);
       font-size: 1rem;
@@ -282,7 +311,7 @@ watch(
     background-color: var(--heading-color);
     cursor: pointer;
 
-    & span {
+    & svg {
       color: var(--bg-color-secondary);
 
       @media only screen and (max-width: 37.5em) {
