@@ -47,18 +47,18 @@ const toggleOptions = () => {
   optionsExpanded.value = !optionsExpanded.value;
 };
 
-// let modalOpened = ref<boolean>(false);
-// let homeURL = window.location.origin;
-// let copyInput = ref<HTMLInputElement>();
-// let copied = ref<boolean>(false);
+let modalOpened = ref<boolean>(false);
+let homeURL = window.location.origin;
+let copyInput = ref<HTMLInputElement>();
+let copied = ref<boolean>(false);
 
-// const copyURL = () => {
-//   copyInput.value.select();
-//   copyInput.value.setSelectionRange(0, 99999);
-//   navigator.clipboard.writeText(copyInput.value.value);
-//   copied.value = true;
-//   setTimeout(() => (copied.value = false), 2000);
-// };
+const copyURL = () => {
+  copyInput.value.select();
+  copyInput.value.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(copyInput.value.value);
+  copied.value = true;
+  setTimeout(() => (copied.value = false), 2000);
+};
 </script>
 
 <template>
@@ -117,7 +117,7 @@ const toggleOptions = () => {
         <li @click="$download(pin.pin_url)" class="options__item">
           <font-awesome-icon icon="fa-solid fa-download" size="lg" />Pobierz
         </li>
-        <li @click="" class="options__item">
+        <li @click="modalOpened = !modalOpened" class="options__item">
           <font-awesome-icon icon="fa-solid fa-share-nodes" size="lg" />Udostępnij
         </li>
         <li v-if="isOwner" class="options__item">
@@ -133,7 +133,7 @@ const toggleOptions = () => {
       </p>
     </NuxtLink>
 
-    <!-- <Modal :open="modalOpened" @close="modalOpened = false">
+    <Modal :open="modalOpened" @close="modalOpened = false">
       <template v-slot:header> Udostępnij Pina </template>
       <template v-slot:body>
         <tippy
@@ -207,7 +207,7 @@ const toggleOptions = () => {
           </ShareNetwork>
         </div>
       </template>
-    </Modal> -->
+    </Modal>
   </div>
 </template>
 

@@ -107,18 +107,18 @@ const removePinFromSaved = async () => {
   }
 };
 
-// let modalOpened = ref<boolean>(false);
-// let homeURL = window.location.origin;
-// let copyInput = ref<HTMLInputElement>();
-// let copied = ref<boolean>(false);
+let modalOpened = ref<boolean>(false);
+let homeURL = window.location.origin;
+let copyInput = ref<HTMLInputElement>();
+let copied = ref<boolean>(false);
 
-// const copyURL = () => {
-//   copyInput.value.select();
-//   copyInput.value.setSelectionRange(0, 99999);
-//   navigator.clipboard.writeText(copyInput.value.value);
-//   copied.value = true;
-//   setTimeout(() => (copied.value = false), 2000);
-// };
+const copyURL = () => {
+  copyInput.value.select();
+  copyInput.value.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(copyInput.value.value);
+  copied.value = true;
+  setTimeout(() => (copied.value = false), 2000);
+};
 
 onMounted(() => {
   getComments();
@@ -151,7 +151,7 @@ definePageMeta({
         </tippy>
         <tippy placement="top" content="Udostępnij Pina">
           <font-awesome-icon
-            @click=""
+            @click="modalOpened = !modalOpened"
             icon="fa-solid fa-share-nodes"
             class="pin__share"
           />
@@ -219,7 +219,7 @@ definePageMeta({
       </div>
     </div>
 
-    <!-- <Modal :open="modalOpened" @close="modalOpened = false">
+    <Modal :open="modalOpened" @close="modalOpened = false">
       <template v-slot:header> Udostępnij Pina </template>
       <template v-slot:body>
         <tippy
@@ -293,7 +293,7 @@ definePageMeta({
           </ShareNetwork>
         </div>
       </template>
-    </Modal> -->
+    </Modal>
   </div>
 </template>
 
