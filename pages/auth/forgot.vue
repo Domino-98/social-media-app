@@ -47,13 +47,12 @@ const handleReset = async (values): Promise<void> => {
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <span class="material-icons-outlined md-42">camera</span>
+      <img class="logo-icon" src="~/assets/icons/camera.svg" alt="" />
       <h1 class="logo-text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
       <div>
         <h1 class="auth__header">Przypomnij hasło</h1>
-
         <VForm @submit="handleReset" class="auth__form">
           <div class="auth__form-group">
             <VField
@@ -64,7 +63,7 @@ const handleReset = async (values): Promise<void> => {
               class="auth__form-input"
               placeholder=" "
             />
-            <span class="material-icons-outlined md-18 icon">email</span>
+            <font-awesome-icon icon="fa-solid fa-envelope" class="icon" />
             <label for="email" class="auth__form-label">Adres email</label>
             <VErrorMessage name="email" class="error" />
           </div>

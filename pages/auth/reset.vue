@@ -54,13 +54,12 @@ let passConfirmVisible = ref<boolean>(false);
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <span class="material-icons-outlined md-42">camera</span>
+      <img class="logo-icon" src="~/assets/icons/camera.svg" alt="" />
       <h1 class="logo-text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
       <div>
         <h1 class="auth__header">Resetowanie hasła</h1>
-
         <VForm :validation-schema="passSchema" @submit="handleReset" class="auth__form">
           <div class="auth__form-group">
             <VField
@@ -70,12 +69,12 @@ let passConfirmVisible = ref<boolean>(false);
               class="auth__form-input"
               placeholder=" "
             />
-            <span class="material-icons-outlined md-18 icon">lock</span>
-            <span
+            <font-awesome-icon icon="fa-solid fa-lock" class="icon" />
+            <font-awesome-icon
               @click="passVisible = !passVisible"
-              class="material-icons-outlined md-18 icon icon--visibility"
-              >{{ passVisible ? "visibility" : "visibility_off" }}</span
-            >
+              :icon="`fa-solid fa-eye${!passVisible ? '-slash' : ''}`"
+              class="icon icon--visibility"
+            />
             <label for="password" class="auth__form-label">Hasło</label>
             <VErrorMessage name="password" class="error" />
           </div>
@@ -87,12 +86,12 @@ let passConfirmVisible = ref<boolean>(false);
               class="auth__form-input"
               placeholder=" "
             />
-            <span class="material-icons-outlined md-18 icon">lock</span>
-            <span
+            <font-awesome-icon icon="fa-solid fa-lock" class="icon" />
+            <font-awesome-icon
               @click="passConfirmVisible = !passConfirmVisible"
-              class="material-icons-outlined md-18 icon icon--visibility"
-              >{{ passConfirmVisible ? "visibility" : "visibility_off" }}</span
-            >
+              :icon="`fa-solid fa-eye${!passConfirmVisible ? '-slash' : ''}`"
+              class="icon icon--visibility"
+            />
             <label for="password2" class="auth__form-label">Powtórz hasło</label>
             <VErrorMessage name="passwordConfirmation" class="error" />
           </div>

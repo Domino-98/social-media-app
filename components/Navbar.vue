@@ -74,7 +74,7 @@ watch(
 <template>
   <nav class="navbar">
     <form class="navbar__search">
-      <!-- <font-awesome-icon icon="fa-solid fa-magnifying-glass" size="lg" /> -->
+      <font-awesome-icon icon="fa-solid fa-magnifying-glass" size="lg" />
       <input type="text" class="navbar__search-input" placeholder="Szukaj" />
     </form>
     <label id="switch" class="switch">
@@ -94,7 +94,7 @@ watch(
           content="Powiadomienia"
           v-tippy
         >
-          <!-- <font-awesome-icon icon="fa-solid fa-bell" size="xl" /> -->
+          <font-awesome-icon icon="fa-solid fa-bell" size="xl" />
         </button>
 
         <!-- <span class="navbar__badge">3</span> -->
@@ -117,7 +117,7 @@ watch(
         content="Dodaj Pina"
         v-tippy
       >
-        <!-- <font-awesome-icon icon="fa-solid fa-plus" size="xl" /> -->
+        <font-awesome-icon icon="fa-solid fa-plus" size="xl" />
       </NuxtLink>
 
       <NuxtLink
@@ -128,7 +128,7 @@ watch(
         content="Logowanie / Rejestracja"
         v-tippy
       >
-        <!-- <font-awesome-icon icon="fa-solid fa-user" size="xl" /> -->
+        <font-awesome-icon icon="fa-solid fa-user" size="xl" />
       </NuxtLink>
 
       <!-- If logged in -->
@@ -154,29 +154,25 @@ watch(
               :to="`/profile/${userProfile.profile_id}`"
               class="navbar__dropdown-item"
             >
-              <!-- <font-awesome-icon
+              <font-awesome-icon
                 icon="fa-solid fa-circle-user"
                 size="xl"
                 fixed-width
-              /> -->
-              Przejdź do profilu
+              />Przejdź do profilu
             </NuxtLink>
             <NuxtLink to="/settings" class="navbar__dropdown-item">
-              <!-- <font-awesome-icon
+              <font-awesome-icon
                 icon="fa-solid fa-user-gear"
                 size="xl"
                 fixed-width
-              /> -->
-              Edytuj profil
+              />Edytuj profil
             </NuxtLink>
             <button @click.prevent="handleLogout" class="navbar__dropdown-item">
-              <!-- <font-awesome-icon
+              <font-awesome-icon
                 icon="fa-solid fa-right-from-bracket"
                 size="xl"
                 fixed-width
-              />
-               -->
-              Wyloguj się
+              />Wyloguj się
             </button>
           </div>
         </Transition>

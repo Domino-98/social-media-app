@@ -122,12 +122,12 @@ const handleEditionMode = () => {
       <div v-if="imgUrl" class="upload-img">
         <img :src="imgUrl" />
         <button @click.prevent="deleteFile" class="upload-delete">
-          <span class="material-icons md-24">delete</span>
+          <font-awesome-icon icon="fa-solid fa-trash-can" />
         </button>
       </div>
 
       <div v-else class="upload-content">
-        <span class="material-icons-outlined md-30">cloud_upload</span>
+        <font-awesome-icon icon="fa-solid fa-cloud-arrow-up" size="2x" />
         <p class="upload-text">Przeciągnij i upuść lub kliknij, aby przesłać</p>
         <p class="upload-text upload-text--mobile">Prześlij zdjęcie / gif</p>
         <p class="upload-info">
@@ -155,11 +155,19 @@ const handleEditionMode = () => {
         type="text"
         class="url-input"
       />
-      <button @click.prevent="getFileFromUrl(givenUrl)" class="url-search">
+      <button
+        @click.prevent="getFileFromUrl(givenUrl)"
+        class="url-search"
+        content="Wyszukaj obraz"
+        placement="right"
+        v-tippy
+      >
         <span v-show="isLoading" class="loading-spinner"></span>
-        <span v-show="!isLoading" class="material-icons-outlined md-30"
-          >image_search</span
-        >
+        <font-awesome-icon
+          v-show="!isLoading"
+          icon="fa-regular fa-file-image"
+          size="xl"
+        />
       </button>
     </div>
   </div>
@@ -225,7 +233,7 @@ const handleEditionMode = () => {
     color: #252525;
     cursor: pointer;
 
-    &:hover span {
+    &:hover svg {
       color: var(--primary-color);
     }
   }

@@ -14,33 +14,6 @@ html {
   }
 }
 
-.material-icons,
-.material-icons-outlined {
-  transition: all 0.2s;
-  color: var(--icon-color);
-  user-select: none;
-
-  &.md-14 {
-    font-size: 14px;
-  }
-
-  &.md-18 {
-    font-size: 18px;
-  }
-  &.md-24 {
-    font-size: 24px;
-  }
-  &.md-30 {
-    font-size: 30px;
-  }
-  &.md-36 {
-    font-size: 36px;
-  }
-  &.md-42 {
-    font-size: 42px;
-  }
-}
-
 .Vue-Toastification__toast.custom-toast-style {
   min-height: 2rem;
   padding: 1rem 1.5rem;
@@ -99,6 +72,69 @@ html {
   }
 }
 
+// Pin share styles
+.share {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &__fb {
+    background-color: #4267b2;
+  }
+
+  &__twitter {
+    background-color: #1da1f2;
+  }
+
+  &__whatsapp {
+    background-color: #25d366;
+  }
+
+  &__fb,
+  &__twitter,
+  &__whatsapp {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    color: #fff;
+  }
+}
+
+.copy {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+
+  &__input {
+    flex: 1;
+    padding: 0.75rem;
+    padding-right: 2rem;
+    border-radius: 0.25rem;
+    background-color: rgba(var(--opacity-color), 0.1);
+    color: var(--font-color);
+  }
+
+  &__icon {
+    position: absolute;
+    right: 0.5rem;
+    color: var(--icon-color);
+  }
+}
+
+.copied {
+  align-self: center;
+  background-color: var(--btn-bg);
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  color: var(--btn-color);
+}
+
+// Page transition
 .page-enter-from {
   opacity: 0;
   transform: translateY(-10px);

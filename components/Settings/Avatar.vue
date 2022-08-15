@@ -122,13 +122,13 @@ const removeAvatar = async () => {
         alt=""
         class="avatar-img"
       />
-      <span
+      <font-awesome-icon
         v-show="avatarUrl"
         title="Usuń awatar"
         @click="removeAvatar"
-        class="material-icons-outlined md-14 avatar-remove"
-        >clear</span
-      >
+        icon="fa-solid fa-xmark"
+        class="avatar-remove"
+      />
     </div>
 
     <input
@@ -172,6 +172,8 @@ const removeAvatar = async () => {
     top: 0;
     right: 0;
     padding: 0.25rem;
+    width: 0.8rem;
+    height: 0.8rem;
     border-radius: 50%;
     background-color: var(--btn-bg);
     color: var(--btn-color);

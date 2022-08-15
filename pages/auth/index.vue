@@ -14,7 +14,7 @@ const toggleAuthState = (state: AuthState) => {
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <span class="material-icons-outlined md-42">camera</span>
+      <img class="logo-icon" src="~/assets/icons/camera.svg" alt="" />
       <h1 class="logo-text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
@@ -100,6 +100,7 @@ const toggleAuthState = (state: AuthState) => {
         top: 0.7rem;
         pointer-events: none;
         color: var(--icon-color);
+        transition: all 0.3s;
 
         &--visibility {
           left: unset;
@@ -121,7 +122,6 @@ const toggleAuthState = (state: AuthState) => {
     }
 
     &-input {
-      transition: all 0.3s;
       padding: 0.6rem 0.25rem;
       padding-left: 2rem;
       padding-right: 2rem;
@@ -130,8 +130,9 @@ const toggleAuthState = (state: AuthState) => {
       box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
       color: var(--font-color);
       font-family: inherit;
+      transition: all 0.3s;
 
-      &:focus + span {
+      &:focus + svg {
         color: var(--primary-color);
       }
 
@@ -229,13 +230,16 @@ const toggleAuthState = (state: AuthState) => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
   margin-top: 1rem;
   text-transform: uppercase;
   text-align: center;
   cursor: pointer;
 
-  & span {
-    color: #f0e1ff;
+  &-icon {
+    width: 2.5rem;
+    filter: invert(99%) sepia(63%) saturate(6187%) hue-rotate(183deg) brightness(102%)
+      contrast(104%);
   }
 
   &-text {

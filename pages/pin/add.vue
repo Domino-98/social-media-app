@@ -2,14 +2,13 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
-import { Pin } from "~~/models/pin";
 
-const validUrl = /^((http|https):\/\/)?(www.)?(?!.*(http|https|www.))[a-zA-Z0-9_-]+(\.[a-zA-Z]+)+(\/)?.([\w\?[a-zA-Z-_%\/@?]+)*([^\/\w\?[a-zA-Z0-9_-]+=\w+(&[a-zA-Z0-9_]+=\w+)*)?$/;
+const validURL = /^((http|https):\/\/)?(www.)?(?!.*(http|https|www.))[a-zA-Z0-9_-]+(\.[a-zA-Z]+)+(\/)?.([\w\?[a-zA-Z-_%\/@?]+)*([^\/\w\?[a-zA-Z0-9_-]+=\w+(&[a-zA-Z0-9_]+=\w+)*)?$/;
 
 const pinSchema = yup.object({
   title: yup.string().required("Tytuł jest wymagany"),
   destination_url: yup.lazy((value) =>
-    !value ? yup.string() : yup.string().matches(validUrl, "Adres URL jest nieprawidłowy")
+    !value ? yup.string() : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
   ),
   category: yup.string().required("Wybierz kategorię"),
 });
@@ -17,9 +16,9 @@ const pinSchema = yup.object({
 const toast = useToast();
 const user = useSupabaseUser();
 const client = useSupabaseClient();
+const userProfile = useUser();
 
 let imgFile = ref<File>();
-
 let isLoading = ref<boolean>();
 
 const handlePinSubmit = async (values) => {
@@ -104,7 +103,7 @@ definePageMeta({
               :src="user?.user_metadata.avatar_to_display"
               alt=""
             />
-            <span class="add__form-profile-name">John</span>
+            <span class="add__form-profile-name">{{ userProfile.username }}</span>
           </div>
           <div class="add__form-group">
             <VField
@@ -147,7 +146,7 @@ definePageMeta({
               <option value="cats">Koty</option>
               <option value="dogs">Psy</option>
             </VField>
-            <span class="material-icons-outlined">expand_more</span>
+            <font-awesome-icon icon="fa-solid fa-chevron-down" />
           </div>
           <VErrorMessage name="category" class="error" />
           <button :disabled="isLoading" class="add__form-save">
@@ -238,12 +237,10 @@ main {
         max-width: 20rem;
         width: 100%;
 
-        & span {
+        & svg {
           position: absolute;
-          right: 0;
-          bottom: 0;
-          transform: scale(0.8);
-          font-size: 2rem;
+          right: 0.5rem;
+          bottom: 0.5rem;
           pointer-events: none;
         }
       }

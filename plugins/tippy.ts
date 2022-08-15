@@ -7,6 +7,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     VueTippy,
     // optional
     {
+      directive: "tippy",
       component: "tippy", // => <tippy/>
       componentSingleton: "tippy-singleton", // => <tippy-singleton/>,
       defaultProps: {

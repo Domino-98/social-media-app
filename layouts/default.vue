@@ -1,9 +1,7 @@
 <template>
-  <Transition name="page">
-    <div>
-      <slot />
-    </div>
-  </Transition>
+  <div>
+    <slot />
+  </div>
 </template>
 
 <style lang="scss">
@@ -12,7 +10,7 @@
 
 :root {
   --primary-color: #3cc8ff;
-  --font-color: #363636;
+  --font-color: #252525;
   --bg-color-primary: rgb(247 248 249);
   --bg-color-secondary: #fff;
   --heading-color: #252525;
@@ -20,6 +18,8 @@
   --btn-bg: #7b7b7b;
   --btn-color: #fff;
   --opacity-color: 0, 0, 0;
+  --font-color-filter: invert(8%) sepia(7%) saturate(2%) hue-rotate(351deg)
+    brightness(99%) contrast(84%);
 }
 
 .dark-mode {
@@ -30,5 +30,7 @@
   --heading-color: #f5f5f5;
   --icon-color: #eee;
   --opacity-color: 255, 255, 255;
+  --font-color-filter: invert(100%) sepia(4%) saturate(1123%) hue-rotate(209deg)
+    brightness(119%) contrast(85%);
 }
 </style>

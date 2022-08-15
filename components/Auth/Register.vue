@@ -104,7 +104,7 @@ let passConfirmVisible = ref<boolean>(false);
           class="auth__form-input"
           placeholder=" "
         />
-        <span class="material-icons-outlined md-18 icon">person</span>
+        <font-awesome-icon icon="fa-solid fa-user" class="icon" />
         <label for="username" class="auth__form-label">Nazwa użytkownika</label>
         <VErrorMessage name="username" class="error" />
       </div>
@@ -116,7 +116,7 @@ let passConfirmVisible = ref<boolean>(false);
           class="auth__form-input"
           placeholder=" "
         />
-        <span class="material-icons-outlined md-18 icon">email</span>
+        <font-awesome-icon icon="fa-solid fa-envelope" class="icon" />
         <label for="email" class="auth__form-label">Email</label>
         <VErrorMessage name="email" class="error" />
       </div>
@@ -129,12 +129,12 @@ let passConfirmVisible = ref<boolean>(false);
           class="auth__form-input"
           placeholder=" "
         />
-        <span class="material-icons-outlined md-18 icon">lock</span>
-        <span
+        <font-awesome-icon icon="fa-solid fa-lock" class="icon" />
+        <font-awesome-icon
           @click="passVisible = !passVisible"
-          class="material-icons-outlined md-18 icon icon--visibility"
-          >{{ passVisible ? "visibility" : "visibility_off" }}</span
-        >
+          :icon="`fa-solid fa-eye${!passVisible ? '-slash' : ''}`"
+          class="icon icon--visibility"
+        />
         <label for="password" class="auth__form-label">Hasło</label>
         <VErrorMessage name="password" class="error" />
       </div>
@@ -147,12 +147,12 @@ let passConfirmVisible = ref<boolean>(false);
           class="auth__form-input"
           placeholder=" "
         />
-        <span class="material-icons-outlined md-18 icon">lock</span>
-        <span
+        <font-awesome-icon icon="fa-solid fa-lock" class="icon" />
+        <font-awesome-icon
           @click="passConfirmVisible = !passConfirmVisible"
-          class="material-icons-outlined md-18 icon icon--visibility"
-          >{{ passConfirmVisible ? "visibility" : "visibility_off" }}</span
-        >
+          :icon="`fa-solid fa-eye${!passConfirmVisible ? '-slash' : ''}`"
+          class="icon icon--visibility"
+        />
         <label for="password2" class="auth__form-label">Powtórz hasło</label>
         <VErrorMessage name="passwordConfirmation" class="error" />
       </div>

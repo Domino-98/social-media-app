@@ -25,54 +25,34 @@ let menuOpened = ref<boolean>(false);
       </svg>
     </button>
     <NuxtLink to="/" class="sidebar__logo">
-      <span class="material-icons-outlined md-36">camera</span>
+      <img class="sidebar__logo-icon" src="~/assets/icons/camera.svg" alt="" />
       <h1 class="sidebar__logo-text">We<span>Share</span></h1>
     </NuxtLink>
-
-    <!-- <NuxtLink to="/auth" class="sidebar__profile">
-      <span class="material-icons md-24">person</span>
-    </NuxtLink> -->
-    <!-- If logged in -->
-    <!-- <button class="sidebar__logout" data-customTooltip="Wyloguj się">
-      <span class="material-icons md-24">logout</span>
-    </button> -->
 
     <div :class="{ 'menu-opened': menuOpened }" class="sidebar__content">
       <ul class="sidebar__list">
         <NuxtLink @click="menuOpened = false" to="/">
           <li class="sidebar__item sidebar__item--home active">
-            <span class="material-icons md-24">home</span>
+            <font-awesome-icon icon="fa-solid fa-house" size="lg" fixed-width />
             Strona główna
           </li>
         </NuxtLink>
         <li class="sidebar__item sidebar__item--popular">
-          <span class="material-icons md-24">whatshot</span>
+          <font-awesome-icon icon="fa-solid fa-fire-flame-curved" size="lg" fixed-width />
           Popularne
         </li>
       </ul>
       <h2 class="sidebar__categories-header">Kategorie</h2>
       <ul class="sidebar__list">
-        <li
-          v-for="category in categories"
-          :key="category.name"
-          class="sidebar__item"
-        >
-          <img
-            :src="category.img"
-            alt="cars"
-            class="sidebar__categories-icon"
-          />
+        <li v-for="category in categories" :key="category.name" class="sidebar__item">
+          <img :src="category.img" alt="cars" class="sidebar__categories-icon" />
           {{ category.name }}
         </li>
       </ul>
     </div>
   </div>
   <Transition>
-    <div
-      v-if="menuOpened"
-      @click="menuOpened = false"
-      class="menu-overlay"
-    ></div>
+    <div v-if="menuOpened" @click="menuOpened = false" class="menu-overlay"></div>
   </Transition>
 </template>
 
@@ -113,8 +93,10 @@ let menuOpened = ref<boolean>(false);
     text-transform: uppercase;
     cursor: pointer;
 
-    & span {
-      color: var(--font-color);
+    &-icon {
+      width: 2rem;
+      filter: var(--font-color-filter);
+      margin-right: 0.25rem;
 
       @media only screen and (max-width: 50em) {
         font-size: 30px;
@@ -132,6 +114,8 @@ let menuOpened = ref<boolean>(false);
       }
 
       & span {
+        color: var(--font-color);
+
         @media only screen and (max-width: 50em) {
           font-size: 1.3rem;
         }
@@ -191,16 +175,15 @@ let menuOpened = ref<boolean>(false);
     font-weight: 400;
     cursor: pointer;
 
-    & .material-icons-outlined {
-      width: 2rem;
+    &--home,
+    &--popular {
+      gap: 0.5rem;
+      padding: 0.6rem;
+      padding-left: 1.5rem;
     }
 
     &:hover:not(.active) {
       background-color: rgba(var(--opacity-color), 0.1);
-    }
-
-    & span {
-      margin-right: 0.5rem;
     }
 
     &.active {

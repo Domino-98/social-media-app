@@ -259,6 +259,10 @@ main {
     font-weight: 500;
     cursor: pointer;
 
+    &:not(.active) {
+      color: var(--font-color);
+    }
+
     &:not(.active):hover {
       background-color: rgba(var(--opacity-color), 0.1);
     }

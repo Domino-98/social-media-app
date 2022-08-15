@@ -20,11 +20,11 @@ const close = () => {
         <div v-if="open" class="modal__box" role="dialog">
           <div class="modal__header">
             <slot name="header">Modal title</slot>
-            <!-- <font-awesome-icon
+            <font-awesome-icon
               icon="fa-solid fa-xmark"
               class="modal__header-close"
               @click="close"
-            /> -->
+            />
           </div>
 
           <div class="modal__content">

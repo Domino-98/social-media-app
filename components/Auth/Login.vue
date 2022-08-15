@@ -70,7 +70,7 @@ let passVisible = ref<boolean>(false);
     <VForm @submit="handleLogin" :validation-schema="loginSchema" class="auth__form">
       <div class="auth__form-group">
         <VField name="email" type="email" class="auth__form-input" placeholder=" " />
-        <span class="material-icons-outlined md-18 icon">email</span>
+        <font-awesome-icon icon="fa-solid fa-envelope" class="icon" />
         <label for="login" class="auth__form-label">Email</label>
         <VErrorMessage name="email" class="error" />
       </div>
@@ -81,12 +81,12 @@ let passVisible = ref<boolean>(false);
           class="auth__form-input"
           placeholder=" "
         />
-        <span class="material-icons-outlined md-18 icon">lock</span>
-        <span
+        <font-awesome-icon icon="fa-solid fa-lock" class="icon" />
+        <font-awesome-icon
           @click="passVisible = !passVisible"
-          class="material-icons-outlined md-18 icon icon--visibility"
-          >{{ passVisible ? "visibility" : "visibility_off" }}</span
-        >
+          :icon="`fa-solid fa-eye${!passVisible ? '-slash' : ''}`"
+          class="icon icon--visibility"
+        />
         <label for="login" class="auth__form-label">Hasło</label>
         <VErrorMessage name="password" class="error" />
       </div>
