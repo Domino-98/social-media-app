@@ -10,6 +10,7 @@ const props = defineProps<{
 const user = useSupabaseUser();
 const isOwner = props.pin.author.id === user.value?.id;
 const { addToSaved, removeFromSaved, isPinSaved } = usePins();
+const { $download } = useNuxtApp();
 const toast = useToast();
 
 let isSaved = ref<boolean>(
@@ -45,6 +46,19 @@ let optionsExpanded = ref<boolean>(false);
 const toggleOptions = () => {
   optionsExpanded.value = !optionsExpanded.value;
 };
+
+// let modalOpened = ref<boolean>(false);
+// let homeURL = window.location.origin;
+// let copyInput = ref<HTMLInputElement>();
+// let copied = ref<boolean>(false);
+
+// const copyURL = () => {
+//   copyInput.value.select();
+//   copyInput.value.setSelectionRange(0, 99999);
+//   navigator.clipboard.writeText(copyInput.value.value);
+//   copied.value = true;
+//   setTimeout(() => (copied.value = false), 2000);
+// };
 </script>
 
 <template>
@@ -71,34 +85,43 @@ const toggleOptions = () => {
           Zapisano
         </button>
         <button class="photo__like">
-          <span class="material-icons md-24">favorite_border</span>
+          <font-awesome-icon icon="fa-regular fa-heart" />
         </button>
         <button
           @click.prevent="toggleOptions"
           :style="[optionsExpanded ? { display: 'flex' } : '']"
           class="photo__more"
         >
-          <span class="material-icons md-24">more_horiz</span>
+          <font-awesome-icon icon="fa-solid fa-ellipsis" />
         </button>
-        <button v-if="pin.destination_url" class="photo__destination">
-          <span class="material-icons-outlined md-18">shortcut</span>
-          <NuxtLink @click.stop="" :to="pin.destination_url" target="_blank"
-            >{{ pin.destination_url.substring(0, 12) }}...</NuxtLink
-          >
-        </button>
+        <NuxtLink
+          v-if="pin.destination_url"
+          @click.stop
+          :to="
+            pin?.destination_url.indexOf('://') === -1
+              ? 'http://' + pin.destination_url
+              : pin.destination_url
+          "
+          target="_blank"
+        >
+          <button class="photo__destination">
+            <font-awesome-icon icon="fa-solid fa-share" />
+            <span>{{ pin.destination_url }}</span>
+          </button>
+        </NuxtLink>
       </div>
     </div>
 
     <Transition name="scale">
       <ul v-if="optionsExpanded" v-click-outside="toggleOptions" class="options">
-        <li class="options__item">
-          <span class="material-icons-outlined md-24">file_download</span>Pobierz
+        <li @click="$download(pin.pin_url)" class="options__item">
+          <font-awesome-icon icon="fa-solid fa-download" size="lg" />Pobierz
         </li>
-        <li class="options__item">
-          <span class="material-icons-outlined md-24">share</span>Udostępnij
+        <li @click="" class="options__item">
+          <font-awesome-icon icon="fa-solid fa-share-nodes" size="lg" />Udostępnij
         </li>
         <li v-if="isOwner" class="options__item">
-          <span class="material-icons-outlined md-24">delete</span>Usuń
+          <font-awesome-icon icon="fa-solid fa-trash-can" size="lg" />Usuń
         </li>
       </ul>
     </Transition>
@@ -109,6 +132,82 @@ const toggleOptions = () => {
         {{ pin?.author?.username || pin?.author?.full_name }}
       </p>
     </NuxtLink>
+
+    <!-- <Modal :open="modalOpened" @close="modalOpened = false">
+      <template v-slot:header> Udostępnij Pina </template>
+      <template v-slot:body>
+        <tippy
+          @click="copyURL"
+          class="copy"
+          placement="right"
+          content="Skopiuj"
+          delay="0"
+          zIndex="99999"
+          hideOnClick="false"
+        >
+          <input
+            ref="copyInput"
+            class="copy__input"
+            type="text"
+            :value="`${homeURL}/pin/${pin.id}`"
+            disabled
+          />
+          <font-awesome-icon icon="fa-solid fa-copy" size="xl" class="copy__icon" />
+        </tippy>
+
+        <p v-if="copied" class="copied">Skopiowano!</p>
+
+        <div class="share">
+          <ShareNetwork
+            class="share__fb"
+            network="facebook"
+            :url="`${homeURL}/pin/${pin.id}`"
+            :title="pin.title"
+            description="Hej, popatrz na ten obrazek!"
+            hashtags="graphics"
+          >
+            <font-awesome-icon
+              icon="fa-brands fa-facebook-square"
+              :style="{ color: 'white' }"
+              size="xl"
+            />
+            <span>Facebook</span>
+          </ShareNetwork>
+
+          <ShareNetwork
+            class="share__twitter"
+            network="twitter"
+            :url="`${homeURL}/pin/${pin.id}`"
+            :title="pin.title"
+            description="Hej, popatrz na ten obrazek!"
+            hashtags="graphics"
+          >
+            <font-awesome-icon
+              icon="fa-brands fa-twitter"
+              :style="{ color: 'white' }"
+              size="xl"
+            />
+            <span>Twitter</span>
+          </ShareNetwork>
+
+          <ShareNetwork
+            class="share__whatsapp"
+            network="whatsapp"
+            :url="`${homeURL}/pin/${pin.id}`"
+            :title="pin.title"
+            description="Hej, popatrz na ten obrazek!"
+            hashtags="graphics"
+          >
+            <font-awesome-icon
+              icon="fa-brands fa-whatsapp"
+              :style="{ color: 'white' }"
+              size="xl"
+            />
+            <span>WhatsApp</span>
+          </ShareNetwork>
+        </div>
+      </template>
+    </Modal> -->
   </div>
 </template>
 
@@ -169,12 +268,12 @@ const toggleOptions = () => {
     height: 2.25rem;
     border-radius: 50%;
     background-color: var(--bg-color-primary);
-    color: #252525;
+    color: var(--font-color);
     cursor: pointer;
 
     opacity: 0.8;
 
-    &:hover span {
+    &:hover svg {
       color: var(--primary-color);
     }
 
@@ -185,12 +284,21 @@ const toggleOptions = () => {
   }
 
   &__destination {
-    border-radius: 1rem;
-    width: unset;
-    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
     gap: 0.25rem;
+    width: 6.5rem;
+    border-radius: 1rem;
     padding: 0 0.5rem;
+    font-size: 0.9rem;
     color: var(--font-color);
+
+    & span {
+      display: inline-block;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
   }
 
   &__like {
