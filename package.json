@@ -9,13 +9,12 @@
   "devDependencies": {
     "@nuxtjs/color-mode": "^3.0.2",
     "@nuxtjs/supabase": "^0.1.19",
-    "nuxt": "^3.0.0-rc.6",
+    "nuxt": "^3.0.0-rc.8",
     "sass": "^1.51.0"
   },
   "dependencies": {
-    "@vee-validate/rules": "^4.6.2",
+    "axios": "^0.27.2",
     "click-outside-vue3": "^4.0.1",
-    "mime-types": "^2.1.35",
     "query-string": "^7.1.1",
     "vee-validate": "^4.6.2",
     "vue-tippy": "^6.0.0-alpha.63",

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
-import mime from "mime-types";
 
 const emit = defineEmits<{
   (e: "updateFile", value: File): void;
@@ -79,8 +78,17 @@ async function getFileFromUrl(url, defaultType = "image/jpeg") {
     )
       throw new Error("Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG, PNG, GIF");
 
+    console.log(data);
     let randomId = Math.floor(Math.random() * Date.now());
-    let ext = mime.extension(data.type);
+    let ext =
+      data.type === "image/jpeg"
+        ? "jpg"
+        : data.type === "image/png"
+        ? "png"
+        : data.type === "image/gif"
+        ? "gif"
+        : "";
+
     let file = new File([data], `image${randomId}.${ext}`, {
       type: data.type || defaultType,
     });
