@@ -65,8 +65,8 @@ const getCategories = async () => {
   }
 };
 
-onMounted(() => {
-  getCategories();
+onMounted(async () => {
+  await getCategories();
 });
 
 definePageMeta({

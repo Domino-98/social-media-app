@@ -9,7 +9,7 @@ const { comments } = useComments();
 
 let isLoading = ref<boolean>(false);
 
-const fetchPin = async () => {
+const getPin = async () => {
   isLoading.value = true;
   try {
     const fetchedPin = await pinsApi().fetchPinById(+pinId.value);
@@ -21,8 +21,8 @@ const fetchPin = async () => {
   }
 };
 
-onMounted(() => {
-  fetchPin();
+onMounted(async () => {
+  await getPin();
   window.scrollTo(0, 0);
 });
 

@@ -71,7 +71,7 @@ const closeModal = () => {
 const modalOpened = ref(route.name === "pin-id-edit");
 let isLoading = ref<boolean>(false);
 
-const fetchPin = async () => {
+const getPin = async () => {
   isLoading.value = true;
   try {
     const fetchedPin = await pinsApi().fetchPinById(+pinId);
@@ -98,7 +98,7 @@ const getCategories = async () => {
 const idString = computed(() => pin.value.category.id.toString());
 
 onMounted(async () => {
-  await fetchPin();
+  await getPin();
   await getCategories();
   if (pin.value.author.id !== user.value.id)
     navigateTo({ name: "pin-id", params: { id: `${pin.value.id}` } });

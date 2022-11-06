@@ -90,8 +90,13 @@ const changePinTab = (tab: PinTab) => {
     : getSavedPins(userInfo.value.id);
 };
 
-onMounted(() => {
-  getUserProfile();
+onMounted(async () => {
+  await getUserProfile();
+});
+
+onUnmounted(() => {
+  userPins.value = [];
+  savedPins.value = [];
 });
 
 definePageMeta({

@@ -41,8 +41,8 @@ const getAllPins = async () => {
 //   }
 // });
 
-onMounted(() => {
-  getAllPins();
+onMounted(async () => {
+  await getAllPins();
 });
 
 definePageMeta({

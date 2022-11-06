@@ -21,7 +21,8 @@ const userInfo = reactive<UserToUpdate>({
   background_url: "",
 });
 
-const validURL = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+const validURL =
+  /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 const regex = new RegExp(validURL);
 
 let userLoading = ref<boolean>(false);
@@ -35,7 +36,8 @@ const getUserInfo = async () => {
     firstName.value = profile.full_name?.split(" ")[0];
     lastName.value = profile.full_name?.split(" ")[1];
     userInfo.username =
-      profile.username || `${profile.email.split("@")[0]}#${profile.profile_id}`;
+      profile.username ||
+      `${profile.email.split("@")[0]}#${profile.profile_id}`;
     userInfo.bio = profile.bio;
     userInfo.website = profile.website;
     userInfo.background_url = profile.background_url;
@@ -52,7 +54,9 @@ const userSchema = yup.object({
     .required("Nazwa użytkownika jest wymagana")
     .min(3, "Nazwa użytkownika musi zawierać minimum 3 znaki"),
   website: yup.lazy((value) =>
-    !value ? yup.string() : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
+    !value
+      ? yup.string()
+      : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
   ),
 });
 
@@ -90,8 +94,8 @@ const updateUserInfo = async () => {
   }
 };
 
-onMounted(() => {
-  getUserInfo();
+onMounted(async () => {
+  await getUserInfo();
 });
 
 definePageMeta({
@@ -112,7 +116,9 @@ definePageMeta({
         <SettingsBackground
           label="Tło"
           :background-url="userInfo.background_url"
-          @update-background="(publicUrl) => (userInfo.background_url = publicUrl)"
+          @update-background="
+            (publicUrl) => (userInfo.background_url = publicUrl)
+          "
         />
         <SettingsAvatar
           label="Awatar"
@@ -157,7 +163,11 @@ definePageMeta({
           type="text"
           placeholder="https://"
         />
-        <button :disabled="updateLoading" type="submit" class="settings__save-btn">
+        <button
+          :disabled="updateLoading"
+          type="submit"
+          class="settings__save-btn"
+        >
           <span v-show="updateLoading" class="loading-spinner"></span>
           <span>{{ updateLoading ? "Zapisywanie" : "Zapisz" }}</span>
         </button>
