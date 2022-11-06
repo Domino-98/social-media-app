@@ -16,9 +16,7 @@ const emit = defineEmits<{
 <template>
   <BaseModal :color="color" @close="$emit('close')" :open="open">
     <template #header>
-      <slot name="header">
-        <slot name="header"></slot>
-      </slot>
+      <slot name="header"></slot>
     </template>
     <template #body>
       <div class="body">
@@ -26,7 +24,9 @@ const emit = defineEmits<{
       </div>
 
       <div class="buttons">
-        <button @click.prevent="$emit('close')" class="btn btn--close">Zamknij</button>
+        <button @click.prevent="$emit('close')" class="btn btn--close">
+          Zamknij
+        </button>
         <button
           @click.prevent="$emit('action')"
           :disabled="loading"

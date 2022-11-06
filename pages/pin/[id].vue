@@ -5,6 +5,7 @@ const route = useRoute();
 const pinId = computed(() => route.params.id);
 
 const { pin } = usePins();
+const { comments } = useComments();
 
 let isLoading = ref<boolean>(false);
 
@@ -25,8 +26,9 @@ onMounted(() => {
   window.scrollTo(0, 0);
 });
 
-onBeforeMount(() => {
+onUnmounted(() => {
   pin.value = null;
+  comments.value = [];
 });
 
 definePageMeta({

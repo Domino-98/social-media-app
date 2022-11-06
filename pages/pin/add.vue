@@ -285,5 +285,6 @@ main {
 
 .btn {
   align-self: flex-end;
+  margin-top: auto;
 }
 </style>

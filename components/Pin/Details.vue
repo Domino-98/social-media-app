@@ -195,6 +195,25 @@ definePageMeta({
         </NuxtLink>
         <button v-if="!isOwner" class="pin__profile-btn">Obserwuj</button>
       </div>
+
+      <div class="pin__comments">
+        <h2 class="pin__comments-header">
+          {{ comments?.length
+          }}{{ comments?.length === 1 ? " komentarz" : " komentarzy" }}
+        </h2>
+
+        <font-awesome-icon
+          v-if="comments?.length"
+          @click="(showComments = !showComments), setImgHeight()"
+          :icon="`fa-solid fa-chevron-${showComments ? 'up' : 'down'}`"
+        />
+
+        <Transition name="fade">
+          <PinCommentList v-if="showComments" />
+        </Transition>
+
+        <PinCommentInput v-if="user" />
+      </div>
     </div>
 
     <BaseModal :open="modalOpened" @close="modalOpened = false">
@@ -474,6 +493,7 @@ definePageMeta({
   max-width: calc(100% - 1rem);
   margin: 1rem 0 1rem 1rem;
   border-radius: 1rem;
+  transition: all 0.2s;
 
   @media only screen and (max-width: 37.5em) {
     max-width: 100%;
