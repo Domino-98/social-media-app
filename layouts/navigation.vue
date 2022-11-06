@@ -1,7 +1,7 @@
 <script setup lang="ts">
 let scrollVisible = ref<boolean>(false);
 
-function scrollListener(e) {
+function scrollListener(e: Event) {
   scrollVisible.value = window.scrollY > 500;
 }
 
@@ -23,13 +23,13 @@ function scrollToTop() {
 
 <template>
   <div class="wrapper">
-    <Sidebar />
+    <TheSidebar />
     <main class="wrapper-inner">
-      <Navbar />
+      <TheNavbar />
       <slot />
       <Transition name="scale">
         <button v-if="scrollVisible" @click="scrollToTop" class="scroll-top">
-          <span class="material-icons-outlined md-30">arrow_upward</span>
+          <font-awesome-icon icon="fa-solid fa-arrow-up" size="xl" />
         </button>
       </Transition>
     </main>
@@ -64,7 +64,8 @@ function scrollToTop() {
   margin-right: 0.75rem;
   border-radius: 50%;
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
-  background-color: var(--bg-color-primary);
+  background-color: var(--bg-color-secondary);
+  color: var(--font-color);
   cursor: pointer;
 
   @media only screen and (max-width: 37.5em) {

@@ -3,6 +3,7 @@ import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
 
 defineProps<{
+  label: string;
   backgroundUrl?: string;
 }>();
 
@@ -11,6 +12,7 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+const user = useSupabaseUser();
 const client = useSupabaseClient();
 
 const file = ref();
@@ -30,22 +32,16 @@ const updateBackground = async (e: Event) => {
     isLoading.value = true;
     const { data, error: uploadError } = await client.storage
       .from("backgrounds")
-      .upload(
-        `${client.auth.user().id}/backgroundImage.${extFile}?bust=${Date.now()}`,
-        fileBg,
-        {
-          cacheControl: "3600",
-          upsert: true,
-        }
-      );
+      .upload(`${user.value.id}/backgroundImage.${extFile}?bust=${Date.now()}`, fileBg, {
+        cacheControl: "3600",
+        upsert: true,
+      });
 
     if (uploadError) throw uploadError;
 
     const { publicURL, error } = client.storage
       .from("backgrounds")
-      .getPublicUrl(
-        `${client.auth.user().id}/backgroundImage.${extFile}?bust=${Date.now()}`
-      );
+      .getPublicUrl(`${user.value.id}/backgroundImage.${extFile}?bust=${Date.now()}`);
 
     const { error: updateError } = await client
       .from("profiles")
@@ -53,7 +49,7 @@ const updateBackground = async (e: Event) => {
         updated_at: new Date(),
         background_url: publicURL,
       })
-      .match({ id: client.auth.user().id });
+      .match({ id: user.value.id });
 
     if (updateError) throw updateError;
     emit("updateBackground", publicURL);
@@ -71,11 +67,11 @@ const removeBackground = async () => {
   try {
     const { data, error: removeError } = await client.storage
       .from("backgrounds")
-      .remove([`${client.auth.user().id}/backgroundImage.${"jpg" || "jpeg" || "png"}`]);
+      .remove([`${user.value.id}/backgroundImage.${"jpg" || "jpeg" || "png"}`]);
 
     if (removeError) throw removeError;
 
-    const { user, error: updateError } = await client.auth.update({
+    const { error: updateError } = await client.auth.update({
       data: {
         background_url: null,
       },
@@ -89,7 +85,7 @@ const removeBackground = async () => {
         updated_at: new Date(),
         background_url: null,
       })
-      .match({ id: client.auth.user().id });
+      .match({ id: user.value.id });
 
     if (error) throw error;
 
@@ -106,51 +102,71 @@ const removeBackground = async () => {
 </script>
 
 <template>
-  <div>
-    <div
-      v-if="backgroundUrl"
-      :style="{
-        background: `url(${backgroundUrl}) no-repeat center `,
-        backgroundSize: 'cover',
-      }"
-      class="background"
-    ></div>
-
-    <div class="background-btns">
-      <input
-        ref="file"
-        :disabled="isLoading"
-        id="uploadBackground"
-        type="file"
-        @change="updateBackground"
-        accept="image/png, image/jpeg, image/jpg"
-        hidden
-      />
-      <label for="uploadBackground" class="upload">
-        <span v-show="isLoading" class="loading-spinner"></span>
-        <span v-show="isLoading">Dodawanie tła</span>
-
-        <span v-show="!isLoading">{{ !backgroundUrl ? "Dodaj" : "Zmień" }}</span>
-      </label>
-      <button
-        :disabled="isLoading"
+  <div class="form__group">
+    <label for="" class="form__label">{{ label }}</label>
+    <div class="background">
+      <div
         v-if="backgroundUrl"
-        @click.prevent="removeBackground"
-        class="btn-gray"
-      >
-        Usuń
-      </button>
+        :style="{
+          background: `url(${backgroundUrl}) no-repeat center `,
+          backgroundSize: 'cover',
+        }"
+        class="background__img"
+      ></div>
+
+      <div class="background__btns">
+        <input
+          ref="file"
+          :disabled="isLoading"
+          id="uploadBackground"
+          type="file"
+          @change="updateBackground"
+          accept="image/png, image/jpeg, image/jpg"
+          hidden
+        />
+        <label for="uploadBackground" class="upload">
+          <span v-show="isLoading" class="loading-spinner"></span>
+          <span v-show="isLoading">Dodawanie tła</span>
+          <span v-show="!isLoading">{{ !backgroundUrl ? "Dodaj" : "Zmień" }}</span>
+        </label>
+        <button
+          :disabled="isLoading"
+          v-if="backgroundUrl"
+          @click.prevent="removeBackground"
+          class="btn-gray"
+        >
+          Usuń
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.background {
-  width: 100%;
-  height: 12.5rem;
-  border-radius: 1.5rem;
+.form {
+  &__group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 1rem;
+  }
 
-  &-btns {
+  &__label {
+    align-self: flex-start;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--font-color);
+  }
+}
+.background {
+  &__img {
+    width: 100%;
+    height: 12.5rem;
+    border-radius: 1.5rem;
+  }
+
+  &__btns {
     display: flex;
     justify-content: space-between;
     margin-top: 0.5rem;

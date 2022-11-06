@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
+import profilesApi from "~~/services/api_profiles";
 
 const toast = useToast();
-
 const user = useSupabaseUser();
 const client = useSupabaseClient();
 const router = useRouter();
@@ -20,12 +20,7 @@ const toggleMode = (): void => {
 };
 
 const setUserProfile = async () => {
-  const { data: profile, error } = await client
-    .from("profiles")
-    .select()
-    .match({ id: user.value.id })
-    .single();
-
+  const profile = await profilesApi().getCurrentUser(user.value.id);
   userProfile.value = profile;
 };
 
@@ -53,14 +48,14 @@ const handleLogout = async (): Promise<void> => {
 };
 
 onMounted(() => {
-  colorMode.value === "dark" ? (darkMode.value = false) : (darkMode.value = true);
+  colorMode.value === "dark" ? (darkMode.value = true) : (darkMode.value = false);
   if (user.value) {
     setUserProfile();
   }
 });
 
 watch(colorMode, (color) => {
-  color.preference === "dark" ? (darkMode.value = false) : (darkMode.value = true);
+  color.preference === "dark" ? (darkMode.value = true) : (darkMode.value = false);
 });
 
 watch(
@@ -77,17 +72,20 @@ watch(
       <font-awesome-icon icon="fa-solid fa-magnifying-glass" size="lg" />
       <input type="text" class="navbar__search-input" placeholder="Szukaj" />
     </form>
-    <label id="switch" class="switch">
-      <input type="checkbox" @click="toggleMode()" v-model="darkMode" id="slider" />
-      <span class="slider round"></span>
-    </label>
+
+    <div v-tippy="`${darkMode ? 'Light Mode' : 'Dark Mode'}`" class="navbar__switch">
+      <input
+        @click="toggleMode()"
+        v-model="darkMode"
+        type="checkbox"
+        id="darkmode-toggle"
+        class="switch__checkbox"
+      />
+      <label for="darkmode-toggle" class="switch__label" />
+    </div>
 
     <div class="navbar__buttons">
-      <div
-        v-if="user"
-        ref="notificationsEl"
-        class="navbar__dropdown navbar__dropdown--notifications"
-      >
+      <div v-if="user" ref="notificationsEl" class="navbar__notifications">
         <button
           @click="toggleNotifications"
           class="navbar__toggle"
@@ -102,7 +100,7 @@ watch(
           <div
             v-if="notificationsVisible"
             v-click-outside="toggleNotifications"
-            class="navbar__dropdown-menu"
+            class="navbar__dropdown"
           >
             <p class="info">Brak powiadomień</p>
             <!-- <div class="navbar__dropdown-item"></div> -->
@@ -132,11 +130,7 @@ watch(
       </NuxtLink>
 
       <!-- If logged in -->
-      <div
-        v-else
-        @click="toggleProfile"
-        class="navbar__dropdown navbar__dropdown--profile"
-      >
+      <div v-else @click="toggleProfile" class="navbar__profile">
         <img
           class="navbar__profile-img"
           :src="
@@ -148,7 +142,7 @@ watch(
           <div
             v-click-outside="toggleProfile"
             v-if="profileVisible"
-            class="navbar__dropdown-menu"
+            class="navbar__dropdown"
           >
             <NuxtLink
               :to="`/profile/${userProfile.profile_id}`"
@@ -187,12 +181,18 @@ watch(
   align-self: end;
   display: flex;
   align-items: center;
+  gap: 1.5rem;
   width: 100%;
   height: 4rem;
   padding: 0.5rem 2rem;
 
   @media only screen and (max-width: 50em) {
     padding: 0.5rem 1rem;
+  }
+
+  @media only screen and (max-width: 37.5em) {
+    margin-right: 0.5rem;
+    gap: 1rem;
   }
 
   &__logo {
@@ -207,7 +207,6 @@ watch(
     flex: 1;
     display: flex;
     align-items: center;
-    margin-right: 2rem;
 
     & svg {
       position: absolute;
@@ -231,14 +230,12 @@ watch(
         box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
       }
     }
+  }
 
-    @media only screen and (max-width: 50em) {
-      margin-right: 1rem;
-    }
-
-    @media only screen and (max-width: 37.5em) {
-      margin-right: 0.5rem;
-    }
+  &__notifications,
+  &__profile {
+    position: relative;
+    color: var(--font-color);
   }
 
   &__buttons {
@@ -247,25 +244,20 @@ watch(
   }
 
   &__dropdown {
-    position: relative;
-    color: var(--font-color);
+    position: absolute;
+    right: 0;
 
-    &-menu {
-      position: absolute;
-      right: 0;
-      top: 1rem;
-      z-index: 1;
-      display: flex;
-      flex-direction: column;
-      width: 12rem;
-      margin-top: 2rem;
-      overflow: hidden;
-      border-radius: 1rem 0;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      background-color: var(--bg-color-secondary);
-      font-size: 0.9rem;
-      text-align: center;
-    }
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    width: 12rem;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    border-radius: 1rem 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    background-color: var(--bg-color-secondary);
+    font-size: 0.9rem;
+    text-align: center;
 
     &-item {
       display: flex;
@@ -293,6 +285,12 @@ watch(
     }
   }
 
+  &__switch {
+    align-self: center;
+    display: flex;
+    align-items: center;
+  }
+
   &__toggle,
   &__add,
   &__auth {
@@ -316,6 +314,8 @@ watch(
     }
 
     @media only screen and (max-width: 50em) {
+      width: 2.4rem;
+      height: 2.4rem;
       padding: 1rem;
     }
   }
@@ -327,6 +327,11 @@ watch(
     border-radius: 50%;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
     cursor: pointer;
+
+    @media only screen and (max-width: 50em) {
+      width: 2.4rem;
+      height: 2.4rem;
+    }
   }
 
   &__badge {
@@ -346,16 +351,12 @@ watch(
   }
 
   &__auth,
-  &__dropdown--profile {
+  &__profile {
     @media only screen and (max-width: 50em) {
       position: fixed;
       top: 0.2rem;
-      right: 0.7rem;
+      right: 1rem;
       z-index: 100;
-
-      &-img {
-        position: fixed;
-      }
     }
 
     @media only screen and (max-width: 37.5em) {
@@ -370,89 +371,27 @@ watch(
   }
 }
 
-nav button:last-child {
-  margin-right: 0;
-}
-
-/* The switch - the box around the slider */
 .switch {
-  position: relative;
-  display: inline-block;
-  margin-right: 1.5rem;
-  width: 60px;
-  height: 26px;
+  &__checkbox {
+    visibility: hidden;
 
-  @media only screen and (max-width: 50em) {
-    margin-right: 1rem;
+    & + label {
+      content: "";
+      display: inline-block;
+      cursor: pointer;
+      height: 2rem;
+      width: 2rem;
+      border-radius: 50%;
+      transition: all 0.3s ease-in-out;
+    }
+
+    &:not(:checked) + label {
+      background-color: gold;
+    }
+
+    &:checked + label {
+      box-shadow: inset -10px -6px #fff, inset -10px -6px 1px #fff;
+    }
   }
-
-  @media only screen and (max-width: 37.5em) {
-    transform: scale(0.8);
-    margin-right: 0.5rem;
-  }
-}
-
-/* Hide default HTML checkbox */
-.switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-/* The slider */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 36px;
-  width: 36px;
-  left: -2px;
-  bottom: 4px;
-  top: 0;
-  bottom: 0;
-  margin: auto 0;
-  -webkit-transition: 0.4s;
-  transition: 0.4s;
-  box-shadow: 0 0px 15px #2020203d;
-  background: white url("https://i.ibb.co/FxzBYR9/night.png");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-input:checked + .slider {
-  background-color: var(--primary-color);
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px var(--primary-color);
-}
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(24px);
-  -ms-transform: translateX(24px);
-  transform: translateX(28px);
-  background: white url("https://i.ibb.co/7JfqXxB/sunny.png");
-  background-repeat: no-repeat;
-  background-position: center;
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
 }
 </style>

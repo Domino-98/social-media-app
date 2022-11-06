@@ -5,7 +5,10 @@ export type Pin = {
   description?: string;
   pin_url: string;
   destination_url?: string;
-  category: string;
+  category: {
+    id: number;
+    name: string;
+  };
   author: {
     id: string;
     profile_id: number;
@@ -13,4 +16,11 @@ export type Pin = {
     username: string;
     full_name: string;
   };
+};
+
+export type PinToUpdate = {
+  title: string;
+  description?: string;
+  destination_url?: string;
+  category_id: number;
 };

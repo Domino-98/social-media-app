@@ -3,6 +3,7 @@ import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
 
 defineProps<{
+  label: string;
   avatarUrl?: string;
 }>();
 
@@ -11,6 +12,7 @@ const emit = defineEmits<{
 }>();
 
 const toast = useToast();
+const user = useSupabaseUser();
 const client = useSupabaseClient();
 
 const file = ref();
@@ -36,20 +38,16 @@ const updateAvatar = async (e: Event) => {
     isLoading.value = true;
     const { data, error: uploadError } = await client.storage
       .from("avatars")
-      .upload(
-        `${client.auth.user().id}/avatarImage.${extFile}?bust=${Date.now()}`,
-        fileAvatar,
-        {
-          cacheControl: "3600",
-          upsert: true,
-        }
-      );
+      .upload(`${user.value.id}/avatarImage.${extFile}?bust=${Date.now()}`, fileAvatar, {
+        cacheControl: "3600",
+        upsert: true,
+      });
 
     if (uploadError) throw uploadError;
 
     const { publicURL, error } = client.storage
       .from("avatars")
-      .getPublicUrl(`${client.auth.user().id}/avatarImage.${extFile}?bust=${Date.now()}`);
+      .getPublicUrl(`${user.value.id}/avatarImage.${extFile}?bust=${Date.now()}`);
 
     const { error: updateError } = await client
       .from("profiles")
@@ -57,7 +55,7 @@ const updateAvatar = async (e: Event) => {
         updated_at: new Date(),
         avatar_url: publicURL,
       })
-      .match({ id: client.auth.user().id });
+      .match({ id: user.value.id });
 
     if (updateError) throw updateError;
 
@@ -77,7 +75,7 @@ const removeAvatar = async () => {
   try {
     const { data, error: removeError } = await client.storage
       .from("avatars")
-      .remove([`${client.auth.user().id}/avatarImage.${"jpg" || "jpeg" || "png"}`]);
+      .remove([`${user.value.id}/avatarImage.${"jpg" || "jpeg" || "png"}`]);
 
     if (removeError) throw removeError;
 
@@ -95,7 +93,7 @@ const removeAvatar = async () => {
         updated_at: new Date(),
         avatar_url: null,
       })
-      .match({ id: client.auth.user().id });
+      .match({ id: user.value.id });
 
     if (error) throw error;
 
@@ -113,60 +111,80 @@ const removeAvatar = async () => {
 </script>
 
 <template>
-  <div class="avatar">
-    <div class="avatar-container">
-      <span v-if="isLoading" class="loading-spinner avatar"></span>
-      <img
-        v-else
-        :src="avatarUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
-        alt=""
-        class="avatar-img"
-      />
-      <font-awesome-icon
-        v-show="avatarUrl"
-        title="Usuń awatar"
-        @click="removeAvatar"
-        icon="fa-solid fa-xmark"
-        class="avatar-remove"
-      />
-    </div>
+  <div class="form__group">
+    <label class="form__label">Awatar</label>
+    <div class="avatar">
+      <div class="avatar__container">
+        <span v-if="isLoading" class="loading-spinner avatar"></span>
+        <img
+          v-else
+          :src="avatarUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+          alt=""
+          class="avatar__img"
+        />
+        <font-awesome-icon
+          v-show="avatarUrl"
+          title="Usuń awatar"
+          @click="removeAvatar"
+          icon="fa-solid fa-xmark"
+          class="avatar__remove"
+        />
+      </div>
 
-    <input
-      ref="file"
-      :disabled="isLoading"
-      id="uploadAvatar"
-      type="file"
-      @change="updateAvatar"
-      accept="image/png, image/jpeg, image/jpg"
-      hidden
-    />
-    <label for="uploadAvatar" class="upload">
-      {{ !avatarUrl ? "Dodaj" : "Zmień" }}
-    </label>
+      <input
+        ref="file"
+        :disabled="isLoading"
+        id="uploadAvatar"
+        type="file"
+        @change="updateAvatar"
+        accept="image/png, image/jpeg, image/jpg"
+        hidden
+      />
+      <label for="uploadAvatar" class="upload">
+        {{ !avatarUrl ? "Dodaj" : "Zmień" }}
+      </label>
+    </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
+.form {
+  &__group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-top: 1rem;
+  }
+
+  &__label {
+    align-self: flex-start;
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    color: var(--font-color);
+  }
+}
+
 .avatar {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 
-  &-container {
+  &__container {
     position: relative;
 
-    &:hover .avatar-remove {
+    &:hover .avatar__remove {
       display: block;
     }
   }
 
-  &-img {
+  &__img {
     width: 4rem;
     height: 4rem;
     border-radius: 50%;
   }
 
-  &-remove {
+  &__remove {
     display: none;
     position: absolute;
     top: 0;

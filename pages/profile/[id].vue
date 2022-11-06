@@ -1,54 +1,47 @@
 <script setup lang="ts">
 import { onBeforeRouteLeave } from "vue-router";
 import { User } from "~~/models/user";
-import { Pin } from "~~/models/pin";
+import pinsApi from "~~/services/api_pins";
+import profilesApi from "~~/services/api_profiles";
 
 const route = useRoute();
-const client = useSupabaseClient();
+const user = useSupabaseUser();
 
-const { fetchUserPins, fetchSavedPins, pins, pinsLoading } = usePins();
+const { userPins } = usePins();
 
 const profileId = route.params.id;
 const isOwner = ref<boolean>(false);
 
 const userInfo = ref<User>();
 
-let isLoading = ref<boolean>();
+let userLoading = ref<boolean>();
+let pinsLoading = ref<boolean>();
 
-const getUser = async () => {
-  isLoading.value = true;
+const getUserPins = async (userId: string) => {
+  pinsLoading.value = true;
   try {
-    const { data: profile, error } = await client
-      .from("profiles")
-      .select()
-      .match({ profile_id: profileId })
-      .single();
-
-    if (error) throw error;
-
-    const {
-      id,
-      avatar_url,
-      full_name,
-      username,
-      bio,
-      website,
-      background_url,
-      profile_id,
-      email,
-    } = profile;
-
-    userInfo.value = profile;
-
-    isOwner.value = id === client.auth.user().id ? true : false;
-
-    fetchUserPins(id);
-
-    console.log(userInfo);
+    const fetchedPins = await pinsApi().fetchUserPins(userId);
+    userPins.value = fetchedPins;
   } catch (error) {
     console.error(error);
   } finally {
-    isLoading.value = false;
+    pinsLoading.value = false;
+  }
+};
+
+const getUserProfile = async () => {
+  userLoading.value = true;
+  try {
+    const fetchedProfile = await profilesApi().getUser(+profileId);
+
+    userInfo.value = fetchedProfile;
+    isOwner.value = fetchedProfile.id === user.value.id ? true : false;
+
+    getUserPins(fetchedProfile.id);
+  } catch (error) {
+    console.error(error);
+  } finally {
+    userLoading.value = false;
   }
 };
 
@@ -80,13 +73,11 @@ let activeTab = ref<PinTab>("created");
 const changePinTab = (tab: PinTab) => {
   activeTab.value = tab;
 
-  tab === "created"
-    ? fetchUserPins(userInfo.value.id)
-    : fetchSavedPins(userInfo.value.id);
+  tab === "created" ? getUserPins(userInfo.value.id) : "";
 };
 
 onMounted(() => {
-  getUser();
+  getUserProfile();
 });
 
 definePageMeta({
@@ -114,7 +105,8 @@ definePageMeta({
         class="profile__avatar"
         :class="{ 'move-top': userInfo?.background_url }"
         :src="
-          userInfo?.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+          userInfo?.avatar_url ||
+          'https://cdn-icons-png.flaticon.com/512/149/149071.png'
         "
         alt="Profile page"
       />
@@ -155,9 +147,11 @@ definePageMeta({
       </div>
     </div>
 
-    <div class="pins">
-      <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
-    </div>
+    <TransitionGroup name="scale">
+      <div v-if="activeTab === 'created'" class="pins">
+        <PinCard v-for="pin in userPins" :key="pin.id" :pin="pin" />
+      </div>
+    </TransitionGroup>
   </main>
 </template>
 
@@ -277,7 +271,7 @@ main {
 .pins {
   margin: 2rem auto;
   columns: 5;
-  column-gap: 1rem;
+  column-gap: 1.5rem;
   font-size: 1.2rem;
 
   @media only screen and (max-width: 87.5em) {
@@ -286,6 +280,7 @@ main {
 
   @media only screen and (max-width: 75em) {
     columns: 3;
+    column-gap: 1rem;
   }
 
   @media only screen and (max-width: 37.5em) {

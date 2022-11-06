@@ -9,3 +9,5 @@ export type User = {
   email: string;
   profile_id: number;
 };
+
+export type UserToUpdate = Partial<User>;

@@ -14,8 +14,8 @@ const toggleAuthState = (state: AuthState) => {
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <img class="logo-icon" src="~/assets/icons/camera.svg" alt="" />
-      <h1 class="logo-text">We<span>Share</span></h1>
+      <img class="logo__icon" src="~/assets/icons/camera.svg" alt="" />
+      <h1 class="logo__text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
       <AuthLogin v-if="authState === 'login'" @auth-state="toggleAuthState" />
@@ -236,13 +236,13 @@ const toggleAuthState = (state: AuthState) => {
   text-align: center;
   cursor: pointer;
 
-  &-icon {
+  &__icon {
     width: 2.5rem;
     filter: invert(99%) sepia(63%) saturate(6187%) hue-rotate(183deg) brightness(102%)
       contrast(104%);
   }
 
-  &-text {
+  &__text {
     font-family: "Rubik", "sans-serif";
     font-size: 1.8rem;
     color: var(--primary-color);
@@ -258,11 +258,5 @@ button:disabled,
 button[disabled] {
   cursor: not-allowed;
   filter: grayscale(50%);
-}
-
-.error {
-  margin-top: 0.5rem;
-  font-size: 0.8rem;
-  color: #ff4040;
 }
 </style>

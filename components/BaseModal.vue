@@ -1,7 +1,10 @@
 <script setup lang="ts">
-const props = defineProps({
-  open: { type: Boolean, required: true },
-});
+const props = defineProps<{
+  open: boolean;
+  color?: string;
+}>();
+
+const { color = "var(--primary-color)" } = props;
 
 const emit = defineEmits(["close"]);
 
@@ -11,36 +14,33 @@ const close = () => {
 </script>
 
 <template>
-  <Teleport to="body">
-    <div class="modal">
-      <Transition name="fade">
-        <div v-if="open" class="modal__overlay" @click="close"></div>
-      </Transition>
-      <Transition name="pop">
-        <div v-if="open" class="modal__box" role="dialog">
-          <div class="modal__header">
-            <slot name="header">Modal title</slot>
-            <font-awesome-icon
-              icon="fa-solid fa-xmark"
-              class="modal__header-close"
-              @click="close"
-            />
-          </div>
+  <div class="modal">
+    <Transition name="fade">
+      <div v-if="open" class="modal__overlay" @click="close"></div>
+    </Transition>
+    <Transition name="pop">
+      <div v-if="open" class="modal__box" role="dialog">
+        <header class="modal__header">
+          <slot name="header"></slot>
+          <font-awesome-icon
+            icon="fa-solid fa-xmark"
+            class="modal__header-close"
+            @click="close"
+          />
+        </header>
 
-          <div class="modal__content">
-            <slot name="body">Modal body</slot>
-            <slot name="button">
-              <button class="modal__btn" @click="close">Zamknij</button>
-            </slot>
-          </div>
-        </div>
-      </Transition>
-    </div>
-  </Teleport>
+        <main class="modal__content">
+          <slot name="body"></slot>
+        </main>
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <style lang="scss" scoped>
 .modal {
+  z-index: 100;
+
   &__box {
     position: fixed;
     top: 0;
@@ -48,13 +48,10 @@ const close = () => {
     bottom: 0;
     left: 0;
     z-index: 20000;
-
     margin: auto;
-    text-align: center;
-    width: fit-content;
     height: fit-content;
     width: 90%;
-    max-width: 30em;
+    max-width: 30rem;
     border-radius: 0.75rem;
     box-shadow: 0 5px 5px rgba(0, 0, 0, 0.2);
     background: var(--bg-color-secondary);
@@ -80,30 +77,15 @@ const close = () => {
     cursor: pointer;
   }
 
-  &__btn {
-    align-self: flex-end;
-    border: 2px solid var(--primary-color);
-    border-radius: 0.25rem;
-    padding: 0.4rem 1.2rem;
-    background-color: var(--primary-color);
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.3s;
-
-    &:hover {
-      background-color: transparent;
-      color: var(--primary-color);
-    }
-  }
-
   &__header {
     width: 100%;
     padding: 0.75rem;
-    background: var(--primary-color);
+    background: v-bind(color);
     border-top-left-radius: 0.75rem;
     border-top-right-radius: 0.75rem;
     color: #fff;
     font-size: 1.4rem;
+    text-align: center;
 
     &-close {
       position: absolute;
@@ -117,7 +99,8 @@ const close = () => {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding: 1rem;
+    padding: 1.5rem;
+    text-align: center;
   }
 }
 

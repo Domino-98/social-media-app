@@ -117,20 +117,20 @@ const handleEditionMode = () => {
 </script>
 
 <template>
-  <div class="upload-container">
-    <div class="upload-box">
-      <div v-if="imgUrl" class="upload-img">
+  <div class="upload">
+    <div class="upload__box">
+      <div v-if="imgUrl" class="upload__img">
         <img :src="imgUrl" />
-        <button @click.prevent="deleteFile" class="upload-delete">
+        <button @click.prevent="deleteFile" class="upload__delete">
           <font-awesome-icon icon="fa-solid fa-trash-can" />
         </button>
       </div>
 
-      <div v-else class="upload-content">
+      <div v-else class="upload__content">
         <font-awesome-icon icon="fa-solid fa-cloud-arrow-up" size="2x" />
-        <p class="upload-text">Przeciągnij i upuść lub kliknij, aby przesłać</p>
-        <p class="upload-text upload-text--mobile">Prześlij zdjęcie / gif</p>
-        <p class="upload-info">
+        <p class="upload__text">Przeciągnij i upuść lub kliknij, aby przesłać</p>
+        <p class="upload__text upload__text--mobile">Prześlij zdjęcie / gif</p>
+        <p class="upload__info">
           Zalecenie: Użyj wysokiej jakości obrazów o rozmiarze mniejszym niż 20MB
         </p>
       </div>
@@ -142,10 +142,14 @@ const handleEditionMode = () => {
       />
     </div>
 
-    <button v-show="!urlInputVisible" @click.prevent="handleEditionMode" class="url-btn">
+    <button
+      v-show="!urlInputVisible"
+      @click.prevent="handleEditionMode"
+      class="upload__url-btn"
+    >
       Zapisz ze strony
     </button>
-    <div v-show="urlInputVisible" class="url-container">
+    <div v-show="urlInputVisible" class="upload__url-container">
       <input
         ref="urlInput"
         v-model="givenUrl"
@@ -153,11 +157,11 @@ const handleEditionMode = () => {
         @focusout="!givenUrl ? (urlInputVisible = false) : null"
         @keydown.enter="!givenUrl ? (urlInputVisible = false) : null"
         type="text"
-        class="url-input"
+        class="upload__url-input"
       />
       <button
         @click.prevent="getFileFromUrl(givenUrl)"
-        class="url-search"
+        class="upload__url-search"
         content="Wyszukaj obraz"
         placement="right"
         v-tippy
@@ -175,14 +179,12 @@ const handleEditionMode = () => {
 
 <style lang="scss" scoped>
 .upload {
-  &-container {
-    flex: 2;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 
-  &-box {
+  &__box {
     position: relative;
     height: 100%;
     padding: 0.75rem;
@@ -213,12 +215,12 @@ const handleEditionMode = () => {
     }
   }
 
-  &-img {
+  &__img {
     position: relative;
     height: 100%;
   }
 
-  &-delete {
+  &__delete {
     z-index: 10;
     position: absolute;
     bottom: 0.5rem;
@@ -238,7 +240,7 @@ const handleEditionMode = () => {
     }
   }
 
-  &-content {
+  &__content {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -249,7 +251,7 @@ const handleEditionMode = () => {
     border-radius: 0.5rem;
   }
 
-  &-text {
+  &__text {
     margin-top: 0.5rem;
     color: var(--font-color);
     text-align: center;
@@ -268,7 +270,7 @@ const handleEditionMode = () => {
     }
   }
 
-  &-info {
+  &__info {
     position: absolute;
     bottom: 2rem;
     padding: 0 2rem;
@@ -282,44 +284,47 @@ const handleEditionMode = () => {
       padding: 0;
     }
   }
-}
 
-.url {
-  &-btn {
-    width: 100%;
-    padding: 0.75rem;
-    border-radius: 2rem;
-    background-color: rgba(var(--opacity-color), 0.075);
-    font-weight: 500;
-    text-align: center;
-    font-size: 1rem;
-    cursor: pointer;
+  &__url {
+    &-btn {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 2rem;
+      background-color: rgba(var(--opacity-color), 0.075);
+      font-weight: 500;
+      text-align: center;
+      font-size: 1rem;
+      cursor: pointer;
 
-    &:hover {
-      background-color: rgba(var(--opacity-color), 0.15);
+      &:hover {
+        background-color: rgba(var(--opacity-color), 0.15);
+      }
     }
-  }
-  &-container {
-    display: flex;
-    border-radius: 2rem;
-  }
-  &-input {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: 2rem 0 0 2rem;
-    background-color: rgba(var(--opacity-color), 0.075);
-    font-weight: 500;
-    font-size: 1rem;
-  }
-  &-search {
-    min-width: 3.5rem;
-    padding: 0 1rem;
-    border-radius: 0 2rem 2rem 0;
-    background-color: rgba(var(--opacity-color), 0.15);
-    cursor: pointer;
 
-    &:hover {
-      background-color: rgba(var(--opacity-color), 0.2);
+    &-container {
+      display: flex;
+      border-radius: 2rem;
+    }
+
+    &-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border-radius: 2rem 0 0 2rem;
+      background-color: rgba(var(--opacity-color), 0.075);
+      font-weight: 500;
+      font-size: 1rem;
+    }
+
+    &-search {
+      min-width: 3.5rem;
+      padding: 0 1rem;
+      border-radius: 0 2rem 2rem 0;
+      background-color: rgba(var(--opacity-color), 0.15);
+      cursor: pointer;
+
+      &:hover {
+        background-color: rgba(var(--opacity-color), 0.2);
+      }
     }
   }
 }

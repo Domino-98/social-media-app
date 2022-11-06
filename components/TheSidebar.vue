@@ -1,13 +1,27 @@
 <script setup lang="ts">
-import { categories } from "~~/data";
+import categoriesApi from "~~/services/api_categories";
 
 let menuOpened = ref<boolean>(false);
+const { categories } = useCategories();
+
+const getCategories = async () => {
+  try {
+    const fetchedCategories = await categoriesApi().fetchCategories();
+    categories.value = fetchedCategories;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+onMounted(() => {
+  getCategories();
+});
 </script>
 
 <template>
   <div class="sidebar">
     <button
-      class="menu-btn"
+      class="sidebar__hamburger"
       @click.prevent="menuOpened = !menuOpened"
       :class="{ opened: menuOpened }"
       aria-label="Main Menu"
@@ -38,21 +52,35 @@ let menuOpened = ref<boolean>(false);
           </li>
         </NuxtLink>
         <li class="sidebar__item sidebar__item--popular">
-          <font-awesome-icon icon="fa-solid fa-fire-flame-curved" size="lg" fixed-width />
+          <font-awesome-icon
+            icon="fa-solid fa-fire-flame-curved"
+            size="lg"
+            fixed-width
+          />
           Popularne
         </li>
       </ul>
-      <h2 class="sidebar__categories-header">Kategorie</h2>
+      <h2 class="sidebar__header">Kategorie</h2>
       <ul class="sidebar__list">
-        <li v-for="category in categories" :key="category.name" class="sidebar__item">
-          <img :src="category.img" alt="cars" class="sidebar__categories-icon" />
-          {{ category.name }}
-        </li>
+        <TransitionGroup name="fade">
+          <li
+            v-for="category in categories"
+            :key="category.name"
+            class="sidebar__item"
+          >
+            <img :src="category.image_url" alt="cars" class="sidebar__icon" />
+            {{ category.name }}
+          </li>
+        </TransitionGroup>
       </ul>
     </div>
   </div>
   <Transition>
-    <div v-if="menuOpened" @click="menuOpened = false" class="menu-overlay"></div>
+    <div
+      v-if="menuOpened"
+      @click="menuOpened = false"
+      class="menu-overlay"
+    ></div>
   </Transition>
 </template>
 
@@ -69,7 +97,7 @@ let menuOpened = ref<boolean>(false);
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
   padding-top: 0.5rem;
   background-color: var(--bg-color-secondary);
-  z-index: 100;
+  z-index: 10;
 
   @media only screen and (max-width: 62.5em) {
     max-width: 12.5rem;
@@ -81,7 +109,21 @@ let menuOpened = ref<boolean>(false);
     padding-top: 0;
     flex-direction: row;
     align-items: center;
-    padding: 0.25rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  &__hamburger {
+    display: none;
+    align-items: center;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    background-color: transparent;
+    z-index: 10;
+
+    @media only screen and (max-width: 50em) {
+      display: flex;
+    }
   }
 
   &__logo {
@@ -131,7 +173,7 @@ let menuOpened = ref<boolean>(false);
     }
   }
 
-  &__categories-header {
+  &__header {
     margin: 0.5rem 0;
     margin-left: 1rem;
     color: var(--font-color);
@@ -139,7 +181,7 @@ let menuOpened = ref<boolean>(false);
     font-weight: 500;
   }
 
-  &__categories-icon {
+  &__icon {
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
@@ -158,7 +200,6 @@ let menuOpened = ref<boolean>(false);
       left: 0;
       top: 0;
       width: 100%;
-      height: calc(100vh - 46.8px);
       max-width: 12.5rem;
       margin-top: 46.8px;
     }
@@ -227,20 +268,6 @@ let menuOpened = ref<boolean>(false);
     @media only screen and (max-width: 50em) {
       display: flex;
     }
-  }
-}
-
-.menu-btn {
-  display: none;
-  align-items: center;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  background-color: transparent;
-  z-index: 10;
-
-  @media only screen and (max-width: 50em) {
-    display: flex;
   }
 }
 

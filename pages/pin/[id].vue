@@ -1,35 +1,18 @@
 <script setup lang="ts">
-import { Pin } from "~~/models/pin";
+import pinsApi from "~~/services/api_pins";
 
-const client = useSupabaseClient();
 const route = useRoute();
-const pinId = route.params.id;
+const pinId = computed(() => route.params.id);
 
-const pin = ref<Pin>();
-let isLoading = ref<boolean>();
+const { pin } = usePins();
 
-const getPin = async () => {
+let isLoading = ref<boolean>(false);
+
+const fetchPin = async () => {
   isLoading.value = true;
   try {
-    const { data, error } = await client
-      .from<Pin>("pins")
-      .select(
-        `
-    *,
-    author:profiles (
-      profile_id,
-      avatar_url,
-      username,
-      full_name
-    )
-  `
-      )
-      .match({ id: pinId })
-      .single();
-
-    if (error) throw error;
-
-    pin.value = data;
+    const fetchedPin = await pinsApi().fetchPinById(+pinId.value);
+    pin.value = fetchedPin;
   } catch (error) {
     console.error(error);
   } finally {
@@ -38,8 +21,12 @@ const getPin = async () => {
 };
 
 onMounted(() => {
-  getPin();
+  fetchPin();
   window.scrollTo(0, 0);
+});
+
+onBeforeMount(() => {
+  pin.value = null;
 });
 
 definePageMeta({
@@ -57,6 +44,12 @@ definePageMeta({
         <!-- <PinCard v-for="image in images" :key="image.id" :image="image" /> -->
       </div>
     </div>
+
+    <router-view v-slot="{ Component }">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
   </main>
 </template>
 

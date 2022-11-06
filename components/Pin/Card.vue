@@ -2,44 +2,22 @@
 import { Pin } from "~~/models/pin";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import pinsApi from "~~/services/api_pins";
 
 const props = defineProps<{
   pin: Pin;
 }>();
 
+const { pins } = usePins();
 const user = useSupabaseUser();
-const isOwner = props.pin.author.id === user.value?.id;
-const { addToSaved, removeFromSaved, isPinSaved } = usePins();
+const isOwner = ref<boolean>(false);
 const { $download } = useNuxtApp();
 const toast = useToast();
 
-let isSaved = ref<boolean>(
-  user.value ? await isPinSaved(props.pin.id, user.value.id) : false
-);
 
-const addPinToSaved = async () => {
-  if (user.value) {
-    try {
-      await addToSaved(props.pin.id, user.value.id);
-      toast("Dodano Pina do zapisanych");
-      isSaved.value = true;
-    } catch (error) {
-      console.error(error);
-    }
-  } else {
-    toast("Zaloguj się, by dodać Pina do zapisanych", { type: TYPE.ERROR });
-  }
-};
 
-const removePinFromSaved = async () => {
-  try {
-    await removeFromSaved(props.pin.id, user.value.id);
-    toast("Usunięto Pina z zapisanych");
-    isSaved.value = false;
-  } catch (error) {
-    console.error(error);
-  }
-};
+
+let confirmModalOpened = ref<boolean>(false);
 
 let optionsExpanded = ref<boolean>(false);
 
@@ -48,24 +26,21 @@ const toggleOptions = () => {
 };
 
 let modalOpened = ref<boolean>(false);
-let homeURL = window.location.origin;
-let copyInput = ref<HTMLInputElement>();
-let copied = ref<boolean>(false);
 
-const copyURL = () => {
-  copyInput.value.select();
-  copyInput.value.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(copyInput.value.value);
-  copied.value = true;
-  setTimeout(() => (copied.value = false), 2000);
-};
+onMounted(() => {
+  isOwner.value = props.pin.author.id === user.value?.id;
+});
+
+onUpdated(() => {
+  isOwner.value = props.pin.author.id === user.value?.id;
+});
 </script>
 
 <template>
-  <div class="photo">
-    <div class="photo__container">
+  <div class="pin">
+    <div class="pin__container">
       <NuxtLink
-        class="photo__link"
+        class="pin__link"
         :to="{
           name: 'pin-id',
           params: { id: pin.id },
@@ -73,24 +48,23 @@ const copyURL = () => {
       >
         <img
           :style="[optionsExpanded ? { filter: 'brightness(60%)' } : '']"
-          class="photo__img"
+          class="pin__img"
           :src="pin.pin_url"
         />
       </NuxtLink>
-      <div :style="[optionsExpanded ? { display: 'block' } : '']" class="photo__btns">
-        <button v-if="!isSaved" @click.prevent="addPinToSaved" class="photo__save">
-          Zapisz
-        </button>
-        <button v-else @click.prevent="removePinFromSaved" class="photo__save">
-          Zapisano
-        </button>
-        <button class="photo__like">
+      <div
+        :style="[optionsExpanded ? { display: 'block' } : '']"
+        class="pin__btns"
+      >
+        <button v-if="!isOwner" class="pin__save">Zapisz</button>
+        <button v-if="!isOwner" class="pin__save">Zapisano</button>
+        <button v-if="!isOwner" class="pin__like">
           <font-awesome-icon icon="fa-regular fa-heart" />
         </button>
         <button
           @click.prevent="toggleOptions"
           :style="[optionsExpanded ? { display: 'flex' } : '']"
-          class="photo__more"
+          class="pin__more"
         >
           <font-awesome-icon icon="fa-solid fa-ellipsis" />
         </button>
@@ -104,7 +78,7 @@ const copyURL = () => {
           "
           target="_blank"
         >
-          <button class="photo__destination">
+          <button class="pin__destination">
             <font-awesome-icon icon="fa-solid fa-share" />
             <span>{{ pin.destination_url }}</span>
           </button>
@@ -113,106 +87,55 @@ const copyURL = () => {
     </div>
 
     <Transition name="scale">
-      <ul v-if="optionsExpanded" v-click-outside="toggleOptions" class="options">
-        <li @click="$download(pin.pin_url)" class="options__item">
+      <ul
+        v-if="optionsExpanded"
+        v-click-outside="toggleOptions"
+        class="pin__options"
+      >
+        <li @click="$download(pin.pin_url)" class="pin__options-item">
           <font-awesome-icon icon="fa-solid fa-download" size="lg" />Pobierz
         </li>
-        <li @click="modalOpened = !modalOpened" class="options__item">
-          <font-awesome-icon icon="fa-solid fa-share-nodes" size="lg" />Udostępnij
+        <li @click="modalOpened = !modalOpened" class="pin__options-item">
+          <font-awesome-icon
+            icon="fa-solid fa-share-nodes"
+            size="lg"
+          />Udostępnij
         </li>
-        <li v-if="isOwner" class="options__item">
+        <li
+          v-if="isOwner"
+          @click.prevent="confirmModalOpened = !confirmModalOpened"
+          class="pin__options-item"
+        >
           <font-awesome-icon icon="fa-solid fa-trash-can" size="lg" />Usuń
         </li>
       </ul>
     </Transition>
 
-    <NuxtLink :to="`/profile/${pin.author.profile_id}`" class="photo__profile">
-      <img class="photo__profile-img" :src="pin.author.avatar_url" alt="Profile page" />
-      <p class="photo__profile-name">
+    <NuxtLink :to="`/profile/${pin.author.profile_id}`" class="pin__profile">
+      <img
+        class="pin__profile-img"
+        :src="
+          pin.author.avatar_url ||
+          'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+        "
+        alt="Profile page"
+      />
+      <p class="pin__profile-name">
         {{ pin?.author?.username || pin?.author?.full_name }}
       </p>
     </NuxtLink>
 
-    <Modal :open="modalOpened" @close="modalOpened = false">
-      <template v-slot:header> Udostępnij Pina </template>
-      <template v-slot:body>
-        <tippy
-          @click="copyURL"
-          class="copy"
-          placement="right"
-          content="Skopiuj"
-          delay="0"
-          zIndex="99999"
-          hideOnClick="false"
-        >
-          <input
-            ref="copyInput"
-            class="copy__input"
-            type="text"
-            :value="`${homeURL}/pin/${pin.id}`"
-            disabled
-          />
-          <font-awesome-icon icon="fa-solid fa-copy" size="xl" class="copy__icon" />
-        </tippy>
-
-        <p v-if="copied" class="copied">Skopiowano!</p>
-
-        <div class="share">
-          <ShareNetwork
-            class="share__fb"
-            network="facebook"
-            :url="`${homeURL}/pin/${pin.id}`"
-            :title="pin.title"
-            description="Hej, popatrz na ten obrazek!"
-            hashtags="graphics"
-          >
-            <font-awesome-icon
-              icon="fa-brands fa-facebook-square"
-              :style="{ color: 'white' }"
-              size="xl"
-            />
-            <span>Facebook</span>
-          </ShareNetwork>
-
-          <ShareNetwork
-            class="share__twitter"
-            network="twitter"
-            :url="`${homeURL}/pin/${pin.id}`"
-            :title="pin.title"
-            description="Hej, popatrz na ten obrazek!"
-            hashtags="graphics"
-          >
-            <font-awesome-icon
-              icon="fa-brands fa-twitter"
-              :style="{ color: 'white' }"
-              size="xl"
-            />
-            <span>Twitter</span>
-          </ShareNetwork>
-
-          <ShareNetwork
-            class="share__whatsapp"
-            network="whatsapp"
-            :url="`${homeURL}/pin/${pin.id}`"
-            :title="pin.title"
-            description="Hej, popatrz na ten obrazek!"
-            hashtags="graphics"
-          >
-            <font-awesome-icon
-              icon="fa-brands fa-whatsapp"
-              :style="{ color: 'white' }"
-              size="xl"
-            />
-            <span>WhatsApp</span>
-          </ShareNetwork>
-        </div>
+    <BaseModal :open="modalOpened" @close="modalOpened = false">
+      <template #header>Udostępnij Pina</template>
+      <template #body>
+        <PinShare :pin="pin" />
       </template>
-    </Modal>
+    </BaseModal>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.photo {
+.pin {
   position: relative;
   width: 100%;
   margin: 0 0 1rem;
@@ -226,11 +149,11 @@ const copyURL = () => {
     position: relative;
     display: block;
 
-    &:hover .photo__btns {
+    &:hover .pin__btns {
       display: block;
     }
 
-    &:hover .photo__img {
+    &:hover .pin__img {
       filter: brightness(60%);
     }
   }
@@ -341,28 +264,29 @@ const copyURL = () => {
       font-weight: 500;
     }
   }
-}
 
-.options {
-  position: absolute;
-  right: 0;
-  min-width: 10rem;
-  background-color: var(--bg-color-secondary);
-  overflow: hidden;
-  border-radius: 1rem;
-  box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
+  &__options {
+    z-index: 10;
+    position: absolute;
+    right: 0;
+    min-width: 10rem;
+    background-color: var(--bg-color-secondary);
+    overflow: hidden;
+    border-radius: 1rem;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
 
-  &__item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    cursor: pointer;
-    font-size: 1rem;
-    color: var(--font-color);
+    &-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem;
+      cursor: pointer;
+      font-size: 1rem;
+      color: var(--font-color);
 
-    &:hover {
-      background-color: rgba(var(--opacity-color), 0.1);
+      &:hover {
+        background-color: rgba(var(--opacity-color), 0.1);
+      }
     }
   }
 }

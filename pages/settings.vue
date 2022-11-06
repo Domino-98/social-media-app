@@ -1,16 +1,16 @@
 <script setup lang="ts">
+import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
-import { User } from "~~/models/user";
+import { UserToUpdate } from "~~/models/user";
+import profilesApi from "~~/services/api_profiles";
 
 const toast = useToast();
-const client = useSupabaseClient();
+const user = useSupabaseUser();
 
 const firstName = ref<string>("");
 const lastName = ref<string>("");
 const fullName = computed((): string => firstName.value + " " + lastName.value);
-
-type UserToUpdate = Partial<User>;
 
 const userInfo = reactive<UserToUpdate>({
   avatar_url: "",
@@ -21,65 +21,61 @@ const userInfo = reactive<UserToUpdate>({
   background_url: "",
 });
 
-const validUrl = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
-const regex = new RegExp(validUrl);
+const validURL = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+const regex = new RegExp(validURL);
+
+let userLoading = ref<boolean>(false);
 
 const getUserInfo = async () => {
-  const { data: profile, error } = await client
-    .from("profiles")
-    .select()
-    .match({ id: client.auth.user().id })
-    .single();
+  userLoading.value = true;
+  try {
+    const profile = await profilesApi().getCurrentUser(user.value.id);
 
-  if (error) throw error;
-
-  const {
-    avatar_url,
-    full_name,
-    username,
-    bio,
-    website,
-    background_url,
-    profile_id,
-    email,
-  } = profile;
-
-  userInfo.avatar_url = avatar_url;
-  firstName.value = full_name?.split(" ")[0];
-  lastName.value = full_name?.split(" ")[1];
-  userInfo.username = username || `${email.split("@")[0]}#${profile_id}`;
-  userInfo.bio = bio;
-  userInfo.website = website;
-  userInfo.background_url = background_url;
+    userInfo.avatar_url = profile.avatar_url;
+    firstName.value = profile.full_name?.split(" ")[0];
+    lastName.value = profile.full_name?.split(" ")[1];
+    userInfo.username =
+      profile.username || `${profile.email.split("@")[0]}#${profile.profile_id}`;
+    userInfo.bio = profile.bio;
+    userInfo.website = profile.website;
+    userInfo.background_url = profile.background_url;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    userLoading.value = false;
+  }
 };
 
-let isLoading = ref(false);
+const userSchema = yup.object({
+  username: yup
+    .string()
+    .required("Nazwa użytkownika jest wymagana")
+    .min(3, "Nazwa użytkownika musi zawierać minimum 3 znaki"),
+  website: yup.lazy((value) =>
+    !value ? yup.string() : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
+  ),
+});
+
+let updateLoading = ref(false);
 
 const updateUserInfo = async () => {
-  userInfo.full_name = fullName.value;
-  isLoading.value = true;
-  try {
-    console.log(client.auth.user().id);
+  console.log(userInfo);
 
+  userInfo.full_name = fullName.value;
+  updateLoading.value = true;
+  try {
     if (userInfo.website && !userInfo.website.match(regex))
       return toast("Nieprawidłowy adres strony", { type: TYPE.ERROR });
 
-    const { error: updateError } = await client
-      .from("profiles")
-      .update({
-        updated_at: new Date(),
-        ...userInfo,
-      })
-      .match({ id: client.auth.user().id });
+    const updateError = await profilesApi().updateUser(user.value.id, userInfo);
 
     if (updateError) {
       let message = updateError.message;
 
       if (updateError.code === "23505") {
         message = "Podana nazwa użytkownika jest już zajęta";
-      } else if (updateError.code === "23514") {
-        message = "Nazwa użytkownika musi zawierać minimum 3 znaki";
       }
+
       toast(message, {
         type: TYPE.ERROR,
       });
@@ -90,7 +86,7 @@ const updateUserInfo = async () => {
   } catch (error) {
     console.error(error);
   } finally {
-    isLoading.value = false;
+    updateLoading.value = false;
   }
 };
 
@@ -108,75 +104,64 @@ definePageMeta({
   <main>
     <div class="settings">
       <h1 class="settings__header">Edycja profilu</h1>
-      <form class="settings__form">
-        <div class="settings__form-group">
-          <label for="" class="settings__form-label">Tło</label>
-          <SettingsBackground
-            :background-url="userInfo.background_url"
-            @update-background="(publicUrl) => (userInfo.background_url = publicUrl)"
-          />
-        </div>
-        <div class="settings__form-group">
-          <label class="settings__form-label">Awatar</label>
-          <SettingsAvatar
-            :avatar-url="userInfo.avatar_url"
-            @update-avatar="(publicUrl) => (userInfo.avatar_url = publicUrl)"
-          />
-        </div>
-        <div class="settings__form-name">
-          <div class="settings__form-group">
-            <label for="first-name" class="settings__form-label">Imię</label>
-            <input
-              v-model="firstName"
-              type="text"
-              id="first-name"
-              class="settings__form-input"
-            />
-          </div>
-          <div class="settings__form-group">
-            <label for="last-name" class="settings__form-label">Nazwisko</label>
-            <input
-              v-model="lastName"
-              type="text"
-              id="last-name"
-              class="settings__form-input"
-            />
-          </div>
-        </div>
-        <div class="settings__form-group">
-          <label for="" class="settings__form-label">O mnie</label>
-          <textarea
-            v-model="userInfo.bio"
-            class="settings__form-input"
-            id=""
-            cols="20"
-            rows="3"
-            placeholder="Opowiedz coś o sobie"
-          ></textarea>
-        </div>
-        <div class="settings__form-group">
-          <label for="" class="settings__form-label">Nazwa użytkownika</label>
-          <input v-model="userInfo.username" type="text" class="settings__form-input" />
-        </div>
-        <div class="settings__form-group">
-          <label for="" class="settings__form-label">Witryna / Portfolio</label>
-          <input
-            v-model="userInfo.website"
+      <VForm
+        @submit="updateUserInfo"
+        class="settings__form"
+        :validation-schema="userSchema"
+      >
+        <SettingsBackground
+          label="Tło"
+          :background-url="userInfo.background_url"
+          @update-background="(publicUrl) => (userInfo.background_url = publicUrl)"
+        />
+        <SettingsAvatar
+          label="Awatar"
+          :avatar-url="userInfo.avatar_url"
+          @update-avatar="(publicUrl) => (userInfo.avatar_url = publicUrl)"
+        />
+        <div class="settings__form-wrapper">
+          <BaseInput
+            v-model="firstName"
+            name="firstName"
+            label="Imię"
+            id="firstName"
             type="text"
-            class="settings__form-input"
-            placeholder="https://"
+          />
+          <BaseInput
+            v-model="lastName"
+            name="lastName"
+            label="Nazwisko"
+            id="lastName"
+            type="text"
           />
         </div>
-        <button
-          :disabled="isLoading"
-          type="submit"
-          @click.prevent="updateUserInfo"
-          class="settings__save-btn"
-        >
-          <span v-show="isLoading" class="loading-spinner"></span>
-          <span>{{ isLoading ? "Zapisywanie" : "Zapisz" }}</span>
+        <BaseTextarea
+          v-model="userInfo.bio"
+          name="bio"
+          label="O mnie"
+          id="bio"
+          placeholder="O mnie"
+        />
+        <BaseInput
+          v-model="userInfo.username"
+          name="username"
+          label="Nazwa użytkownika"
+          id="username"
+          type="text"
+        />
+        <BaseInput
+          v-model="userInfo.website"
+          name="website"
+          label="Witryna / Portfolio"
+          id="website"
+          type="text"
+          placeholder="https://"
+        />
+        <button :disabled="updateLoading" type="submit" class="settings__save-btn">
+          <span v-show="updateLoading" class="loading-spinner"></span>
+          <span>{{ updateLoading ? "Zapisywanie" : "Zapisz" }}</span>
         </button>
-      </form>
+      </VForm>
     </div>
   </main>
 </template>
@@ -189,82 +174,54 @@ main {
   margin: 0 1rem;
 }
 
-:deep() {
-  .settings {
+.settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 30rem;
+  margin-top: 0.5rem;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background-color: var(--bg-color-secondary);
+
+  @media only screen and (max-width: 37.5em) {
+    padding: 1rem;
+  }
+
+  &__header {
+    font-size: 1.6rem;
+    font-weight: 500;
+    font-family: "Rubik", "sans-serif";
+    color: var(--heading-color);
+  }
+
+  &__form {
+    align-self: start;
+    width: 100%;
+
+    &-wrapper {
+      display: flex;
+      gap: 1.25rem;
+    }
+  }
+
+  &__save-btn {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    width: 100%;
-    max-width: 30rem;
-    margin-top: 0.5rem;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    background-color: var(--bg-color-secondary);
+    margin: 0 auto;
+    margin-top: 1rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 2rem;
+    cursor: pointer;
+    background-color: var(--primary-color);
+    color: #fff;
 
-    @media only screen and (max-width: 37.5em) {
-      padding: 1rem;
-    }
-
-    &__header {
-      font-size: 1.6rem;
-      font-weight: 500;
-      font-family: "Rubik", "sans-serif";
-      color: var(--heading-color);
-    }
-
-    &__form {
-      align-self: start;
-      width: 100%;
-
-      &-name {
-        display: flex;
-      }
-
-      &-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-        margin: 0 0.5rem;
-        margin-top: 1rem;
-      }
-
-      &-label {
-        font-size: 0.9rem;
-        color: var(--font-color);
-      }
-
-      &-input {
-        transition: all 0.3s;
-        width: 100%;
-        padding: 0.5rem;
-        border-radius: 1rem;
-        box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-        background-color: var(--bg-color-primary);
-        color: var(--font-color);
-
-        &:focus {
-          box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
-        }
-      }
-    }
-
-    &__save-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto;
-      margin-top: 1rem;
-      padding: 0.75rem 1.25rem;
-      border-radius: 2rem;
-      cursor: pointer;
-      background-color: var(--primary-color);
-      color: #fff;
-
-      &:hover {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
-      }
+    &:hover {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
     }
   }
 }

@@ -1,14 +1,24 @@
 <script setup lang="ts">
 import { onBeforeRouteLeave } from "vue-router";
-import { Pin } from "~~/models/pin";
+import pinsApi from "~~/services/api_pins";
 
 const config = useRuntimeConfig();
 const route = useRoute();
-const client = useSupabaseClient();
 
-const isLoading = ref<boolean>();
+const { pins } = usePins();
 
-const { fetchAllPins, pins, pinsLoading } = usePins();
+let pinsLoading = ref<boolean>(false);
+
+const getAllPins = async () => {
+  pinsLoading.value = true;
+  try {
+    const fetchedPins = await pinsApi().fetchAllPins();
+    pins.value = fetchedPins;
+  } catch (error) {
+  } finally {
+    pinsLoading.value = false;
+  }
+};
 
 // let showModal = ref();
 
@@ -32,7 +42,7 @@ const { fetchAllPins, pins, pinsLoading } = usePins();
 // });
 
 onMounted(() => {
-  fetchAllPins();
+  getAllPins();
 });
 
 definePageMeta({
@@ -47,17 +57,18 @@ definePageMeta({
       <button @click="hidePinModal">Hide pin modal</button>
     </div> -->
 
-    <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
+    <TransitionGroup name="scale">
+      <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
+    </TransitionGroup>
   </div>
 </template>
 
 <style lang="scss" scoped>
 .container {
   position: relative;
-  margin: auto;
   margin: 1rem 2rem;
   columns: 5;
-  column-gap: 1rem;
+  column-gap: 1.5rem;
   font-size: 1.2rem;
 
   @media only screen and (max-width: 87.5em) {
@@ -66,6 +77,7 @@ definePageMeta({
 
   @media only screen and (max-width: 75em) {
     columns: 3;
+    column-gap: 1rem;
   }
 
   @media only screen and (max-width: 50em) {

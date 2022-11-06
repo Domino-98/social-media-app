@@ -1,0 +1,43 @@
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  padding: 0.625rem;
+  border-radius: 2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+
+  &--primary {
+    padding: calc(0.625rem + 2px);
+    background-color: var(--primary-color);
+
+    &:hover {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
+    }
+  }
+
+  &--outline {
+    background-color: var(--bg-color-secondary);
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+
+    &:hover {
+      background-image: linear-gradient(var(--primary-color) 0 0);
+      color: #fff;
+    }
+  }
+}
+
+button:disabled {
+  cursor: not-allowed;
+  filter: grayscale(50%);
+}
+
+select {
+  & option {
+    background-color: var(--bg-color-secondary);
+  }
+}

@@ -2,54 +2,41 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import pinsApi from "~~/services/api_pins";
+import categoriesApi from "~~/services/api_categories";
 
-const validURL = /^((http|https):\/\/)?(www.)?(?!.*(http|https|www.))[a-zA-Z0-9_-]+(\.[a-zA-Z]+)+(\/)?.([\w\?[a-zA-Z-_%\/@?]+)*([^\/\w\?[a-zA-Z0-9_-]+=\w+(&[a-zA-Z0-9_]+=\w+)*)?$/;
+const validURL =
+  /^((http|https):\/\/)?(www.)?(?!.*(http|https|www.))[a-zA-Z0-9_-]+(\.[a-zA-Z]+)+(\/)?.([\w\?[a-zA-Z-_%\/@?]+)*([^\/\w\?[a-zA-Z0-9_-]+=\w+(&[a-zA-Z0-9_]+=\w+)*)?$/;
 
 const pinSchema = yup.object({
   title: yup.string().required("Tytuł jest wymagany"),
   destination_url: yup.lazy((value) =>
-    !value ? yup.string() : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
+    !value
+      ? yup.string()
+      : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
   ),
-  category: yup.string().required("Wybierz kategorię"),
+  category_id: yup.string().required("Wybierz kategorię"),
 });
 
 const toast = useToast();
 const user = useSupabaseUser();
-const client = useSupabaseClient();
 const userProfile = useUser();
 
 let imgFile = ref<File>();
 let isLoading = ref<boolean>();
 
 const handlePinSubmit = async (values) => {
-  const { title, description, destination_url, category } = values;
+  const { title, description, destination_url, category_id } = values;
   isLoading.value = true;
   try {
     if (imgFile.value) {
-      const { error: uploadError } = await client.storage
-        .from("pins")
-        .upload(`${client.auth.user().id}/${imgFile.value.name}`, imgFile.value);
-
-      if (uploadError) throw new Error("Wystąpił błąd podczas przesyłania pliku");
-
-      const { publicURL, error } = client.storage
-        .from("pins")
-        .getPublicUrl(`${client.auth.user().id}/${imgFile.value.name}`);
-
-      if (error) throw new Error("Wystąpił błąd podczas pobierania adresu URL");
-
-      console.log(publicURL);
-
-      const { error: insertError } = await client.from("pins").insert({
-        title: title,
-        description: description,
-        pin_url: publicURL,
-        destination_url: destination_url,
-        category: category,
-        user_id: client.auth.user().id,
-      });
-
-      if (insertError) throw new Error("Wystąpił błąd podczas dodawania obrazu");
+      await pinsApi().addPin(
+        imgFile.value,
+        title,
+        description,
+        destination_url,
+        category_id
+      );
 
       toast("Pomyślnie dodano pina!");
       return navigateTo("/");
@@ -67,6 +54,21 @@ const handlePinSubmit = async (values) => {
   }
 };
 
+const { categories } = useCategories();
+
+const getCategories = async () => {
+  try {
+    const fetchedCategories = await categoriesApi().fetchCategories();
+    categories.value = fetchedCategories;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+onMounted(() => {
+  getCategories();
+});
+
 definePageMeta({
   layout: "navigation",
   middleware: "auth",
@@ -76,14 +78,18 @@ definePageMeta({
 <template>
   <main>
     <div class="add">
-      <VForm @submit="handlePinSubmit" :validation-schema="pinSchema" class="add__form">
+      <VForm
+        @submit="handlePinSubmit"
+        :validation-schema="pinSchema"
+        class="add__form"
+      >
         <PinUpload @update-file="(file) => (imgFile = file)" />
 
         <div class="add__form-info">
           <div class="add__form-group">
             <VField
               v-slot="{ field, errors }"
-              label="tytuł"
+              label="title"
               name="title"
               :validateOnBlur="false"
             >
@@ -92,18 +98,23 @@ definePageMeta({
                 class="add__form-input add__form-input--big"
                 type="text"
                 placeholder="Dodaj tytuł"
-                :class="{ invalid: errors[0] }"
+                :class="{ invalid: errors.length }"
               />
-              <span class="error">{{ errors[0] }}</span>
+              <VErrorMessage name="title" class="error" />
             </VField>
           </div>
           <div class="add__form-profile">
             <img
               class="add__form-profile-img"
-              :src="user?.user_metadata.avatar_to_display"
+              :src="
+                user?.user_metadata.avatar_to_display ||
+                'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+              "
               alt=""
             />
-            <span class="add__form-profile-name">{{ userProfile.username }}</span>
+            <span class="add__form-profile-name">{{
+              userProfile.username
+            }}</span>
           </div>
           <div class="add__form-group">
             <VField
@@ -116,40 +127,35 @@ definePageMeta({
           <div class="add__form-group">
             <VField v-slot="{ field, errors }" name="destination_url">
               <input
+                name="destination"
                 v-bind="field"
                 class="add__form-input"
                 type="text"
                 placeholder="Dodaj link docelowy"
-                :class="{ invalid: errors[0] }"
+                :class="{ invalid: errors.length }"
               />
             </VField>
             <VErrorMessage name="destination_url" class="error" />
           </div>
-          <div class="add__form-group">
-            <label for="" class="add__form-label">Wybierz kategorię pina</label>
-            <VField
-              name="category"
-              as="select"
-              :validateOnBlur="false"
-              class="add__form-select"
-            >
+
+          <BaseSelect
+            label="Wybierz kategorię pina"
+            name="category_id"
+            id="category"
+          >
+            <template #options>
               <option value="" selected disabled>Wybierz kategorię</option>
-              <option value="cars">Samochody</option>
-              <option value="fitness">Fitness</option>
-              <option value="wallpapers">Tapety</option>
-              <option value="food">Jedzenie</option>
-              <option value="nature">Natura</option>
-              <option value="art">Sztuka</option>
-              <option value="web-designs">Web designs</option>
-              <option value="travels">Podróże</option>
-              <option value="quotes">Cytaty</option>
-              <option value="cats">Koty</option>
-              <option value="dogs">Psy</option>
-            </VField>
-            <font-awesome-icon icon="fa-solid fa-chevron-down" />
-          </div>
-          <VErrorMessage name="category" class="error" />
-          <button :disabled="isLoading" class="add__form-save">
+              <option
+                v-for="category in categories"
+                :key="category.id"
+                :value="category.id"
+              >
+                {{ category.name }}
+              </option>
+            </template>
+          </BaseSelect>
+
+          <button type="submit" :disabled="isLoading" class="btn btn--primary">
             <span v-show="isLoading" class="loading-spinner"></span>
             <span>{{ isLoading ? "Zapisywanie Pina" : "Zapisz Pina" }}</span>
           </button>
@@ -225,14 +231,11 @@ main {
     }
 
     &-group {
-      margin-top: 1rem;
-
-      &:nth-child(4) {
-        margin-top: auto;
-      }
+      position: relative;
+      height: auto;
+      margin-top: 1.25rem;
 
       &:nth-child(5) {
-        position: relative;
         align-self: flex-start;
         max-width: 20rem;
         width: 100%;
@@ -267,44 +270,6 @@ main {
       font-weight: 500;
       color: var(--font-color);
     }
-
-    &-select {
-      display: block;
-      width: 100%;
-      margin-top: 0.5rem;
-      padding: 0.5rem;
-      border: none;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-      background-color: var(--bg-color-primary);
-      color: var(--font-color);
-      font-size: 1rem;
-      -webkit-appearance: none;
-      appearance: none;
-      outline: none;
-
-      & option {
-        padding: 0 0.25rem;
-      }
-    }
-
-    &-save {
-      align-self: end;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 2rem;
-      background-color: var(--primary-color);
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #eee;
-      cursor: pointer;
-
-      &:hover {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
-      }
-    }
   }
 }
 
@@ -318,8 +283,7 @@ main {
   margin-right: 0.5rem;
 }
 
-button:disabled {
-  cursor: not-allowed;
-  filter: grayscale(50%);
+.btn {
+  align-self: flex-end;
 }
 </style>
