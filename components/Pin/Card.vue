@@ -14,8 +14,33 @@ const isOwner = ref<boolean>(false);
 const { $download } = useNuxtApp();
 const toast = useToast();
 
+let isSaved = ref<boolean>(
+  user.value ? await pinsApi().isPinSaved(props.pin.id, user.value.id) : false
+);
 
+const addPinToSaved = async () => {
+  if (user.value) {
+    try {
+      await pinsApi().addToSaved(props.pin.id, user.value.id);
+      toast("Dodano Pina do zapisanych");
+      isSaved.value = true;
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    toast("Zaloguj się, by dodać Pina do zapisanych", { type: TYPE.ERROR });
+  }
+};
 
+const removePinFromSaved = async () => {
+  try {
+    await pinsApi().removeFromSaved(props.pin.id, user.value.id);
+    toast("Usunięto Pina z zapisanych");
+    isSaved.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 let confirmModalOpened = ref<boolean>(false);
 
@@ -56,8 +81,20 @@ onUpdated(() => {
         :style="[optionsExpanded ? { display: 'block' } : '']"
         class="pin__btns"
       >
-        <button v-if="!isOwner" class="pin__save">Zapisz</button>
-        <button v-if="!isOwner" class="pin__save">Zapisano</button>
+        <button
+          v-if="!isSaved && !isOwner"
+          @click.prevent="addPinToSaved"
+          class="pin__save"
+        >
+          Zapisz
+        </button>
+        <button
+          v-if="isSaved && !isOwner"
+          @click.prevent="removePinFromSaved"
+          class="pin__save"
+        >
+          Zapisano
+        </button>
         <button v-if="!isOwner" class="pin__like">
           <font-awesome-icon icon="fa-regular fa-heart" />
         </button>

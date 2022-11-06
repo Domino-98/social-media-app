@@ -75,6 +75,64 @@ export default () => {
     return pin;
   };
 
+  const fetchSavedPins = async (userId: string) => {
+    const { data: pins, error } = await client
+      .from("saved")
+      .select(
+        `
+          pin:pins (
+            *,
+            author:profiles (
+              id,
+              profile_id,
+              avatar_url,
+              username,
+              full_name
+            )
+          )
+        `
+      )
+      .match({ user_id: userId });
+
+    if (error) throw error;
+
+    return pins.map((pin) => {
+      return pin["pin"];
+    });
+  };
+
+  const addToSaved = async (pinId: number, userId: string) => {
+    const { data, error } = await client.from("saved").insert({
+      pin_id: pinId,
+      user_id: userId,
+    });
+
+    if (error) throw error;
+  };
+
+  const removeFromSaved = async (pinId: number, userId: string) => {
+    const { data, error } = await client
+      .from("saved")
+      .delete()
+      .match({ pin_id: pinId, user_id: userId });
+
+    if (error) throw error;
+  };
+
+  const isPinSaved = async (
+    pinId: number,
+    userId: string
+  ): Promise<boolean> => {
+    const { data, error } = await client
+      .from("saved")
+      .select()
+      .match({ pin_id: pinId, user_id: userId });
+
+    if (error) throw error;
+
+    return !!data.length;
+  };
+
   const addPin = async (
     imgFile: File,
     title: string,
@@ -112,6 +170,10 @@ export default () => {
     fetchAllPins,
     fetchPinById,
     fetchUserPins,
+    fetchSavedPins,
+    addToSaved,
+    removeFromSaved,
+    isPinSaved,
     addPin,
   };
 };

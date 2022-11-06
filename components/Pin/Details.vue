@@ -28,6 +28,34 @@ const setImgHeight = () => {
 
 let showComments = ref<boolean>(true);
 
+let isSaved = ref<boolean>(
+  user.value ? await pinsApi().isPinSaved(props.pin.id, user.value.id) : false
+);
+
+const addPinToSaved = async () => {
+  if (user.value) {
+    try {
+      await pinsApi().addToSaved(props.pin.id, user.value.id);
+      toast("Dodano Pina do zapisanych");
+      isSaved.value = true;
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    toast("Zaloguj się, by dodać Pina do zapisanych", { type: TYPE.ERROR });
+  }
+};
+
+const removePinFromSaved = async () => {
+  try {
+    await pinsApi().removeFromSaved(props.pin.id, user.value.id);
+    toast("Usunięto Pina z zapisanych");
+    isSaved.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 let modalOpened = ref<boolean>(false);
 
 const confirmModalOpened = ref<boolean>(false);
@@ -86,8 +114,20 @@ definePageMeta({
           <span>5</span>
         </div>
 
-        <button v-if="!isOwner" class="pin__save">Zapisz</button>
-        <button v-else-if="!isOwner" class="pin__save">Zapisano</button>
+        <button
+          v-if="!isSaved && !isOwner"
+          @click="addPinToSaved"
+          class="pin__save"
+        >
+          Zapisz
+        </button>
+        <button
+          v-else-if="isSaved && !isOwner"
+          @click="removePinFromSaved"
+          class="pin__save"
+        >
+          Zapisano
+        </button>
         <NuxtLink v-else class="pin__save"> Edycja Pina </NuxtLink>
       </div>
 

@@ -7,7 +7,7 @@ import profilesApi from "~~/services/api_profiles";
 const route = useRoute();
 const user = useSupabaseUser();
 
-const { userPins } = usePins();
+const { userPins, savedPins } = usePins();
 
 const profileId = route.params.id;
 const isOwner = ref<boolean>(false);
@@ -22,6 +22,18 @@ const getUserPins = async (userId: string) => {
   try {
     const fetchedPins = await pinsApi().fetchUserPins(userId);
     userPins.value = fetchedPins;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    pinsLoading.value = false;
+  }
+};
+
+const getSavedPins = async (userId: string) => {
+  pinsLoading.value = true;
+  try {
+    const fetchedPins = await pinsApi().fetchSavedPins(userId);
+    savedPins.value = fetchedPins;
   } catch (error) {
     console.error(error);
   } finally {
@@ -73,7 +85,9 @@ let activeTab = ref<PinTab>("created");
 const changePinTab = (tab: PinTab) => {
   activeTab.value = tab;
 
-  tab === "created" ? getUserPins(userInfo.value.id) : "";
+  tab === "created"
+    ? getUserPins(userInfo.value.id)
+    : getSavedPins(userInfo.value.id);
 };
 
 onMounted(() => {
@@ -150,6 +164,12 @@ definePageMeta({
     <TransitionGroup name="scale">
       <div v-if="activeTab === 'created'" class="pins">
         <PinCard v-for="pin in userPins" :key="pin.id" :pin="pin" />
+      </div>
+    </TransitionGroup>
+
+    <TransitionGroup name="scale">
+      <div v-if="activeTab === 'saved'" class="pins">
+        <PinCard v-for="pin in savedPins" :key="pin.id" :pin="pin" />
       </div>
     </TransitionGroup>
   </main>
