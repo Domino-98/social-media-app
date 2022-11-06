@@ -166,6 +166,15 @@ export default () => {
     if (insertError) throw new Error("Wystąpił błąd podczas dodawania obrazu");
   };
 
+  const editPin = async (id: number, pinToUpdate: PinToUpdate) => {
+    const { data, error } = await client
+      .from<Pin>("pins")
+      .update({ ...pinToUpdate })
+      .match({ id });
+
+    if (error) throw error;
+  };
+
   const deletePin = async (
     pinId: number,
     pinFileName: string,
@@ -191,6 +200,7 @@ export default () => {
     removeFromSaved,
     isPinSaved,
     addPin,
+    editPin,
     deletePin,
   };
 };
