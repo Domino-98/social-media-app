@@ -43,6 +43,23 @@ const removePinFromSaved = async () => {
 };
 
 let confirmModalOpened = ref<boolean>(false);
+const isDeleting = ref<boolean>(false);
+
+const deletePin = async (id: number) => {
+  isDeleting.value = true;
+  try {
+    const parts = props.pin.pin_url.split("/");
+    const pinFileName = parts[parts.length - 1];
+    await pinsApi().deletePin(id, pinFileName, user.value.id);
+    const pinIndex = pins.value.findIndex((pin) => pin.id === props.pin.id);
+    pins.value.splice(pinIndex, 1);
+    toast("Pomyślnie usunięto Pina");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isDeleting.value = false;
+  }
+};
 
 let optionsExpanded = ref<boolean>(false);
 
@@ -168,6 +185,17 @@ onUpdated(() => {
         <PinShare :pin="pin" />
       </template>
     </BaseModal>
+
+    <ConfirmationModal
+      :open="confirmModalOpened"
+      :loading="isDeleting"
+      :color="'hsl(0, 100%, 62%)'"
+      @close="confirmModalOpened = false"
+      @action="deletePin(props.pin.id)"
+    >
+      <template #header>Usuń Pina</template>
+      <template #body>Czy na pewno chcesz usunąć Pina?</template>
+    </ConfirmationModal>
   </div>
 </template>
 

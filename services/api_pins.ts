@@ -166,6 +166,22 @@ export default () => {
     if (insertError) throw new Error("Wystąpił błąd podczas dodawania obrazu");
   };
 
+  const deletePin = async (
+    pinId: number,
+    pinFileName: string,
+    userId: string
+  ) => {
+    const { error } = await client.from("pins").delete().match({ id: pinId });
+
+    if (error) throw error;
+
+    const { error: storageError } = await client.storage
+      .from("pins")
+      .remove([`${userId}/${pinFileName}`]);
+
+    if (storageError) throw error;
+  };
+
   return {
     fetchAllPins,
     fetchPinById,
@@ -175,5 +191,6 @@ export default () => {
     removeFromSaved,
     isPinSaved,
     addPin,
+    deletePin,
   };
 };

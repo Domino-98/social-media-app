@@ -59,6 +59,22 @@ const removePinFromSaved = async () => {
 let modalOpened = ref<boolean>(false);
 
 const confirmModalOpened = ref<boolean>(false);
+const isDeleting = ref<boolean>(false);
+
+const deletePin = async (id: number) => {
+  isDeleting.value = true;
+  try {
+    const parts = props.pin.pin_url.split("/");
+    const pinFileName = parts[parts.length - 1];
+    await pinsApi().deletePin(id, pinFileName, user.value.id);
+    toast("Pomyślnie usunięto Pina");
+    router.push("/");
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isDeleting.value = false;
+  }
+};
 
 onMounted(() => {
   isOwner.value = props.pin.author.id === user.value?.id;
@@ -76,6 +92,15 @@ definePageMeta({
 <template>
   <div class="pin">
     <div class="pin__img-container">
+      <button
+        v-if="isOwner"
+        @click.prevent="confirmModalOpened = !confirmModalOpened"
+        content="Usuń Pina"
+        v-tippy
+        class="pin__delete"
+      >
+        <font-awesome-icon icon="fa-solid fa-trash-can" size="lg" />
+      </button>
       <img
         id="img1"
         ref="imgEl"
@@ -128,7 +153,9 @@ definePageMeta({
         >
           Zapisano
         </button>
-        <NuxtLink v-else class="pin__save"> Edycja Pina </NuxtLink>
+        <NuxtLink v-else :to="`/pin/${pin.id}/edit`" class="pin__save">
+          Edycja Pina
+        </NuxtLink>
       </div>
 
       <div class="pin__info">
@@ -176,6 +203,17 @@ definePageMeta({
         <PinShare :pin="pin" />
       </template>
     </BaseModal>
+
+    <ConfirmationModal
+      :open="confirmModalOpened"
+      :loading="isDeleting"
+      :color="'hsl(0, 100%, 62%)'"
+      @close="confirmModalOpened = false"
+      @action="deletePin(pin.id)"
+    >
+      <template #header>Usuń Pina</template>
+      <template #body>Czy na pewno chcesz usunąć Pina?</template>
+    </ConfirmationModal>
   </div>
 </template>
 
@@ -206,9 +244,44 @@ definePageMeta({
     &-container {
       width: 50%;
 
+      &:hover .pin__delete {
+        visibility: visible;
+        opacity: 1;
+      }
+
       @media only screen and (max-width: 37.5em) {
         width: 100%;
       }
+    }
+  }
+
+  &__delete {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    background-color: var(--bg-color-primary);
+    cursor: pointer;
+    visibility: visible;
+    opacity: 1;
+    transition: all 0.3s;
+
+    & svg {
+      transition: all 0.3s;
+    }
+
+    &:hover svg {
+      color: #ff4040;
+    }
+
+    @media (hover: hover) {
+      visibility: hidden;
+      opacity: 0;
     }
   }
 
