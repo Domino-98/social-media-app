@@ -12,6 +12,13 @@ let pinsLoading = ref<boolean>(false);
 const getAllPins = async () => {
   pinsLoading.value = true;
   try {
+    if (route.query.search) {
+      const fetchedPins = await pinsApi().searchPins(
+        route.query.search as string
+      );
+      pins.value = fetchedPins;
+      return;
+    }
     const fetchedPins = await pinsApi().fetchAllPins();
     pins.value = fetchedPins;
   } catch (error) {
@@ -42,6 +49,12 @@ const getAllPins = async () => {
 // });
 
 onMounted(async () => {
+  await getAllPins();
+});
+
+const searchQuery = computed(() => route.query.search);
+
+watch(searchQuery, async () => {
   await getAllPins();
 });
 

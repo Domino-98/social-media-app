@@ -47,15 +47,28 @@ const handleLogout = async (): Promise<void> => {
   }
 };
 
-onMounted(() => {
-  colorMode.value === "dark" ? (darkMode.value = true) : (darkMode.value = false);
+const searchValue = ref<string>("");
+
+const searchPins = async (searchValue: string) => {
+  router.push({
+    path: "/",
+    query: { search: searchValue },
+  });
+};
+
+onMounted(async () => {
+  colorMode.value === "dark"
+    ? (darkMode.value = true)
+    : (darkMode.value = false);
   if (user.value) {
     setUserProfile();
   }
 });
 
 watch(colorMode, (color) => {
-  color.preference === "dark" ? (darkMode.value = true) : (darkMode.value = false);
+  color.preference === "dark"
+    ? (darkMode.value = true)
+    : (darkMode.value = false);
 });
 
 watch(
@@ -68,12 +81,20 @@ watch(
 
 <template>
   <nav class="navbar">
-    <form class="navbar__search">
+    <form @submit.prevent="searchPins(searchValue)" class="navbar__search">
       <font-awesome-icon icon="fa-solid fa-magnifying-glass" size="lg" />
-      <input type="text" class="navbar__search-input" placeholder="Szukaj" />
+      <input
+        v-model="searchValue"
+        type="text"
+        class="navbar__search-input"
+        placeholder="Szukaj"
+      />
     </form>
 
-    <div v-tippy="`${darkMode ? 'Light Mode' : 'Dark Mode'}`" class="navbar__switch">
+    <div
+      v-tippy="`${darkMode ? 'Light Mode' : 'Dark Mode'}`"
+      class="navbar__switch"
+    >
       <input
         @click="toggleMode()"
         v-model="darkMode"

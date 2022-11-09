@@ -5,7 +5,7 @@ export default () => {
   const client = useSupabaseClient();
 
   const fetchAllPins = async () => {
-    const { data, error } = await client
+    const { data: pins, error } = await client
       .from<Pin>("pins")
       .select(
         `
@@ -23,7 +23,7 @@ export default () => {
 
     if (error) throw error;
 
-    return data;
+    return pins;
   };
 
   const fetchPinById = async (id: number) => {
@@ -191,6 +191,29 @@ export default () => {
     if (storageError) throw error;
   };
 
+  const searchPins = async (searchValue: string) => {
+    const { data: pins, error } = await client
+      .from("pins")
+      .select(
+        `
+          *,
+          author:profiles (
+            id,
+            profile_id,
+            avatar_url,
+            username,
+            full_name
+          )
+        `
+      )
+      .ilike("title", `%${searchValue}%`)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return pins;
+  };
+
   return {
     fetchAllPins,
     fetchPinById,
@@ -202,5 +225,6 @@ export default () => {
     addPin,
     editPin,
     deletePin,
+    searchPins,
   };
 };

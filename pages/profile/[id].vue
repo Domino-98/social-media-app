@@ -45,9 +45,10 @@ const getUserProfile = async () => {
   userLoading.value = true;
   try {
     const fetchedProfile = await profilesApi().getUser(+profileId);
+    console.log(fetchedProfile);
 
     userInfo.value = fetchedProfile;
-    isOwner.value = fetchedProfile.id === user.value.id ? true : false;
+    isOwner.value = fetchedProfile.id === user.value?.id ? true : false;
 
     getUserPins(fetchedProfile.id);
   } catch (error) {
@@ -82,12 +83,12 @@ type PinTab = "created" | "saved";
 
 let activeTab = ref<PinTab>("created");
 
-const changePinTab = (tab: PinTab) => {
+const changePinTab = async (tab: PinTab) => {
   activeTab.value = tab;
 
   tab === "created"
-    ? getUserPins(userInfo.value.id)
-    : getSavedPins(userInfo.value.id);
+    ? await getUserPins(userInfo.value.id)
+    : await getSavedPins(userInfo.value.id);
 };
 
 onMounted(async () => {
