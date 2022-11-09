@@ -63,14 +63,15 @@ onMounted(async () => {
       <h2 class="sidebar__header">Kategorie</h2>
       <ul class="sidebar__list">
         <TransitionGroup name="fade">
-          <li
+          <NuxtLink
             v-for="category in categories"
             :key="category.name"
+            :to="`/category/${category.slug}`"
             class="sidebar__item"
           >
             <img :src="category.image_url" alt="cars" class="sidebar__icon" />
             {{ category.name }}
-          </li>
+          </NuxtLink>
         </TransitionGroup>
       </ul>
     </div>
