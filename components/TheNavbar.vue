@@ -273,20 +273,6 @@ onMounted(async () => {
     }
   }
 
-  &__auth,
-  &__profile {
-    @media only screen and (max-width: 50em) {
-      position: fixed;
-      top: 0.2rem;
-      right: 1rem;
-      z-index: 100;
-    }
-
-    @media only screen and (max-width: 37.5em) {
-      top: 0.35rem;
-    }
-  }
-
   &__add {
     @media only screen and (max-width: 50em) {
       margin-right: 0;
@@ -348,6 +334,20 @@ onMounted(async () => {
         width: 2.4rem;
         height: 2.4rem;
         padding: 1rem;
+      }
+    }
+
+    &__auth,
+    &__profile {
+      @media only screen and (max-width: 50em) {
+        position: fixed;
+        top: 0.2rem;
+        right: 1rem;
+        z-index: 100;
+      }
+
+      @media only screen and (max-width: 37.5em) {
+        top: 0.35rem;
       }
     }
   }

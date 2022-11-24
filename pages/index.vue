@@ -59,7 +59,6 @@ definePageMeta({
   columns: 5;
   column-gap: 1.5rem;
   font-size: 1.2rem;
-  min-height: 100vh;
 
   @media only screen and (max-width: 87.5em) {
     columns: 4;
