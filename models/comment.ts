@@ -9,5 +9,6 @@ export type Comment = {
     avatar_url: string;
     username: string;
     full_name: string;
-  };
+    profile_id: number;
+  } | null;
 };

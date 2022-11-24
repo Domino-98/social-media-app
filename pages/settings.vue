@@ -2,51 +2,31 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
-import { UserToUpdate } from "~~/models/user";
 import profilesApi from "~~/services/api_profiles";
 
 const toast = useToast();
 const user = useSupabaseUser();
+const userProfile = useUser();
 
-const firstName = ref<string>("");
-const lastName = ref<string>("");
-const fullName = computed((): string => firstName.value + " " + lastName.value);
+const firstName = ref<string>(
+  userProfile.value?.full_name?.split(" ")[0]
+    ? userProfile.value?.full_name?.split(" ")[0]
+    : ""
+);
+const lastName = ref<string>(
+  userProfile.value?.full_name?.split(" ")[1]
+    ? userProfile.value?.full_name?.split(" ")[1]
+    : ""
+);
+const fullName = computed(() => firstName.value + " " + lastName.value);
 
-const userInfo = reactive<UserToUpdate>({
-  avatar_url: "",
-  full_name: fullName.value,
-  username: "",
-  bio: "",
-  website: "",
-  background_url: "",
-});
+const isProfileLoaded = computed(() =>
+  Object.values(userProfile.value!).some((value) => value)
+);
 
 const validURL =
   /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 const regex = new RegExp(validURL);
-
-let userLoading = ref<boolean>(false);
-
-const getUserInfo = async () => {
-  userLoading.value = true;
-  try {
-    const profile = await profilesApi().getCurrentUser(user.value.id);
-
-    userInfo.avatar_url = profile.avatar_url;
-    firstName.value = profile.full_name?.split(" ")[0];
-    lastName.value = profile.full_name?.split(" ")[1];
-    userInfo.username =
-      profile.username ||
-      `${profile.email.split("@")[0]}#${profile.profile_id}`;
-    userInfo.bio = profile.bio;
-    userInfo.website = profile.website;
-    userInfo.background_url = profile.background_url;
-  } catch (error) {
-    console.error(error);
-  } finally {
-    userLoading.value = false;
-  }
-};
 
 const userSchema = yup.object({
   username: yup
@@ -60,18 +40,18 @@ const userSchema = yup.object({
   ),
 });
 
-let updateLoading = ref(false);
+const updateLoading = ref(false);
 
-const updateUserInfo = async () => {
-  console.log(userInfo);
-
-  userInfo.full_name = fullName.value;
+const updateUserInfo = async (values: any) => {
   updateLoading.value = true;
   try {
-    if (userInfo.website && !userInfo.website.match(regex))
+    if (userProfile.value?.website && !userProfile.value?.website.match(regex))
       return toast("Nieprawidłowy adres strony", { type: TYPE.ERROR });
 
-    const updateError = await profilesApi().updateUser(user.value.id, userInfo);
+    const updateError = await profilesApi().updateUser(user.value!.id, {
+      ...userProfile.value,
+      full_name: fullName.value,
+    });
 
     if (updateError) {
       let message = updateError.message;
@@ -94,9 +74,14 @@ const updateUserInfo = async () => {
   }
 };
 
-onMounted(async () => {
-  await getUserInfo();
-});
+watch(
+  () => userProfile.value?.full_name,
+  (newValue) => {
+    firstName.value = newValue?.split(" ")[0] as string;
+    lastName.value = newValue?.split(" ")[1] as string;
+  },
+  { deep: true }
+);
 
 definePageMeta({
   layout: "navigation",
@@ -106,24 +91,22 @@ definePageMeta({
 
 <template>
   <main>
-    <div class="settings">
+    <div v-if="isProfileLoaded" class="settings">
       <h1 class="settings__header">Edycja profilu</h1>
       <VForm
         @submit="updateUserInfo"
-        class="settings__form"
         :validation-schema="userSchema"
+        class="settings__form"
       >
         <SettingsBackground
           label="Tło"
-          :background-url="userInfo.background_url"
-          @update-background="
-            (publicUrl) => (userInfo.background_url = publicUrl)
-          "
+          :background-url="userProfile?.background_url!"
+          @update-background="(publicUrl: string) => (userProfile!.background_url = publicUrl)"
         />
         <SettingsAvatar
           label="Awatar"
-          :avatar-url="userInfo.avatar_url"
-          @update-avatar="(publicUrl) => (userInfo.avatar_url = publicUrl)"
+          :avatar-url="userProfile?.avatar_url!"
+          @update-avatar="(publicUrl: string) => (userProfile!.avatar_url = publicUrl)"
         />
         <div class="settings__form-wrapper">
           <BaseInput
@@ -142,21 +125,21 @@ definePageMeta({
           />
         </div>
         <BaseTextarea
-          v-model="userInfo.bio"
+          v-model="userProfile!.bio"
           name="bio"
           label="O mnie"
           id="bio"
           placeholder="O mnie"
         />
         <BaseInput
-          v-model="userInfo.username"
+          v-model="userProfile!.username"
           name="username"
           label="Nazwa użytkownika"
           id="username"
           type="text"
         />
         <BaseInput
-          v-model="userInfo.website"
+          v-model="userProfile!.website"
           name="website"
           label="Witryna / Portfolio"
           id="website"
@@ -168,11 +151,15 @@ definePageMeta({
           type="submit"
           class="settings__save-btn"
         >
-          <span v-show="updateLoading" class="loading-spinner"></span>
+          <span
+            v-show="updateLoading"
+            class="loading-spinner loading-spinner--sm loading-spinner--light"
+          ></span>
           <span>{{ updateLoading ? "Zapisywanie" : "Zapisz" }}</span>
         </button>
       </VForm>
     </div>
+    <span v-if="!isProfileLoaded" class="loading-spinner"></span>
   </main>
 </template>
 
@@ -182,6 +169,7 @@ main {
   align-items: center;
   justify-content: center;
   margin: 0 1rem;
+  margin-top: 0.5rem;
 }
 
 .settings {
@@ -191,7 +179,6 @@ main {
   justify-content: center;
   width: 100%;
   max-width: 30rem;
-  margin-top: 0.5rem;
   padding: 2rem;
   border-radius: 1rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -261,11 +248,5 @@ main {
   &:hover {
     background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
   }
-}
-
-:deep(.loading-spinner) {
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.5rem;
 }
 </style>

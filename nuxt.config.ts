@@ -1,6 +1,3 @@
-import { defineNuxtConfig } from "nuxt";
-
-// https://v3.nuxtjs.org/api/configuration/nuxt.config
 export default defineNuxtConfig({
   css: [
     "assets/styles/main.scss",
@@ -8,12 +5,6 @@ export default defineNuxtConfig({
     "@fortawesome/fontawesome-svg-core/styles.css",
   ],
   modules: ["@nuxtjs/color-mode", "@nuxtjs/supabase"],
-  publicRuntimeConfig: {
-    UNSPLASH_API_KEY: process.env.UNSPLASH_API_KEY,
-  },
-  meta: {
-    link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
-  },
   alias: {
     yup: "yup/lib/index.js",
   },
@@ -25,5 +16,35 @@ export default defineNuxtConfig({
       "@fortawesome/free-regular-svg-icons",
       "@fortawesome/free-solid-svg-icons",
     ],
+  },
+  app: {
+    head: {
+      meta: [
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+      ],
+      link: [
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap",
+          crossorigin: "",
+        },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Rubik:wght@400;500&display=swap",
+          crossorigin: "",
+        },
+      ],
+    },
+    pageTransition: {
+      name: "fade",
+      mode: "out-in", // default
+    },
+  },
+  supabase: {
+    client: {
+      auth: {
+        persistSession: true,
+      },
+    },
   },
 });

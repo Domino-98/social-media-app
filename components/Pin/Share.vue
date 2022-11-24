@@ -5,14 +5,14 @@ const props = defineProps<{
   pin: Pin;
 }>();
 
-let homeURL = window.location.origin;
-let copyInput = ref<HTMLInputElement>();
-let copied = ref<boolean>(false);
+const homeURL = window.location.origin;
+const copyInput = ref<HTMLInputElement>();
+const copied = ref<boolean>(false);
 
 const copyURL = () => {
-  copyInput.value.select();
-  copyInput.value.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(copyInput.value.value);
+  copyInput.value?.select();
+  copyInput.value?.setSelectionRange(0, 99999);
+  navigator.clipboard.writeText(copyInput.value?.value as string);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
 };
@@ -36,7 +36,11 @@ const copyURL = () => {
         :value="`${homeURL}/pin/${pin.id}`"
         disabled
       />
-      <font-awesome-icon icon="fa-solid fa-copy" size="xl" class="share__copy-icon" />
+      <font-awesome-icon
+        icon="fa-solid fa-copy"
+        size="xl"
+        class="share__copy-icon"
+      />
     </tippy>
 
     <p v-if="copied" class="share__copied">Skopiowano!</p>
@@ -114,6 +118,8 @@ const copyURL = () => {
       border-radius: 0.25rem;
       background-color: rgba(var(--opacity-color), 0.1);
       color: var(--font-color);
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     &-icon {
@@ -134,6 +140,7 @@ const copyURL = () => {
   &__social {
     display: flex;
     justify-content: center;
+    flex-wrap: wrap;
     gap: 0.5rem;
   }
 
@@ -154,6 +161,7 @@ const copyURL = () => {
   &__whatsapp {
     display: flex;
     align-items: center;
+    justify-content: center;
     flex: 1;
     gap: 0.5rem;
     padding: 0.5rem 1rem;

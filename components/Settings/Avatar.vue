@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import { Database } from "~~/lib/database.types";
 
 defineProps<{
   label: string;
@@ -8,59 +9,71 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "updateAvatar", url: string): void;
+  (e: "updateAvatar", url: string | null): void;
 }>();
 
 const toast = useToast();
 const user = useSupabaseUser();
-const client = useSupabaseClient();
+const client = useSupabaseClient<Database>();
 
 const file = ref();
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 const updateAvatarMetadata = async (url: string | null) => {
-  const { user, error } = await client.auth.update({
+  const { data, error } = await client.auth.updateUser({
     data: { avatar_to_display: url },
   });
 };
 
 const updateAvatar = async (e: Event) => {
   const target = e.target as HTMLInputElement;
-  const fileAvatar = target.files[0] as File;
+  const fileAvatar = target.files![0] as File;
   let extFile = fileAvatar.name.split(".").pop();
   if (!(extFile === "jpg" || extFile === "jpeg" || extFile === "png")) {
-    return toast("Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG oraz PNG", {
-      type: TYPE.ERROR,
-    });
+    return toast(
+      "Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG oraz PNG",
+      {
+        type: TYPE.ERROR,
+      }
+    );
   }
 
   try {
     isLoading.value = true;
     const { data, error: uploadError } = await client.storage
       .from("avatars")
-      .upload(`${user.value.id}/avatarImage.${extFile}?bust=${Date.now()}`, fileAvatar, {
-        cacheControl: "3600",
-        upsert: true,
-      });
+      .upload(
+        `${user.value?.id}/avatarImage.${extFile}?bust=${Date.now()}`,
+        fileAvatar,
+        {
+          cacheControl: "3600",
+          upsert: true,
+        }
+      );
 
     if (uploadError) throw uploadError;
 
-    const { publicURL, error } = client.storage
+    const {
+      data: { publicUrl },
+    } = client.storage
       .from("avatars")
-      .getPublicUrl(`${user.value.id}/avatarImage.${extFile}?bust=${Date.now()}`);
+      .getPublicUrl(
+        `${user.value?.id}/avatarImage.${extFile}?bust=${Date.now()}`
+      );
 
     const { error: updateError } = await client
       .from("profiles")
       .update({
         updated_at: new Date(),
-        avatar_url: publicURL,
+        avatar_url: publicUrl,
       })
-      .match({ id: user.value.id });
+      .match({ id: user.value?.id });
 
     if (updateError) throw updateError;
 
-    emit("updateAvatar", publicURL);
-    updateAvatarMetadata(publicURL);
+    updateAvatarMetadata(publicUrl);
+    console.log({ publicUrl });
+    emit("updateAvatar", publicUrl);
 
     toast("Pomyślnie zaktualizowano awatar!");
   } catch (error) {
@@ -75,11 +88,11 @@ const removeAvatar = async () => {
   try {
     const { data, error: removeError } = await client.storage
       .from("avatars")
-      .remove([`${user.value.id}/avatarImage.${"jpg" || "jpeg" || "png"}`]);
+      .remove([`${user.value?.id}/avatarImage.${"jpg" || "jpeg" || "png"}`]);
 
     if (removeError) throw removeError;
 
-    const { error: updateError } = await client.auth.update({
+    const { error: updateError } = await client.auth.updateUser({
       data: {
         avatar_url: null,
       },
@@ -93,7 +106,7 @@ const removeAvatar = async () => {
         updated_at: new Date(),
         avatar_url: null,
       })
-      .match({ id: user.value.id });
+      .match({ id: user.value?.id });
 
     if (error) throw error;
 
@@ -115,10 +128,15 @@ const removeAvatar = async () => {
     <label class="form__label">Awatar</label>
     <div class="avatar">
       <div class="avatar__container">
-        <span v-if="isLoading" class="loading-spinner avatar"></span>
+        <span
+          v-if="isLoading"
+          class="loading-spinner loading-spinner--light avatar"
+        ></span>
         <img
           v-else
-          :src="avatarUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'"
+          :src="
+            avatarUrl || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+          "
           alt=""
           class="avatar__img"
         />
@@ -140,7 +158,7 @@ const removeAvatar = async () => {
         accept="image/png, image/jpeg, image/jpg"
         hidden
       />
-      <label for="uploadAvatar" class="upload">
+      <label for="uploadAvatar" class="btn btn--gray">
         {{ !avatarUrl ? "Dodaj" : "Zmień" }}
       </label>
     </div>
@@ -193,7 +211,7 @@ const removeAvatar = async () => {
     width: 0.8rem;
     height: 0.8rem;
     border-radius: 50%;
-    background-color: var(--btn-bg);
+    background-color: var(--btn-gray);
     color: var(--btn-color);
     cursor: pointer;
 

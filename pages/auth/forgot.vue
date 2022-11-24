@@ -2,25 +2,28 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import { Database } from "~~/lib/database.types";
 
+const client = useSupabaseClient<Database>();
 const toast = useToast();
-
-const client = useSupabaseClient();
 
 const emailRules = yup
   .string()
   .required("Adres email jest wymagany")
   .email("Adres email musi być prawidłowy");
 
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 // Send link for password reset
-const handleReset = async (values): Promise<void> => {
+const handleReset = async (values: any): Promise<void> => {
   isLoading.value = true;
   try {
-    const { data, error } = await client.auth.api.resetPasswordForEmail(values.email, {
-      redirectTo: `${window.location.origin}/auth/reset/`,
-    });
+    const { data, error } = await client.auth.resetPasswordForEmail(
+      values.email,
+      {
+        redirectTo: `${window.location.origin}/auth/reset/`,
+      }
+    );
 
     if (error) {
       toast(error.message, {
@@ -34,7 +37,7 @@ const handleReset = async (values): Promise<void> => {
       timeout: 10000,
     });
   } catch (error) {
-    console.error(error.message);
+    if (error instanceof Error) console.error(error.message);
   } finally {
     isLoading.value = false;
   }
@@ -47,8 +50,8 @@ const handleReset = async (values): Promise<void> => {
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <img class="logo-icon" src="~/assets/icons/camera.svg" alt="" />
-      <h1 class="logo-text">We<span>Share</span></h1>
+      <img class="logo__icon" src="~/assets/icons/camera.svg" alt="logo" />
+      <h1 class="logo__text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
       <div>
@@ -68,7 +71,9 @@ const handleReset = async (values): Promise<void> => {
             <VErrorMessage name="email" class="error" />
           </div>
 
-          <button :disabled="isLoading" class="auth__form-btn">Przypomnij hasło</button>
+          <button :disabled="isLoading" class="auth__form-btn">
+            {{ isLoading ? "Wysyłanie linku..." : "Przypomnij hasło" }}
+          </button>
         </VForm>
         <div class="auth__signup">
           <NuxtLink to="/auth" class="auth__signup-switch">Logowanie</NuxtLink>

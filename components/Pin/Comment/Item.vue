@@ -2,18 +2,18 @@
 import { Comment } from "~~/models/comment";
 import commentsApi from "~~/services/api_comments";
 import { useToast } from "vue-toastification";
+import { onClickOutside } from "@vueuse/core";
 
 const props = defineProps<{
   comment: Comment;
 }>();
 
-const user = useSupabaseUser();
 const isOwner = computed(() => user.value?.id === props.comment.user_id);
+const user = useSupabaseUser();
 const toast = useToast();
-
 const { timeFromNow } = useDateTime();
 
-let isEditing = ref<boolean>(false);
+const isEditing = ref<boolean>(false);
 
 const editComment = async (comment: string, id: number) => {
   isEditing.value = true;
@@ -28,9 +28,13 @@ const editComment = async (comment: string, id: number) => {
   }
 };
 
-let editMode = ref<boolean>(false);
+const editMode = ref<boolean>(false);
 
-console.log(props.comment.updated_at);
+const commentEl = ref();
+
+onClickOutside(commentEl, (e: Event) => {
+  if ((e.target as HTMLElement).id !== "editBtn") disableEdit();
+});
 
 const disableEdit = () => {
   editMode.value = false;
@@ -38,18 +42,23 @@ const disableEdit = () => {
 </script>
 
 <template>
-  <div v-click-outside="disableEdit" class="comment__item">
-    <img
-      class="comment__avatar"
-      :src="
-        comment.author.avatar_url ||
-        'https://cdn-icons-png.flaticon.com/512/149/149071.png'
-      "
-      alt=""
-    />
+  <div ref="commentEl" class="comment__item">
+    <NuxtLink
+      :to="`/profile/${comment.author?.profile_id}`"
+      style="flex-shrink: 0"
+    >
+      <img
+        class="comment__avatar"
+        :src="
+          comment.author?.avatar_url ||
+          'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+        "
+        alt=""
+      />
+    </NuxtLink>
     <div class="comment__info">
       <span class="comment__name">{{
-        comment.author.username || comment.author.full_name
+        comment.author?.username || comment.author?.full_name
       }}</span>
 
       <p v-if="!editMode" class="comment__text">{{ comment.message }}</p>
@@ -64,6 +73,7 @@ const disableEdit = () => {
           @click.prevent="editComment(comment.message, comment.id)"
           :disabled="!comment.message || isEditing"
           class="comment__edit"
+          id="editBtn"
         >
           Edytuj
         </button>
@@ -116,6 +126,7 @@ const disableEdit = () => {
     width: 2.5rem;
     height: 2.5rem;
     border-radius: 50%;
+    cursor: pointer;
   }
 
   &__info {

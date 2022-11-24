@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onBeforeRouteLeave } from "vue-router";
-import { User } from "~~/models/user";
+import type { User } from "~~/models/user";
 import pinsApi from "~~/services/api_pins";
 import profilesApi from "~~/services/api_profiles";
+import relationsApi from "~~/services/api_relations";
+import { onClickOutside } from "@vueuse/core";
+import { useToast, TYPE } from "vue-toastification";
+import { Pin } from "~~/models/pin";
 
 const route = useRoute();
 const user = useSupabaseUser();
+const toast = useToast();
 
 const { userPins, savedPins } = usePins();
 
@@ -14,14 +18,14 @@ const isOwner = ref<boolean>(false);
 
 const userInfo = ref<User>();
 
-let userLoading = ref<boolean>();
-let pinsLoading = ref<boolean>();
+const userLoading = ref<boolean>();
+const pinsLoading = ref<boolean>();
 
 const getUserPins = async (userId: string) => {
   pinsLoading.value = true;
   try {
     const fetchedPins = await pinsApi().fetchUserPins(userId);
-    userPins.value = fetchedPins;
+    userPins.value = fetchedPins as Pin[];
   } catch (error) {
     console.error(error);
   } finally {
@@ -33,7 +37,7 @@ const getSavedPins = async (userId: string) => {
   pinsLoading.value = true;
   try {
     const fetchedPins = await pinsApi().fetchSavedPins(userId);
-    savedPins.value = fetchedPins;
+    savedPins.value = fetchedPins as Pin[];
   } catch (error) {
     console.error(error);
   } finally {
@@ -46,10 +50,8 @@ const getUserProfile = async () => {
   try {
     const fetchedProfile = await profilesApi().getUser(+profileId);
     console.log(fetchedProfile);
-
-    userInfo.value = fetchedProfile;
+    userInfo.value = fetchedProfile as User;
     isOwner.value = fetchedProfile.id === user.value?.id ? true : false;
-
     getUserPins(fetchedProfile.id);
   } catch (error) {
     console.error(error);
@@ -58,41 +60,77 @@ const getUserProfile = async () => {
   }
 };
 
-// let showModal = ref();
-
-// function displayPinModal(route) {
-//   showModal.value = route.params.id;
-//   console.log(showModal.value);
-//   window.history.pushState({}, null, route.path);
-// }
-
-// function hidePinModal() {
-//   showModal.value = null;
-//   window.history.pushState({}, null, router.path);
-// }
-
-// onBeforeRouteLeave((to, from, next) => {
-//   if (to.name === "pin-id") {
-//     displayPinModal(to);
-//   } else {
-//     next();
-//   }
-// });
-
 type PinTab = "created" | "saved";
 
-let activeTab = ref<PinTab>("created");
+const activeTab = ref<PinTab>("created");
 
 const changePinTab = async (tab: PinTab) => {
   activeTab.value = tab;
 
-  tab === "created"
-    ? await getUserPins(userInfo.value.id)
-    : await getSavedPins(userInfo.value.id);
+  if (userInfo.value)
+    tab === "created"
+      ? await getUserPins(userInfo.value.id as string)
+      : await getSavedPins(userInfo.value.id as string);
+};
+
+const isChatActive = ref<boolean>(false);
+
+const toggleChat = () => {
+  isChatActive.value = !isChatActive.value;
+};
+
+const isFollowed = ref<boolean>(false);
+
+const totalFollowers = ref<number>();
+const totalFollowing = ref<number>();
+
+const followUser = async () => {
+  if (user.value) {
+    try {
+      await relationsApi().followUser(
+        user.value!.id,
+        userInfo.value?.id as string
+      );
+      totalFollowers.value!++;
+      isFollowed.value = true;
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    toast("Zaloguj się, by dodać użytkownika do obserwowanych", {
+      type: TYPE.ERROR,
+    });
+  }
+};
+
+const unfollowUser = async () => {
+  await relationsApi().unfollowUser(
+    user.value!.id,
+    userInfo.value?.id as string
+  );
+  totalFollowers.value!--;
+  isFollowed.value = false;
 };
 
 onMounted(async () => {
   await getUserProfile();
+  totalFollowers.value = await relationsApi().getTotalFollowers(
+    userInfo.value?.id as string
+  );
+  totalFollowing.value = await relationsApi().getTotalFollowing(
+    userInfo.value?.id as string
+  );
+  isOwner.value = userInfo.value!.id === user.value?.id;
+  isFollowed.value = await relationsApi().checkIfFollowing(
+    user.value!.id,
+    userInfo.value?.id as string
+  );
+});
+
+const chatEl = ref();
+
+onClickOutside(chatEl, (e: Event) => {
+  if ((e.target as HTMLElement).id !== "sendBtn") toggleChat();
 });
 
 onUnmounted(() => {
@@ -107,11 +145,6 @@ definePageMeta({
 
 <template>
   <main>
-    <!-- <div v-if="showModal">
-      <h1>Modal</h1>
-      <button @click="hidePinModal">Hide pin modal</button>
-    </div> -->
-
     <div v-if="userInfo" class="profile">
       <div
         v-if="userInfo.background_url"
@@ -140,15 +173,46 @@ definePageMeta({
           >{{ userInfo?.website }}</NuxtLink
         >
         <p class="profile__follows">
-          <span class="profile__followers">56 obserwujących, </span>
-          <span class="profile__following">5 obserwowanych</span>
+          <span class="profile__followers"
+            >{{ totalFollowers }} obserwujących,
+          </span>
+          <span class="profile__following"
+            >{{ totalFollowing }} obserwowanych</span
+          >
         </p>
       </div>
 
-      <NuxtLink v-if="isOwner" to="/settings" class="profile__edit"
+      <NuxtLink v-if="isOwner" to="/settings" class="btn btn--gray"
         >Edytuj profil
       </NuxtLink>
-      <button v-else class="profile__follow">Obserwuj</button>
+
+      <button
+        v-if="!isFollowed && !isOwner"
+        @click.prevent="followUser"
+        class="btn btn--gray"
+      >
+        Obserwuj
+      </button>
+      <button
+        v-if="isFollowed && !isOwner"
+        @click.prevent="unfollowUser"
+        class="btn btn--gray"
+      >
+        Przestań obserwować
+      </button>
+      <div v-if="!isOwner" class="profile__chat">
+        <button @click.prevent="toggleChat" class="btn btn--gray" id="sendBtn">
+          Wyślij wiadomość
+        </button>
+
+        <Transition name="scale">
+          <ChatInput
+            v-if="isChatActive"
+            ref="chatEl"
+            :receiver-id="userInfo.id!"
+          />
+        </Transition>
+      </div>
       <div class="profile__btns">
         <button
           @click="changePinTab('created')"
@@ -167,17 +231,15 @@ definePageMeta({
       </div>
     </div>
 
-    <TransitionGroup name="scale">
-      <div v-if="activeTab === 'created'" class="pins">
-        <PinCard v-for="pin in userPins" :key="pin.id" :pin="pin" />
-      </div>
-    </TransitionGroup>
+    <div v-if="activeTab === 'created'" class="pins">
+      <PinCard v-for="pin in userPins" :key="pin.id" :pin="pin" />
+    </div>
 
-    <TransitionGroup name="scale">
-      <div v-if="activeTab === 'saved'" class="pins">
-        <PinCard v-for="pin in savedPins" :key="pin.id" :pin="pin" />
-      </div>
-    </TransitionGroup>
+    <div v-if="activeTab === 'saved'" class="pins">
+      <PinCard v-for="pin in savedPins" :key="pin.id" :pin="pin" />
+    </div>
+
+    <span v-if="pinsLoading" class="loading-spinner"></span>
   </main>
 </template>
 
@@ -235,22 +297,9 @@ main {
     flex-direction: column;
     align-items: center;
     gap: 0.75rem;
+    margin-bottom: 0.75rem;
     font-size: 1rem;
     color: var(--font-color);
-  }
-
-  &__edit,
-  &__follow {
-    margin-top: 1rem;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    background-color: var(--btn-bg);
-    color: var(--btn-color);
-    cursor: pointer;
-
-    &:hover {
-      background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
-    }
   }
 
   &__website {
@@ -287,6 +336,12 @@ main {
       background-color: rgba(var(--opacity-color), 0.1);
     }
   }
+
+  &__chat {
+    position: relative;
+    margin: 0 0.5rem;
+    margin-top: 0.75rem;
+  }
 }
 
 .move-top {
@@ -316,5 +371,9 @@ main {
   @media only screen and (max-width: 25em) {
     columns: 1;
   }
+}
+
+.loading-spinner {
+  margin-top: 2rem;
 }
 </style>

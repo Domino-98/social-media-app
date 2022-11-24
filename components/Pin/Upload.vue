@@ -8,13 +8,13 @@ const emit = defineEmits<{
 
 const toast = useToast();
 
-let file = ref<File>();
-let fileInput = ref<HTMLInputElement>();
-let urlInput = ref<HTMLInputElement>();
-let urlInputVisible = ref<boolean>(false);
-let isLoading = ref<boolean>(false);
-let givenUrl = ref<string>("");
-let imgUrl = ref<string>("");
+const file = ref<File>();
+const fileInput = ref<HTMLInputElement>();
+const urlInput = ref<HTMLInputElement>();
+const urlInputVisible = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
+const givenUrl = ref<string>("");
+const imgUrl = ref<string>("");
 
 const validateFileSize = (file: File, maxSizeMb: number): boolean => {
   const fileSize = file.size;
@@ -27,24 +27,27 @@ const validateFileSize = (file: File, maxSizeMb: number): boolean => {
 };
 
 const uploadFile = (e: Event) => {
-  let input = e.target as HTMLInputElement;
+  const input = e.target as HTMLInputElement;
 
-  if (input.files[0]) {
+  if (input.files![0]) {
     const allowedExtensions = /(\.jpg|\.jpeg|\.png|\.gif)$/i;
 
     if (!allowedExtensions.exec(input.value)) {
-      return toast("Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG, PNG, GIF", {
-        type: TYPE.ERROR,
-      });
+      return toast(
+        "Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG, PNG, GIF",
+        {
+          type: TYPE.ERROR,
+        }
+      );
     }
 
-    if (!validateFileSize(input.files[0], 20)) {
+    if (!validateFileSize(input.files![0], 20)) {
       return toast("Maksymalna wielkość pliku to 20MB", {
         type: TYPE.ERROR,
       });
     }
 
-    file.value = input.files[0];
+    file.value = input.files![0];
     imgUrl.value = URL.createObjectURL(file.value);
 
     emit("updateFile", file.value);
@@ -52,20 +55,22 @@ const uploadFile = (e: Event) => {
 };
 
 const deleteFile = () => {
-  file.value = null;
-  fileInput.value.value = "";
+  file.value = undefined;
+  fileInput.value!.value = "";
   givenUrl.value = "";
   imgUrl.value = "";
   urlInputVisible.value = false;
 };
 
-const validUrl = /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
+const validUrl =
+  /(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})/gi;
 const regex = new RegExp(validUrl);
 
-async function getFileFromUrl(url, defaultType = "image/jpeg") {
+async function getFileFromUrl(url: string, defaultType = "image/jpeg") {
   isLoading.value = true;
   try {
-    if (!url.match(regex)) throw new Error("Wprowadź poprawny adres URL obrazu");
+    if (!url.match(regex))
+      throw new Error("Wprowadź poprawny adres URL obrazu");
     const response = await fetch(url);
     const data = await response.blob();
 
@@ -76,7 +81,9 @@ async function getFileFromUrl(url, defaultType = "image/jpeg") {
         data.type === "image/gif"
       )
     )
-      throw new Error("Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG, PNG, GIF");
+      throw new Error(
+        "Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG, PNG, GIF"
+      );
 
     console.log(data);
     let randomId = Math.floor(Math.random() * Date.now());
@@ -100,9 +107,10 @@ async function getFileFromUrl(url, defaultType = "image/jpeg") {
     imgUrl.value = url;
     emit("updateFile", file);
   } catch (error) {
-    toast(error.message, {
-      type: TYPE.ERROR,
-    });
+    if (error instanceof Error)
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
   } finally {
     isLoading.value = false;
   }
@@ -111,7 +119,7 @@ async function getFileFromUrl(url, defaultType = "image/jpeg") {
 const handleEditionMode = () => {
   urlInputVisible.value = true;
   nextTick(() => {
-    urlInput.value.focus();
+    urlInput.value?.focus();
   });
 };
 </script>
@@ -128,10 +136,13 @@ const handleEditionMode = () => {
 
       <div v-else class="upload__content">
         <font-awesome-icon icon="fa-solid fa-cloud-arrow-up" size="2x" />
-        <p class="upload__text">Przeciągnij i upuść lub kliknij, aby przesłać</p>
+        <p class="upload__text">
+          Przeciągnij i upuść lub kliknij, aby przesłać
+        </p>
         <p class="upload__text upload__text--mobile">Prześlij zdjęcie / gif</p>
         <p class="upload__info">
-          Zalecenie: Użyj wysokiej jakości obrazów o rozmiarze mniejszym niż 20MB
+          Zalecenie: Użyj wysokiej jakości obrazów o rozmiarze mniejszym niż
+          20MB
         </p>
       </div>
       <input
@@ -166,7 +177,10 @@ const handleEditionMode = () => {
         placement="right"
         v-tippy
       >
-        <span v-show="isLoading" class="loading-spinner"></span>
+        <span
+          v-show="isLoading"
+          class="loading-spinner loading-spinner--light"
+        ></span>
         <font-awesome-icon
           v-show="!isLoading"
           icon="fa-regular fa-file-image"
@@ -232,7 +246,7 @@ const handleEditionMode = () => {
     height: 2.5rem;
     border-radius: 50%;
     background-color: var(--bg-color-secondary);
-    color: #252525;
+    color: var(--icon-color);
     cursor: pointer;
 
     &:hover svg {

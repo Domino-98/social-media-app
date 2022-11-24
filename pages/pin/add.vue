@@ -22,10 +22,11 @@ const toast = useToast();
 const user = useSupabaseUser();
 const userProfile = useUser();
 
-let imgFile = ref<File>();
-let isLoading = ref<boolean>();
+const imgFile = ref<File>();
+const isLoading = ref<boolean>();
 
-const handlePinSubmit = async (values) => {
+const handlePinSubmit = async (values: any) => {
+  console.log({ values });
   const { title, description, destination_url, category_id } = values;
   isLoading.value = true;
   try {
@@ -46,9 +47,10 @@ const handlePinSubmit = async (values) => {
       });
     }
   } catch (error) {
-    toast(error.message, {
-      type: TYPE.ERROR,
-    });
+    if (error instanceof Error)
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
   } finally {
     isLoading.value = false;
   }
@@ -83,7 +85,7 @@ definePageMeta({
         :validation-schema="pinSchema"
         class="add__form"
       >
-        <PinUpload @update-file="(file) => (imgFile = file)" />
+        <PinUpload @update-file="(file: File) => (imgFile = file)" />
 
         <div class="add__form-info">
           <div class="add__form-group">
@@ -113,7 +115,7 @@ definePageMeta({
               alt=""
             />
             <span class="add__form-profile-name">{{
-              userProfile.username
+              userProfile?.username
             }}</span>
           </div>
           <div class="add__form-group">
@@ -156,7 +158,10 @@ definePageMeta({
           </BaseSelect>
 
           <button type="submit" :disabled="isLoading" class="btn btn--primary">
-            <span v-show="isLoading" class="loading-spinner"></span>
+            <span
+              v-show="isLoading"
+              class="loading-spinner loading-spinner--sm loading-spinner--light"
+            ></span>
             <span>{{ isLoading ? "Zapisywanie Pina" : "Zapisz Pina" }}</span>
           </button>
         </div>
@@ -184,6 +189,7 @@ main {
   display: flex;
   width: 100%;
   max-width: 60rem;
+  min-height: 70vh;
   margin-top: 0.5rem;
   padding: 2rem;
   border-radius: 1rem;
@@ -275,12 +281,6 @@ main {
 
 .invalid {
   border-bottom: 2px solid #ff5151 !important;
-}
-
-.loading-spinner {
-  width: 1rem;
-  height: 1rem;
-  margin-right: 0.5rem;
 }
 
 .btn {

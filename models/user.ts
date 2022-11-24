@@ -8,6 +8,7 @@ export type User = {
   background_url?: string;
   email: string;
   profile_id: number;
+  updated_at: string;
 };
 
 export type UserToUpdate = Partial<User>;

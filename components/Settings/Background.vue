@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import { Database } from "~~/lib/database.types";
 
 defineProps<{
   label: string;
@@ -8,51 +9,62 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "updateBackground", url: string): void;
+  (e: "updateBackground", url: string | null): void;
 }>();
 
 const toast = useToast();
 const user = useSupabaseUser();
-const client = useSupabaseClient();
+const client = useSupabaseClient<Database>();
 
 const file = ref();
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 const updateBackground = async (e: Event) => {
   const target = e.target as HTMLInputElement;
-  const fileBg = target.files[0] as File;
+  const fileBg = target.files![0] as File;
   let extFile = fileBg.name.split(".").pop();
   if (!(extFile === "jpg" || extFile === "jpeg" || extFile === "png")) {
-    return toast("Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG oraz PNG", {
-      type: TYPE.ERROR,
-    });
+    return toast(
+      "Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG oraz PNG",
+      {
+        type: TYPE.ERROR,
+      }
+    );
   }
 
   try {
     isLoading.value = true;
     const { data, error: uploadError } = await client.storage
       .from("backgrounds")
-      .upload(`${user.value.id}/backgroundImage.${extFile}?bust=${Date.now()}`, fileBg, {
-        cacheControl: "3600",
-        upsert: true,
-      });
+      .upload(
+        `${user.value?.id}/backgroundImage.${extFile}?bust=${Date.now()}`,
+        fileBg,
+        {
+          cacheControl: "3600",
+          upsert: true,
+        }
+      );
 
     if (uploadError) throw uploadError;
 
-    const { publicURL, error } = client.storage
+    const {
+      data: { publicUrl },
+    } = client.storage
       .from("backgrounds")
-      .getPublicUrl(`${user.value.id}/backgroundImage.${extFile}?bust=${Date.now()}`);
+      .getPublicUrl(
+        `${user.value?.id}/backgroundImage.${extFile}?bust=${Date.now()}`
+      );
 
     const { error: updateError } = await client
       .from("profiles")
       .update({
         updated_at: new Date(),
-        background_url: publicURL,
+        background_url: publicUrl,
       })
-      .match({ id: user.value.id });
+      .match({ id: user.value?.id });
 
     if (updateError) throw updateError;
-    emit("updateBackground", publicURL);
+    emit("updateBackground", publicUrl);
 
     toast("Pomyślnie zaktualizowano tło!");
   } catch (error) {
@@ -67,11 +79,13 @@ const removeBackground = async () => {
   try {
     const { data, error: removeError } = await client.storage
       .from("backgrounds")
-      .remove([`${user.value.id}/backgroundImage.${"jpg" || "jpeg" || "png"}`]);
+      .remove([
+        `${user.value?.id}/backgroundImage.${"jpg" || "jpeg" || "png"}`,
+      ]);
 
     if (removeError) throw removeError;
 
-    const { error: updateError } = await client.auth.update({
+    const { error: updateError } = await client.auth.updateUser({
       data: {
         background_url: null,
       },
@@ -85,7 +99,7 @@ const removeBackground = async () => {
         updated_at: new Date(),
         background_url: null,
       })
-      .match({ id: user.value.id });
+      .match({ id: user.value?.id });
 
     if (error) throw error;
 
@@ -124,16 +138,22 @@ const removeBackground = async () => {
           accept="image/png, image/jpeg, image/jpg"
           hidden
         />
-        <label for="uploadBackground" class="upload">
-          <span v-show="isLoading" class="loading-spinner"></span>
-          <span v-show="isLoading">Dodawanie tła</span>
-          <span v-show="!isLoading">{{ !backgroundUrl ? "Dodaj" : "Zmień" }}</span>
+        <label
+          for="uploadBackground"
+          class="btn btn--gray"
+          :class="{ test: isLoading }"
+        >
+          <span
+            v-show="isLoading"
+            class="loading-spinner loading-spinner--sm loading-spinner--light"
+          ></span>
+          <span>{{ !backgroundUrl ? "Dodaj" : "Zmień" }}</span>
         </label>
         <button
           :disabled="isLoading"
           v-if="backgroundUrl"
           @click.prevent="removeBackground"
-          class="btn-gray"
+          class="btn btn--gray"
         >
           Usuń
         </button>

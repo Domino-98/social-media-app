@@ -1,11 +1,19 @@
 <script setup lang="ts">
 type AuthState = "login" | "register";
 
-let authState = ref<AuthState>("login");
+const authState = ref<AuthState>("login");
 
 const toggleAuthState = (state: AuthState) => {
   authState.value = state;
 };
+
+const user = useSupabaseUser();
+
+onBeforeMount(async () => {
+  if (user.value) {
+    await navigateTo("/");
+  }
+});
 </script>
 
 <template>
@@ -14,7 +22,7 @@ const toggleAuthState = (state: AuthState) => {
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <img class="logo__icon" src="~/assets/icons/camera.svg" alt="" />
+      <img class="logo__icon" src="~/assets/icons/camera.svg" alt="logo" />
       <h1 class="logo__text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
@@ -238,8 +246,8 @@ const toggleAuthState = (state: AuthState) => {
 
   &__icon {
     width: 2.5rem;
-    filter: invert(99%) sepia(63%) saturate(6187%) hue-rotate(183deg) brightness(102%)
-      contrast(104%);
+    filter: invert(99%) sepia(63%) saturate(6187%) hue-rotate(183deg)
+      brightness(102%) contrast(104%);
   }
 
   &__text {

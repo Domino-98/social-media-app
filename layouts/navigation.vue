@@ -1,17 +1,12 @@
 <script setup lang="ts">
-let scrollVisible = ref<boolean>(false);
+import { User } from "~~/models/user";
+import profilesApi from "~~/services/api_profiles";
+
+const scrollVisible = ref<boolean>(false);
 
 function scrollListener(e: Event) {
   scrollVisible.value = window.scrollY > 500;
 }
-
-onMounted(() => {
-  window.addEventListener("scroll", scrollListener);
-});
-
-onBeforeUnmount(() => {
-  window.removeEventListener("scroll", scrollListener);
-});
 
 function scrollToTop() {
   window.scrollTo({
@@ -19,10 +14,62 @@ function scrollToTop() {
     behavior: "smooth",
   });
 }
+
+const key = ref(0);
+const messages = [
+  `Uncaught NotFoundError: Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node.`, // chromium based
+  `NotFoundError: The object can not be found here.`, // safari
+];
+if (typeof window !== "undefined") {
+  // @ts-expect-error using arbitrary window key
+  if (!window.__vue5513) {
+    window.addEventListener("error", (event) => {
+      console.log({ event });
+      if (messages.includes(event.message)) {
+        event.preventDefault();
+        console.warn(
+          "Rerendering layout because of https://github.com/vuejs/core/issues/5513"
+        );
+        key.value++;
+      }
+    });
+  }
+  // @ts-expect-error using arbitrary window key
+  window.__vue5513 = true;
+}
+
+const user = useSupabaseUser();
+const userProfile = useUser();
+
+const setUserProfile = async () => {
+  if (user.value) {
+    const profile = await profilesApi().getCurrentUser(user.value.id);
+    userProfile.value = profile as User;
+  }
+};
+
+watch(
+  () => user?.value?.id,
+  async (newId) => {
+    if (newId) await setUserProfile();
+  },
+  { deep: true }
+);
+
+onMounted(async () => {
+  window.addEventListener("scroll", scrollListener);
+  if (user.value) {
+    await setUserProfile();
+  }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("scroll", scrollListener);
+});
 </script>
 
 <template>
-  <div class="wrapper">
+  <div :key="key" class="wrapper">
     <TheSidebar />
     <main class="wrapper-inner">
       <TheNavbar />

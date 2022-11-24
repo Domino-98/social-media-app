@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import categoriesApi from "~~/services/api_categories";
 
-let menuOpened = ref<boolean>(false);
+const menuOpened = ref<boolean>(false);
 const { categories } = useCategories();
 
 const getCategories = async () => {
@@ -45,38 +45,51 @@ onMounted(async () => {
 
     <div :class="{ 'menu-opened': menuOpened }" class="sidebar__content">
       <ul class="sidebar__list">
-        <NuxtLink @click="menuOpened = false" to="/">
-          <li class="sidebar__item sidebar__item--home active">
-            <font-awesome-icon icon="fa-solid fa-house" size="lg" fixed-width />
+        <li class="sidebar__item sidebar__item--home">
+          <NuxtLink @click="menuOpened = false" to="/">
+            <font-awesome-icon
+              icon="fa-solid fa-house"
+              size="lg"
+              fixed-width
+              class="icon"
+            />
             Strona główna
-          </li>
-        </NuxtLink>
-        <li class="sidebar__item sidebar__item--popular">
-          <font-awesome-icon
-            icon="fa-solid fa-fire-flame-curved"
-            size="lg"
-            fixed-width
-          />
-          Popularne
+          </NuxtLink>
+        </li>
+
+        <li class="sidebar__item sidebar__item--following">
+          <NuxtLink @click="menuOpened = false" to="/following">
+            <font-awesome-icon
+              icon="fa-solid fa-users"
+              size="lg"
+              fixed-width
+              class="icon"
+            />
+            Obserwowani
+          </NuxtLink>
         </li>
       </ul>
       <h2 class="sidebar__header">Kategorie</h2>
       <ul class="sidebar__list">
         <TransitionGroup name="fade">
-          <NuxtLink
+          <li
             v-for="category in categories"
             :key="category.name"
-            :to="`/category/${category.slug}`"
             class="sidebar__item"
           >
-            <img :src="category.image_url" alt="cars" class="sidebar__icon" />
-            {{ category.name }}
-          </NuxtLink>
+            <NuxtLink
+              @click="menuOpened = false"
+              :to="`/category/${category.slug}`"
+            >
+              <img :src="category.image_url" alt="cars" class="sidebar__icon" />
+              {{ category.name }}
+            </NuxtLink>
+          </li>
         </TransitionGroup>
       </ul>
     </div>
   </div>
-  <Transition>
+  <Transition name="fade">
     <div
       v-if="menuOpened"
       @click="menuOpened = false"
@@ -91,7 +104,6 @@ onMounted(async () => {
   top: 0;
   display: flex;
   flex-direction: column;
-  transition: 0.2s ease-in-out;
   width: 100%;
   height: 100vh;
   max-width: 15rem;
@@ -99,6 +111,7 @@ onMounted(async () => {
   padding-top: 0.5rem;
   background-color: var(--bg-color-secondary);
   z-index: 10;
+  transition: 0.2s ease-in-out;
 
   @media only screen and (max-width: 62.5em) {
     max-width: 12.5rem;
@@ -186,53 +199,56 @@ onMounted(async () => {
     width: 2rem;
     height: 2rem;
     border-radius: 50%;
-    margin-right: 0.75rem;
   }
 
   &__content {
     background-color: var(--bg-color-secondary);
     z-index: 10;
+    transition: all 0.2s ease-in-out;
 
     @media only screen and (max-width: 50em) {
-      visibility: hidden;
       position: absolute;
       transform: translateX(-100%);
-      transition: all 0.3s ease-in-out;
       left: 0;
       top: 0;
+      height: 100vh;
+      visibility: hidden;
       width: 100%;
       max-width: 12.5rem;
       margin-top: 46.8px;
     }
   }
 
-  &__item {
+  &__list {
     display: flex;
-    align-items: center;
-    transition: all 0.2s;
-    padding: 0.4rem;
-    padding-left: 1.5rem;
+    flex-direction: column;
+  }
+
+  &__item {
     color: var(--font-color);
     font-size: 0.9rem;
-    font-weight: 400;
     cursor: pointer;
 
-    &--home,
-    &--popular {
-      gap: 0.5rem;
-      padding: 0.6rem;
+    & a {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      width: 100%;
+      height: 100%;
+      padding: 0.4rem;
       padding-left: 1.5rem;
+      border-left: 0.35rem solid transparent;
+      transition: background-color 0.2s, border-color 0.2s;
+
+      &:hover {
+        background-color: rgba(var(--opacity-color), 0.1);
+      }
     }
 
-    &:hover:not(.active) {
-      background-color: rgba(var(--opacity-color), 0.1);
-    }
-
-    &.active {
-      padding-left: 1.15rem;
-      border-left: 0.35rem solid var(--primary-color);
-      background-color: rgba(0, 0, 0, 0.1);
-      font-weight: 700;
+    &--home a,
+    &--following a {
+      padding: 0.75rem;
+      padding-left: 1.5rem;
     }
   }
 
@@ -270,6 +286,12 @@ onMounted(async () => {
       display: flex;
     }
   }
+}
+
+a.router-link-active:not(.sidebar__logo) {
+  border-left: 0.35rem solid var(--primary-color);
+  background-color: rgba(0, 0, 0, 0.1);
+  font-weight: 700;
 }
 
 .line {
@@ -323,13 +345,7 @@ onMounted(async () => {
   z-index: 1;
 }
 
-.v-enter-active,
-.v-leave-active {
-  transition: opacity 0.3s ease-in-out;
-}
-
-.v-enter-from,
-.v-leave-to {
-  opacity: 0;
+.icon {
+  color: var(--icon-color);
 }
 </style>

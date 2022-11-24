@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { onBeforeRouteLeave } from "vue-router";
+import { Pin } from "~~/models/pin";
 import pinsApi from "~~/services/api_pins";
 
-const config = useRuntimeConfig();
 const route = useRoute();
-
 const { pins } = usePins();
 
-let pinsLoading = ref<boolean>(false);
+const pinsLoading = ref<boolean>(false);
 
 const getAllPins = async () => {
   pinsLoading.value = true;
@@ -16,40 +14,23 @@ const getAllPins = async () => {
       const fetchedPins = await pinsApi().searchPins(
         route.query.search as string
       );
-      pins.value = fetchedPins;
+      pins.value = fetchedPins as Pin[];
       return;
     }
     const fetchedPins = await pinsApi().fetchAllPins();
-    pins.value = fetchedPins;
+    pins.value = fetchedPins as Pin[];
   } catch (error) {
   } finally {
     pinsLoading.value = false;
   }
 };
 
-// let showModal = ref();
-
-// function displayPinModal(route) {
-//   showModal.value = route.params.id;
-//   console.log(showModal.value);
-//   window.history.pushState({}, null, route.path);
-// }
-
-// function hidePinModal() {
-//   showModal.value = null;
-//   window.history.pushState({}, null, route.path);
-// }
-
-// onBeforeRouteLeave((to, from, next) => {
-//   if (to.name === "pin-id") {
-//     displayPinModal(to);
-//   } else {
-//     next();
-//   }
-// });
-
 onMounted(async () => {
   await getAllPins();
+});
+
+onUnmounted(() => {
+  pins.value = [];
 });
 
 const searchQuery = computed(() => route.query.search);
@@ -65,14 +46,9 @@ definePageMeta({
 
 <template>
   <div class="container">
-    <!-- <div v-if="showModal">
-      <h1>Modal</h1>
-      <button @click="hidePinModal">Hide pin modal</button>
-    </div> -->
+    <PinCard v-if="pins.length" v-for="pin in pins" :key="pin.id" :pin="pin" />
 
-    <TransitionGroup name="scale">
-      <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
-    </TransitionGroup>
+    <span v-if="pinsLoading" class="loading-spinner"></span>
   </div>
 </template>
 
@@ -83,6 +59,7 @@ definePageMeta({
   columns: 5;
   column-gap: 1.5rem;
   font-size: 1.2rem;
+  min-height: 100vh;
 
   @media only screen and (max-width: 87.5em) {
     columns: 4;
@@ -104,5 +81,11 @@ definePageMeta({
   @media only screen and (max-width: 25em) {
     columns: 1;
   }
+}
+
+.loading-spinner {
+  position: absolute;
+  left: 50%;
+  margin: 0 0 0 -50px;
 }
 </style>

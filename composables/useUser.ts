@@ -1,8 +1,8 @@
 import { User } from "~~/models/user";
 
 export const useUser = () =>
-  useState<User>("user", () => ({
-    id: null,
+  useState<User | null>("user", () => ({
+    id: "",
     avatar_url: "",
     full_name: "",
     username: "",
@@ -10,5 +10,6 @@ export const useUser = () =>
     website: "",
     background_url: "",
     email: "",
-    profile_id: null,
+    profile_id: 0,
+    updated_at: "",
   }));

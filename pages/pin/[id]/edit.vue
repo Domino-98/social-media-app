@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import * as yup from "yup";
-import { Pin, PinToUpdate } from "~~/models/pin";
+import type { Pin, PinToUpdate } from "~~/models/pin";
 import { useToast } from "vue-toastification";
-import { TYPE } from "vue-toastification";
 import pinsApi from "~~/services/api_pins";
 import categoriesApi from "~~/services/api_categories";
 
@@ -30,17 +29,15 @@ const pinSchema = yup.object({
 
 const route = useRoute();
 const pinId = route.params.id;
-let isEditing = ref<boolean>(false);
+const isEditing = ref<boolean>(false);
 
-const handlePinEdit = async (values) => {
+const handlePinEdit = async (values: any) => {
   let { title, description, destination_url, category_id } = values;
 
-  console.log({ values, pin: pin.value });
-
-  destination_url ||= "";
   description ||= "";
+  destination_url ||= "";
 
-  const id = pin.value.id;
+  const id = pin.value?.id;
 
   const pinToUpdate = {
     title,
@@ -51,31 +48,31 @@ const handlePinEdit = async (values) => {
 
   isEditing.value = true;
   try {
-    await pinsApi().editPin(id, pinToUpdate);
+    await pinsApi().editPin(id!, pinToUpdate);
     emit("update", pinToUpdate);
     const { pin: actualPin } = usePins();
-    actualPin.value = { ...actualPin.value, ...pin.value };
+    actualPin.value = { ...actualPin.value, ...pin.value } as Pin;
     toast("Pomyślnie zaktualizowano Pina");
   } catch (error) {
     console.error(error);
   } finally {
     isEditing.value = false;
-    navigateTo({ name: "pin-id", params: { id: `${pin.value.id}` } });
+    await navigateTo({ name: "pin-id", params: { id: `${pin.value?.id}` } });
   }
 };
 
-const closeModal = () => {
-  navigateTo({ name: "pin-id", params: { id: `${pin.value.id}` } });
+const closeModal = async () => {
+  await navigateTo({ name: "pin-id", params: { id: `${pin.value?.id}` } });
 };
 
 const modalOpened = ref(route.name === "pin-id-edit");
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 const getPin = async () => {
   isLoading.value = true;
   try {
     const fetchedPin = await pinsApi().fetchPinById(+pinId);
-    pin.value = fetchedPin;
+    pin.value = fetchedPin as Pin;
     console.log(fetchedPin);
   } catch (error) {
     console.error(error);
@@ -91,17 +88,17 @@ const getCategories = async () => {
     const fetchedCategories = await categoriesApi().fetchCategories();
     categories.value = fetchedCategories;
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) console.error(error);
   }
 };
 
-const idString = computed(() => pin.value.category.id.toString());
+const idString = computed(() => pin.value?.category?.id.toString());
 
 onMounted(async () => {
   await getPin();
   await getCategories();
-  if (pin.value.author.id !== user.value.id)
-    navigateTo({ name: "pin-id", params: { id: `${pin.value.id}` } });
+  if (pin.value?.author?.id !== user.value?.id)
+    await navigateTo({ name: "pin-id", params: { id: `${pin.value?.id}` } });
 });
 
 definePageMeta({
@@ -166,7 +163,10 @@ definePageMeta({
             Zamknij
           </button>
           <button type="submit" :disabled="isEditing" class="btn btn--primary">
-            <span v-show="isEditing" class="loading-spinner"></span>
+            <span
+              v-show="isEditing"
+              class="loading-spinner loading-spinner--light"
+            ></span>
             <span>{{ isEditing ? "Zapisywanie Pina" : "Zapisz Pina" }}</span>
           </button>
         </div>

@@ -2,11 +2,11 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import { Database } from "~~/lib/database.types";
 
-const toast = useToast();
-
-const client = useSupabaseClient();
+const client = useSupabaseClient<Database>();
 const router = useRouter();
+const toast = useToast();
 
 const loginSchema = yup.object({
   email: yup
@@ -16,14 +16,13 @@ const loginSchema = yup.object({
   password: yup.string().required("Hasło jest wymagane"),
 });
 
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
-// Login user
-const handleLogin = async (values): Promise<void> => {
+const handleLogin = async (values: any): Promise<void> => {
   isLoading.value = true;
   const { email, password } = values;
   try {
-    const { error } = await client.auth.signIn({
+    const { error } = await client.auth.signInWithPassword({
       email,
       password,
     });
@@ -34,9 +33,8 @@ const handleLogin = async (values): Promise<void> => {
       });
       throw error;
     }
-
+    await navigateTo("/");
     toast("Pomyślnie zalogowano!");
-    router.push("/");
   } catch (error) {
     console.error(error);
   } finally {
@@ -46,7 +44,7 @@ const handleLogin = async (values): Promise<void> => {
 
 const providerLogin = async (provider: "google" | "facebook") => {
   try {
-    const { error } = await client.auth.signIn({ provider });
+    const { error } = await client.auth.signInWithOAuth({ provider });
 
     if (error) {
       toast(error.message, {
@@ -57,19 +55,30 @@ const providerLogin = async (provider: "google" | "facebook") => {
 
     router.push("/");
   } catch (error) {
-    console.error(error.message);
+    if (error instanceof Error) {
+      console.error(error.message);
+    }
   }
 };
 
-let passVisible = ref<boolean>(false);
+const passVisible = ref<boolean>(false);
 </script>
 
 <template>
   <div>
     <h1 class="auth__header">Zaloguj się</h1>
-    <VForm @submit="handleLogin" :validation-schema="loginSchema" class="auth__form">
+    <VForm
+      @submit="handleLogin"
+      :validation-schema="loginSchema"
+      class="auth__form"
+    >
       <div class="auth__form-group">
-        <VField name="email" type="email" class="auth__form-input" placeholder=" " />
+        <VField
+          name="email"
+          type="email"
+          class="auth__form-input"
+          placeholder=" "
+        />
         <font-awesome-icon icon="fa-solid fa-envelope" class="icon" />
         <label for="login" class="auth__form-label">Email</label>
         <VErrorMessage name="email" class="error" />
@@ -93,7 +102,9 @@ let passVisible = ref<boolean>(false);
       <p class="auth__forgot">
         <NuxtLink to="/auth/forgot">Zapomniałeś hasła?</NuxtLink>
       </p>
-      <button :disabled="isLoading" class="auth__form-btn">Zaloguj się</button>
+      <button type="submit" :disabled="isLoading" class="auth__form-btn">
+        {{ isLoading ? "Logowanie..." : "Zaloguj się" }}
+      </button>
     </VForm>
     <p class="auth__providers-text">Lub zaloguj się za pomocą</p>
     <div class="auth__providers">
@@ -130,8 +141,8 @@ let passVisible = ref<boolean>(false);
     <div class="auth__signup">
       <p class="auth__signup-text">Nie masz konta?</p>
       <a @click="$emit('auth-state', 'register')" class="auth__signup-switch"
-        >Zarejestruj się</a
-      >
+        >Zarejestruj się
+      </a>
     </div>
   </div>
 </template>

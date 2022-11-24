@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { useToast } from "vue-toastification";
-import profilesApi from "~~/services/api_profiles";
+import { onClickOutside } from "@vueuse/core";
+import { Database } from "~~/lib/database.types";
 
-const toast = useToast();
 const user = useSupabaseUser();
-const client = useSupabaseClient();
+const client = useSupabaseClient<Database>();
 const router = useRouter();
+const toast = useToast();
+const userProfile = useUser();
+const colorMode = useColorMode();
 
-let userProfile = useUser();
-let colorMode = useColorMode();
-let darkMode = ref<boolean>(false);
+const darkMode = ref<boolean>(false);
 
 const toggleMode = (): void => {
   if (colorMode.preference === "light") {
@@ -19,29 +20,25 @@ const toggleMode = (): void => {
   }
 };
 
-const setUserProfile = async () => {
-  const profile = await profilesApi().getCurrentUser(user.value.id);
-  userProfile.value = profile;
-};
+const profileVisible = ref<boolean>(false);
 
-let notificationsVisible = ref<boolean>(false);
-let profileVisible = ref<boolean>(false);
-
-const toggleNotifications = (): void => {
-  notificationsVisible.value = !notificationsVisible.value;
-};
 const toggleProfile = (): void => {
   profileVisible.value = !profileVisible.value;
 };
 
 // Logout
-const handleLogout = async (): Promise<void> => {
+const handleLogout = async () => {
   try {
     const { error } = await client.auth.signOut();
     if (error) throw error;
-
+    const sbRefreshToken = useCookie("sb-refresh-token");
+    sbRefreshToken.value = null;
+    const sbAccessToken = useCookie("sb-access-token");
+    sbAccessToken.value = null;
+    userProfile.value = null;
+    await client.removeAllChannels();
     toast("Pomyślnie wylogowano!");
-    router.push("/auth");
+    window.location.href = "/auth";
   } catch (error) {
     console.error(error);
   }
@@ -56,13 +53,10 @@ const searchPins = async (searchValue: string) => {
   });
 };
 
-onMounted(async () => {
-  colorMode.value === "dark"
-    ? (darkMode.value = true)
-    : (darkMode.value = false);
-  if (user.value) {
-    setUserProfile();
-  }
+const profileEl = ref();
+
+onClickOutside(profileEl, (e: Event) => {
+  if ((e.target as HTMLElement).id !== "profileBtn") toggleProfile();
 });
 
 watch(colorMode, (color) => {
@@ -71,12 +65,11 @@ watch(colorMode, (color) => {
     : (darkMode.value = false);
 });
 
-watch(
-  () => user?.value?.id,
-  () => {
-    if (user.value) setUserProfile();
-  }
-);
+onMounted(async () => {
+  colorMode.value === "dark"
+    ? (darkMode.value = true)
+    : (darkMode.value = false);
+});
 </script>
 
 <template>
@@ -106,28 +99,9 @@ watch(
     </div>
 
     <div class="navbar__buttons">
-      <div v-if="user" ref="notificationsEl" class="navbar__notifications">
-        <button
-          @click="toggleNotifications"
-          class="navbar__toggle"
-          content="Powiadomienia"
-          v-tippy
-        >
-          <font-awesome-icon icon="fa-solid fa-bell" size="xl" />
-        </button>
+      <NotificationButton v-show="user" ref="notificationsEl" />
 
-        <!-- <span class="navbar__badge">3</span> -->
-        <Transition name="scale">
-          <div
-            v-if="notificationsVisible"
-            v-click-outside="toggleNotifications"
-            class="navbar__dropdown"
-          >
-            <p class="info">Brak powiadomień</p>
-            <!-- <div class="navbar__dropdown-item"></div> -->
-          </div>
-        </Transition>
-      </div>
+      <ChatButton v-show="user" />
 
       <NuxtLink
         ref="addPinEl"
@@ -140,7 +114,7 @@ watch(
       </NuxtLink>
 
       <NuxtLink
-        v-if="!user"
+        v-show="!user"
         ref="authEl"
         to="/auth"
         class="navbar__auth"
@@ -151,7 +125,12 @@ watch(
       </NuxtLink>
 
       <!-- If logged in -->
-      <div v-else @click="toggleProfile" class="navbar__profile">
+      <div
+        v-show="user"
+        @click="toggleProfile"
+        class="navbar__profile"
+        id="profileBtn"
+      >
         <img
           class="navbar__profile-img"
           :src="
@@ -161,31 +140,38 @@ watch(
         />
         <Transition name="scale">
           <div
-            v-click-outside="toggleProfile"
+            ref="profileEl"
             v-if="profileVisible"
-            class="navbar__dropdown"
+            class="profile__dropdown"
+            id="profileBtn"
           >
             <NuxtLink
-              :to="`/profile/${userProfile.profile_id}`"
-              class="navbar__dropdown-item"
+              :to="`/profile/${userProfile?.profile_id}`"
+              class="profile__dropdown-item"
             >
               <font-awesome-icon
                 icon="fa-solid fa-circle-user"
                 size="xl"
+                class="icon"
                 fixed-width
               />Przejdź do profilu
             </NuxtLink>
-            <NuxtLink to="/settings" class="navbar__dropdown-item">
+            <NuxtLink to="/settings" class="profile__dropdown-item">
               <font-awesome-icon
                 icon="fa-solid fa-user-gear"
                 size="xl"
+                class="icon"
                 fixed-width
               />Edytuj profil
             </NuxtLink>
-            <button @click.prevent="handleLogout" class="navbar__dropdown-item">
+            <button
+              @click.prevent="handleLogout"
+              class="profile__dropdown-item"
+            >
               <font-awesome-icon
                 icon="fa-solid fa-right-from-bracket"
                 size="xl"
+                class="icon"
                 fixed-width
               />Wyloguj się
             </button>
@@ -213,7 +199,7 @@ watch(
 
   @media only screen and (max-width: 37.5em) {
     margin-right: 0.5rem;
-    gap: 1rem;
+    gap: 0.5rem;
   }
 
   &__logo {
@@ -239,71 +225,32 @@ watch(
     &-input {
       transition: all 0.2s;
       width: 100%;
-      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      box-shadow: rgba(17, 17, 26, 0.05) 0px 1px 0px,
+        rgba(17, 17, 26, 0.1) 0px 0px 6px;
       padding: 0.6rem;
       padding-left: 2.4rem;
-      border-radius: 1rem;
+      border-radius: 2rem;
       background-color: var(--bg-color-secondary);
       font-size: 1rem;
       color: var(--font-color);
 
       &:focus {
-        box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px,
+          rgba(17, 17, 26, 0.15) 0px 0px 8px;
       }
     }
   }
 
-  &__notifications,
   &__profile {
     position: relative;
     color: var(--font-color);
+    cursor: pointer;
+    user-select: none;
   }
 
   &__buttons {
     display: flex;
     gap: 0.5rem;
-  }
-
-  &__dropdown {
-    position: absolute;
-    right: 0;
-
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    width: 12rem;
-    margin-top: 0.25rem;
-    overflow: hidden;
-    border-radius: 1rem 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    background-color: var(--bg-color-secondary);
-    font-size: 0.9rem;
-    text-align: center;
-
-    &-item {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      transition: all 0.3s;
-      padding: 0.75rem;
-      font-size: 1rem;
-      font-weight: 500;
-      cursor: pointer;
-
-      &:hover {
-        background-color: rgba(var(--opacity-color), 0.1);
-      }
-
-      &--center {
-        text-align: center;
-      }
-    }
-
-    & .info {
-      padding: 0.75rem;
-      font-style: italic;
-      font-size: 0.9rem;
-    }
   }
 
   &__switch {
@@ -312,63 +259,18 @@ watch(
     align-items: center;
   }
 
-  &__toggle,
-  &__add,
-  &__auth {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: all 0.3s;
-    width: 2.8rem;
-    height: 2.8rem;
-    border-radius: 50%;
-
-    background-color: var(--heading-color);
-    cursor: pointer;
-
-    & svg {
-      color: var(--bg-color-secondary);
-
-      @media only screen and (max-width: 37.5em) {
-        font-size: 24px;
-      }
-    }
-
-    @media only screen and (max-width: 50em) {
-      width: 2.4rem;
-      height: 2.4rem;
-      padding: 1rem;
-    }
-  }
-
   &__profile-img {
     display: block;
     width: 2.8rem;
     height: 2.8rem;
     border-radius: 50%;
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
+    pointer-events: none;
 
     @media only screen and (max-width: 50em) {
       width: 2.4rem;
       height: 2.4rem;
     }
-  }
-
-  &__badge {
-    position: absolute;
-    top: -0.25rem;
-    right: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.25rem;
-    height: 1.25rem;
-    border-radius: 50%;
-    background-color: var(--primary-color);
-    color: var(--font-color);
-    font-size: 0.8rem;
-    font-weight: 500;
   }
 
   &__auth,
@@ -412,6 +314,109 @@ watch(
 
     &:checked + label {
       box-shadow: inset -10px -6px #fff, inset -10px -6px 1px #fff;
+    }
+  }
+}
+
+:deep() {
+  .navbar,
+  .notifications {
+    &__toggle,
+    &__add,
+    &__chats,
+    &__auth {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: all 0.3s;
+      width: 2.8rem;
+      height: 2.8rem;
+      border-radius: 50%;
+      background-color: var(--heading-color);
+      cursor: pointer;
+
+      & svg {
+        color: var(--bg-color-secondary);
+
+        @media only screen and (max-width: 37.5em) {
+          font-size: 24px;
+        }
+      }
+
+      @media only screen and (max-width: 50em) {
+        width: 2.4rem;
+        height: 2.4rem;
+        padding: 1rem;
+      }
+    }
+  }
+
+  .badge {
+    position: absolute;
+    top: -0.25rem;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .notifications,
+  .profile {
+    &__dropdown {
+      position: absolute;
+      right: 0;
+      z-index: 5;
+      display: flex;
+      flex-direction: column;
+      width: 12rem;
+      margin-top: 0.25rem;
+      overflow: hidden;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      background-color: var(--bg-color-secondary);
+      font-size: 0.9rem;
+      text-align: center;
+
+      & .icon {
+        color: var(--icon-color);
+      }
+
+      &-item {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        transition: all 0.3s;
+        padding: 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        cursor: pointer;
+
+        &:hover {
+          background-color: rgba(var(--opacity-color), 0.1);
+        }
+
+        &--center {
+          text-align: center;
+        }
+      }
+    }
+  }
+
+  .notifications {
+    &__dropdown {
+      width: 17.5rem;
+
+      @media only screen and (max-width: 25em) {
+        right: -5.8rem;
+      }
     }
   }
 }

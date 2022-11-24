@@ -2,13 +2,12 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
+import { Database } from "~~/lib/database.types";
 
+const client = useSupabaseClient<Database>();
+const router = useRouter();
 const toast = useToast();
 
-const client = useSupabaseClient();
-const router = useRouter();
-
-// Validation schema
 const registerSchema = yup.object({
   username: yup
     .string()
@@ -25,27 +24,28 @@ const registerSchema = yup.object({
     .min(8, "Minimalna ilość znaków: 8"),
   passwordConfirmation: yup
     .string()
+    .required("Powtórz hasło")
     .oneOf([yup.ref("password"), null], "Hasła muszą do siebie pasować"),
 });
 
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
-// Register user
-const handleRegister = async (values, { resetForm }): Promise<void> => {
+const handleRegister = async (
+  values: any,
+  { resetForm }: { resetForm: Function }
+): Promise<void> => {
   isLoading.value = true;
   const { email, password, username } = values;
   try {
-    const { error } = await client.auth.signUp(
-      {
-        email,
-        password,
-      },
-      {
+    const { error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
         data: {
           username,
         },
-      }
-    );
+      },
+    });
 
     if (error) {
       toast(error.message, {
@@ -68,7 +68,7 @@ const handleRegister = async (values, { resetForm }): Promise<void> => {
 
 const providerLogin = async (provider: "google" | "facebook") => {
   try {
-    const { error } = await client.auth.signIn({ provider });
+    const { error } = await client.auth.signInWithOAuth({ provider });
 
     if (error) {
       toast(error.message, {
@@ -79,12 +79,12 @@ const providerLogin = async (provider: "google" | "facebook") => {
 
     router.push("/");
   } catch (error) {
-    console.error(error.message);
+    if (error instanceof Error) console.error(error.message);
   }
 };
 
-let passVisible = ref<boolean>(false);
-let passConfirmVisible = ref<boolean>(false);
+const passVisible = ref<boolean>(false);
+const passConfirmVisible = ref<boolean>(false);
 </script>
 
 <template>
@@ -156,7 +156,9 @@ let passConfirmVisible = ref<boolean>(false);
         <label for="password2" class="auth__form-label">Powtórz hasło</label>
         <VErrorMessage name="passwordConfirmation" class="error" />
       </div>
-      <button :disabled="isLoading" class="auth__form-btn">Zarejestruj się</button>
+      <button :disabled="isLoading" class="auth__form-btn">
+        {{ isLoading ? "Trwa rejestracja..." : "Zarejestruj się" }}
+      </button>
     </VForm>
     <p class="auth__providers-text">Lub zarejestruj się za pomocą</p>
     <div class="auth__providers">
@@ -192,7 +194,9 @@ let passConfirmVisible = ref<boolean>(false);
     </div>
     <div class="auth__signup">
       <p class="auth__signup-text">Masz już konto?</p>
-      <a @click="$emit('auth-state', 'login')" class="auth__signup-switch">Zaloguj się</a>
+      <a @click="$emit('auth-state', 'login')" class="auth__signup-switch"
+        >Zaloguj się</a
+      >
     </div>
   </div>
 </template>

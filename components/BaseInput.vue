@@ -4,29 +4,29 @@ interface Props {
   label: string;
   id: string;
   type: "text" | "number" | "tel" | "email" | "password";
-  modelValue: string | null;
+  modelValue: string | undefined;
   placeholder?: string;
 }
 
 const props = defineProps<Props>();
+console.log(props.modelValue);
 </script>
 
 <template>
   <div class="form__group">
-    <VField v-slot="{ field }" v-model="modelValue" :name="name">
-      <label :for="id" class="form__label">{{ label }}</label>
-      <input
-        @input="
-          $emit('update:modelValue', ($event.target as HTMLInputElement).value)
-        "
-        v-bind="field"
-        :type="type"
-        :id="id"
-        class="form__input"
-        :placeholder="placeholder"
-      />
-      <VErrorMessage :name="name" class="error" />
-    </VField>
+    <label :for="id" class="form__label">{{ label }}</label>
+    <VField
+      :value="modelValue"
+      @input="
+        $emit('update:modelValue', ($event.target as HTMLInputElement).value)
+      "
+      :type="type"
+      :name="name"
+      :id="id"
+      :placeholder="placeholder"
+      class="form__input"
+    />
+    <VErrorMessage :name="name" class="error" />
   </div>
 </template>
 

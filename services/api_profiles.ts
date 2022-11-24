@@ -1,11 +1,12 @@
-import { User, UserToUpdate } from "~~/models/user";
+import type { Database } from "~~/lib/database.types";
+import type { UserToUpdate } from "~~/models/user";
 
 export default () => {
-  const client = useSupabaseClient();
+  const client = useSupabaseClient<Database>();
 
   const getUser = async (profileId: number) => {
     const { data: profile, error } = await client
-      .from<User>("profiles")
+      .from("profiles")
       .select()
       .match({ profile_id: profileId })
       .single();
@@ -17,7 +18,7 @@ export default () => {
 
   const getCurrentUser = async (userId: string) => {
     const { data: profile, error } = await client
-      .from<User>("profiles")
+      .from("profiles")
       .select()
       .match({ id: userId })
       .single();

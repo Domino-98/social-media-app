@@ -2,16 +2,11 @@
 import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
-import queryString from "query-string";
+import { Database } from "~~/lib/database.types";
 
-const toast = useToast();
-
-const client = useSupabaseClient();
+const client = useSupabaseClient<Database>();
 const router = useRouter();
-const route = useRoute();
-
-const access_token = queryString.parse(route.fullPath.split("#")[1])
-  .access_token as string;
+const toast = useToast();
 
 const passSchema = yup.object({
   password: yup
@@ -20,13 +15,16 @@ const passSchema = yup.object({
     .min(8, "Minimalna ilość znaków: 8"),
   passwordConfirmation: yup
     .string()
+    .required("Powtórz hasło")
     .oneOf([yup.ref("password"), null], "Hasła muszą do siebie pasować"),
 });
 
-// Reset password
-const handleReset = async (values): Promise<void> => {
+const isLoading = ref<boolean>(false);
+
+const handleReset = async (values: any): Promise<void> => {
+  isLoading.value = true;
   try {
-    const { error, data } = await client.auth.api.updateUser(access_token, {
+    const { error, data } = await client.auth.updateUser({
       password: values.password,
     });
 
@@ -40,12 +38,14 @@ const handleReset = async (values): Promise<void> => {
     toast("Hasło zostało zmienione!");
     router.push("/");
   } catch (error) {
-    console.error(error.message);
+    if (error instanceof Error) console.error(error.message);
+  } finally {
+    isLoading.value = false;
   }
 };
 
-let passVisible = ref<boolean>(false);
-let passConfirmVisible = ref<boolean>(false);
+const passVisible = ref<boolean>(false);
+const passConfirmVisible = ref<boolean>(false);
 </script>
 
 <template>
@@ -54,13 +54,17 @@ let passConfirmVisible = ref<boolean>(false);
       <source src="~/assets/background.mp4" type="video/mp4" />
     </video>
     <NuxtLink to="/" class="logo">
-      <img class="logo-icon" src="~/assets/icons/camera.svg" alt="" />
-      <h1 class="logo-text">We<span>Share</span></h1>
+      <img class="logo__icon" src="~/assets/icons/camera.svg" alt="logo" />
+      <h1 class="logo__text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
       <div>
         <h1 class="auth__header">Resetowanie hasła</h1>
-        <VForm :validation-schema="passSchema" @submit="handleReset" class="auth__form">
+        <VForm
+          :validation-schema="passSchema"
+          @submit="handleReset"
+          class="auth__form"
+        >
           <div class="auth__form-group">
             <VField
               name="password"
@@ -92,11 +96,15 @@ let passConfirmVisible = ref<boolean>(false);
               :icon="`fa-solid fa-eye${!passConfirmVisible ? '-slash' : ''}`"
               class="icon icon--visibility"
             />
-            <label for="password2" class="auth__form-label">Powtórz hasło</label>
+            <label for="password2" class="auth__form-label"
+              >Powtórz hasło
+            </label>
             <VErrorMessage name="passwordConfirmation" class="error" />
           </div>
 
-          <button class="auth__form-btn">Zmień hasło</button>
+          <button type="submit" :disabled="isLoading" class="auth__form-btn">
+            {{ isLoading ? "Zmienianie hasła..." : "Zmień hasło" }}
+          </button>
         </VForm>
         <div class="auth__signup">
           <NuxtLink to="/" class="auth__signup-switch">Strona główna</NuxtLink>

@@ -1,12 +1,16 @@
-import { PinToUpdate } from "./../models/pin";
-import { Pin } from "~~/models/pin";
+import type { PinToUpdate } from "./../models/pin";
+import type { Pin } from "~~/models/pin";
+import type { User } from "~~/models/user";
+import type { Database } from "~~/lib/database.types";
+import notificationsApi from "./api_notifications";
 
 export default () => {
-  const client = useSupabaseClient();
+  const client = useSupabaseClient<Database>();
+  const user = useSupabaseUser();
 
   const fetchAllPins = async () => {
     const { data: pins, error } = await client
-      .from<Pin>("pins")
+      .from("pins")
       .select(
         `
           *,
@@ -28,7 +32,7 @@ export default () => {
 
   const fetchPinById = async (id: number) => {
     const { data: pin, error } = await client
-      .from<Pin>("pins")
+      .from("pins")
       .select(
         `
           *,
@@ -55,7 +59,7 @@ export default () => {
 
   const fetchUserPins = async (userId: string) => {
     const { data: pin, error } = await client
-      .from<Pin>("pins")
+      .from("pins")
       .select(
         `
           *,
@@ -101,11 +105,26 @@ export default () => {
     });
   };
 
-  const addToSaved = async (pinId: number, userId: string) => {
+  const addToSaved = async (
+    pinId: number,
+    userId: string,
+    recipentId: string,
+    user: Partial<User>,
+    pin: Pin
+  ) => {
     const { data, error } = await client.from("saved").insert({
       pin_id: pinId,
       user_id: userId,
     });
+
+    const notificationContent = `<a href="/pin/${pin.id}" target="_self" onclick="event.preventDefault(); 
+    router.push(/pin/${pin.id});"><span class="notifications__text">Użytkownik <b>${user.username}</b> zapisał twojego pina <b>${pin.title}</b>!</span></a>`;
+
+    await notificationsApi().sendNotification(
+      userId,
+      recipentId,
+      notificationContent
+    );
 
     if (error) throw error;
   };
@@ -142,33 +161,36 @@ export default () => {
   ) => {
     const { error: uploadError } = await client.storage
       .from("pins")
-      .upload(`${client.auth.user().id}/${imgFile.name}`, imgFile);
+      .upload(`${user.value?.id}/${imgFile.name}`, imgFile);
 
     if (uploadError) throw new Error("Wystąpił błąd podczas przesyłania pliku");
 
-    const { publicURL, error } = client.storage
+    const {
+      data: { publicUrl },
+    } = client.storage
       .from("pins")
-      .getPublicUrl(`${client.auth.user().id}/${imgFile.name}`);
+      .getPublicUrl(`${user.value?.id}/${imgFile.name}`);
 
-    if (error) throw new Error("Wystąpił błąd podczas pobierania adresu URL");
+    console.log(publicUrl);
 
-    console.log(publicURL);
-
-    const { error: insertError } = await client.from("pins").insert({
-      title: title,
-      description: description,
-      pin_url: publicURL,
-      destination_url: destination_url,
-      category_id,
-      user_id: client.auth.user().id,
-    });
+    const { error: insertError } = await client
+      .from("pins")
+      .insert({
+        title: title,
+        description: description,
+        pin_url: publicUrl,
+        destination_url: destination_url,
+        category_id,
+        user_id: user.value?.id!,
+      })
+      .select();
 
     if (insertError) throw new Error("Wystąpił błąd podczas dodawania obrazu");
   };
 
   const editPin = async (id: number, pinToUpdate: PinToUpdate) => {
     const { data, error } = await client
-      .from<Pin>("pins")
+      .from("pins")
       .update({ ...pinToUpdate })
       .match({ id });
 

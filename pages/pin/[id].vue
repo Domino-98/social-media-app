@@ -1,19 +1,36 @@
 <script setup lang="ts">
+import { Pin } from "~~/models/pin";
+import categoriesApi from "~~/services/api_categories";
 import pinsApi from "~~/services/api_pins";
 
 const route = useRoute();
 const pinId = computed(() => route.params.id);
 
-const { pin } = usePins();
+const { pin, pins } = usePins();
 const { comments } = useComments();
 
-let isLoading = ref<boolean>(false);
+const isLoading = ref<boolean>(false);
 
 const getPin = async () => {
   isLoading.value = true;
   try {
     const fetchedPin = await pinsApi().fetchPinById(+pinId.value);
-    pin.value = fetchedPin;
+    pin.value = fetchedPin as Pin;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+const getSimilarPins = async () => {
+  isLoading.value = true;
+  try {
+    const fetchedPins = await categoriesApi().fetchSimilarPins(
+      +pinId.value,
+      pin.value!.category_id
+    );
+    pins.value = fetchedPins as Pin[];
   } catch (error) {
     console.error(error);
   } finally {
@@ -23,11 +40,13 @@ const getPin = async () => {
 
 onMounted(async () => {
   await getPin();
+  if (pin.value) await getSimilarPins();
   window.scrollTo(0, 0);
 });
 
 onUnmounted(() => {
   pin.value = null;
+  pins.value = [];
   comments.value = [];
 });
 
@@ -40,12 +59,14 @@ definePageMeta({
   <main>
     <PinDetails v-if="pin" :pin="pin" />
 
-    <div class="pins">
+    <div v-if="pin && pins?.length" class="pins">
       <h2 class="pins__header">Więcej podobnych</h2>
       <div class="pins__container">
-        <!-- <PinCard v-for="image in images" :key="image.id" :image="image" /> -->
+        <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
       </div>
     </div>
+
+    <div v-if="isLoading" class="loading-spinner"></div>
 
     <router-view v-slot="{ Component }">
       <transition name="fade" mode="out-in">
@@ -62,6 +83,7 @@ main {
   align-items: center;
   justify-content: center;
   margin: 0 2rem;
+  padding-bottom: 1rem;
 
   @media only screen and (max-width: 50em) {
     margin: 0 1rem;
@@ -99,5 +121,9 @@ main {
       columns: 1;
     }
   }
+}
+
+.loading-spinner {
+  margin-top: 2rem;
 }
 </style>

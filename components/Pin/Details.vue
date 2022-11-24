@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Pin } from "~~/models/pin";
-import { useToast } from "vue-toastification";
-import { TYPE } from "vue-toastification";
-import { useComments } from "~~/composables/comments";
+import { useToast, TYPE } from "vue-toastification";
 import pinsApi from "~~/services/api_pins";
+import relationsApi from "~~/services/api_relations";
+import { onClickOutside } from "@vueuse/core";
 
 const props = defineProps<{
   pin: Pin;
@@ -16,9 +16,9 @@ const { comments } = useComments();
 const { $download } = useNuxtApp();
 const toast = useToast();
 
-let infoEl = ref<HTMLDivElement>();
-let imgEl = ref<HTMLImageElement>();
-let imgHeight = ref<number>();
+const infoEl = ref<HTMLDivElement>();
+const imgEl = ref<HTMLImageElement>();
+const imgHeight = ref<number>();
 
 const setImgHeight = () => {
   setTimeout(() => {
@@ -26,16 +26,24 @@ const setImgHeight = () => {
   }, 500);
 };
 
-let showComments = ref<boolean>(true);
+const showComments = ref<boolean>(true);
 
-let isSaved = ref<boolean>(
-  user.value ? await pinsApi().isPinSaved(props.pin.id, user.value.id) : false
+const isSaved = ref<boolean>(
+  user.value ? await pinsApi().isPinSaved(props.pin.id, user.value?.id) : false
 );
+
+const userProfile = useUser();
 
 const addPinToSaved = async () => {
   if (user.value) {
     try {
-      await pinsApi().addToSaved(props.pin.id, user.value.id);
+      await pinsApi().addToSaved(
+        props.pin.id,
+        user.value.id,
+        props.pin.author?.id!,
+        userProfile.value!,
+        props.pin
+      );
       toast("Dodano Pina do zapisanych");
       isSaved.value = true;
     } catch (error) {
@@ -48,7 +56,7 @@ const addPinToSaved = async () => {
 
 const removePinFromSaved = async () => {
   try {
-    await pinsApi().removeFromSaved(props.pin.id, user.value.id);
+    await pinsApi().removeFromSaved(props.pin.id, user.value!.id);
     toast("Usunięto Pina z zapisanych");
     isSaved.value = false;
   } catch (error) {
@@ -56,7 +64,7 @@ const removePinFromSaved = async () => {
   }
 };
 
-let modalOpened = ref<boolean>(false);
+const modalOpened = ref<boolean>(false);
 
 const confirmModalOpened = ref<boolean>(false);
 const isDeleting = ref<boolean>(false);
@@ -66,7 +74,7 @@ const deletePin = async (id: number) => {
   try {
     const parts = props.pin.pin_url.split("/");
     const pinFileName = parts[parts.length - 1];
-    await pinsApi().deletePin(id, pinFileName, user.value.id);
+    await pinsApi().deletePin(id, pinFileName, user.value!.id);
     toast("Pomyślnie usunięto Pina");
     router.push("/");
   } catch (error) {
@@ -76,13 +84,64 @@ const deletePin = async (id: number) => {
   }
 };
 
-onMounted(() => {
-  isOwner.value = props.pin.author.id === user.value?.id;
+const isChatActive = ref<boolean>(false);
+
+const toggleChat = () => {
+  if (user.value) isChatActive.value = !isChatActive.value;
+  else
+    toast("Zaloguj się, by wysłać wiadomość", {
+      type: TYPE.ERROR,
+    });
+};
+
+const isFollowed = ref<boolean>(false);
+
+const followUser = async () => {
+  if (user.value) {
+    try {
+      await relationsApi().followUser(user.value!.id, props.pin.author?.id!);
+      isFollowed.value = true;
+    } catch (error) {
+      console.error(error);
+    }
+  } else {
+    toast("Zaloguj się, by dodać użytkownika do obserwowanych", {
+      type: TYPE.ERROR,
+    });
+  }
+};
+
+const unfollowUser = async () => {
+  try {
+    await relationsApi().unfollowUser(user.value!.id, props.pin.author?.id!);
+    isFollowed.value = false;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+const chatEl = ref();
+
+onClickOutside(chatEl, (e: Event) => {
+  if ((e.target as HTMLElement).id !== "sendBtn") toggleChat();
 });
 
-onUpdated(() => {
-  isOwner.value = props.pin.author.id === user.value?.id;
+onMounted(async () => {
+  isOwner.value = props.pin.author?.id === user.value?.id;
+  if (user.value)
+    isFollowed.value = await relationsApi().checkIfFollowing(
+      user.value!.id,
+      props.pin.author?.id!
+    );
 });
+
+watch(
+  () => user?.value?.id,
+  async () => {
+    isOwner.value = props.pin.author?.id === user.value?.id;
+  },
+  { deep: true }
+);
 
 definePageMeta({
   layout: "navigation",
@@ -102,10 +161,11 @@ definePageMeta({
         <font-awesome-icon icon="fa-solid fa-trash-can" size="lg" />
       </button>
       <img
+        v-if="infoEl"
         id="img1"
         ref="imgEl"
         class="pin__img"
-        :class="{ rounded: infoEl?.clientHeight > imgHeight }"
+        :class="{ rounded: infoEl.clientHeight > imgHeight! }"
         :src="pin.pin_url"
         alt=""
         @load="setImgHeight()"
@@ -113,30 +173,22 @@ definePageMeta({
     </div>
     <div class="pin__content" ref="infoEl">
       <div class="pin__btns">
-        <font-awesome-icon
-          @click="$download(props.pin.pin_url)"
-          icon="fa-solid fa-download"
-          class="pin__download"
-          v-tippy="{ placement: 'top' }"
-          content="Pobierz Pina"
-        />
+        <div class="pin__download-share">
+          <font-awesome-icon
+            @click="$download(props.pin.pin_url)"
+            icon="fa-solid fa-download"
+            class="pin__download"
+            v-tippy="{ placement: 'top' }"
+            content="Pobierz Pina"
+          />
 
-        <font-awesome-icon
-          @click="modalOpened = !modalOpened"
-          icon="fa-solid fa-share-nodes"
-          class="pin__share"
-          v-tippy="{ placement: 'top' }"
-          content="Udostępnij Pina"
-        />
-
-        <div
-          class="pin__likes"
-          v-tippy="{ placement: 'top' }"
-          content="Polub Pina"
-          :style="[isOwner ? { 'pointer-events': 'none' } : '']"
-        >
-          <font-awesome-icon icon="fa-regular fa-heart" class="pin__like" />
-          <span>5</span>
+          <font-awesome-icon
+            @click="modalOpened = !modalOpened"
+            icon="fa-solid fa-share-nodes"
+            class="pin__share"
+            v-tippy="{ placement: 'top' }"
+            content="Udostępnij Pina"
+          />
         </div>
 
         <button
@@ -178,13 +230,13 @@ definePageMeta({
 
       <div class="pin__profile">
         <NuxtLink
-          :to="`/profile/${props.pin.author.profile_id}`"
+          :to="`/profile/${props.pin.author?.profile_id}`"
           class="pin__profile-link"
         >
           <img
             class="pin__profile-avatar"
             :src="
-              pin.author.avatar_url ||
+              pin.author?.avatar_url ||
               'https://cdn-icons-png.flaticon.com/512/149/149071.png'
             "
             alt=""
@@ -193,7 +245,39 @@ definePageMeta({
             >{{ pin.author?.username || pin.author?.full_name }}
           </span>
         </NuxtLink>
-        <button v-if="!isOwner" class="pin__profile-btn">Obserwuj</button>
+        <button
+          v-if="!isFollowed && !isOwner"
+          @click.prevent="followUser"
+          class="btn btn--gray"
+        >
+          Obserwuj
+        </button>
+        <button
+          v-if="isFollowed && !isOwner"
+          @click.prevent="unfollowUser"
+          class="btn btn--gray"
+        >
+          Przestań obserwować
+        </button>
+      </div>
+
+      <div class="pin__chat">
+        <button
+          @click.prevent="toggleChat"
+          v-if="!isOwner"
+          class="btn btn--gray"
+          id="sendBtn"
+        >
+          Wyślij wiadomość
+        </button>
+
+        <Transition name="scale">
+          <ChatInput
+            ref="chatEl"
+            v-if="isChatActive"
+            :receiver-id="pin.author?.id!"
+          />
+        </Transition>
       </div>
 
       <div class="pin__comments">
@@ -223,6 +307,13 @@ definePageMeta({
       </template>
     </BaseModal>
 
+    <BaseModal :open="modalOpened" @close="modalOpened = false">
+      <template #header>Udostępnij Pina</template>
+      <template #body>
+        <PinShare :pin="pin" />
+      </template>
+    </BaseModal>
+
     <ConfirmationModal
       :open="confirmModalOpened"
       :loading="isDeleting"
@@ -240,7 +331,6 @@ definePageMeta({
 .pin {
   position: relative;
   display: flex;
-  overflow: hidden;
   width: 100%;
   max-width: 62.5rem;
   margin-top: 0.5rem;
@@ -259,6 +349,14 @@ definePageMeta({
     display: block;
     width: 100%;
     height: auto;
+    border-top-left-radius: 2rem;
+    border-bottom-left-radius: 2rem;
+
+    @media only screen and (max-width: 37.5em) {
+      border-radius: 0;
+      border-top-left-radius: 2rem;
+      border-top-right-radius: 2rem;
+    }
 
     &-container {
       width: 50%;
@@ -343,16 +441,13 @@ definePageMeta({
     justify-content: space-between;
   }
 
-  &__likes {
+  &__download-share {
     display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-weight: 500;
+    gap: 2rem;
   }
 
   &__download,
-  &__share,
-  &__like {
+  &__share {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -387,29 +482,12 @@ definePageMeta({
     font-size: 0.9rem;
   }
 
-  &__category {
-    display: block;
-    width: 100%;
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    padding-right: 2rem;
-    border: none;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-    background-color: var(--bg-color-primary);
-    color: var(--font-color);
-    font-size: 1rem;
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-
-    & option {
-      padding: 0 0.25rem;
-    }
-  }
-
   &__profile {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 
     &-name {
       font-weight: 500;
@@ -429,16 +507,10 @@ definePageMeta({
       cursor: pointer;
     }
 
-    &-btn {
-      margin-left: auto;
-      padding: 0.5rem 1rem;
-      border-radius: 2rem;
-      background-color: var(--btn-bg);
-      color: var(--btn-color);
-      cursor: pointer;
-
-      &:hover {
-        background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
+    & .btn {
+      @media only screen and (max-width: 25em) {
+        width: 100%;
+        margin-top: 0.5rem;
       }
     }
   }
@@ -473,6 +545,19 @@ definePageMeta({
     }
   }
 
+  &__chat {
+    align-self: flex-start;
+    position: relative;
+
+    @media only screen and (max-width: 25em) {
+      width: 100%;
+    }
+
+    & .btn {
+      width: 100%;
+    }
+  }
+
   &__save {
     align-self: center;
     padding: 0.5rem 1rem;
@@ -498,7 +583,8 @@ definePageMeta({
   @media only screen and (max-width: 37.5em) {
     max-width: 100%;
     margin: 0;
-    border-radius: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
 }
 </style>

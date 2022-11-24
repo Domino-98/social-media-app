@@ -2,31 +2,30 @@
 import commentsApi from "~~/services/api_comments";
 import { useToast } from "vue-toastification";
 import type { Comment } from "~~/models/comment";
-import { TYPE } from "vue-toastification";
 
-const route = useRoute();
 const pinId = computed(() => route.params.id);
-
 const { comments } = useComments();
-const commentsLoading = ref<boolean>(false);
+const route = useRoute();
 const toast = useToast();
 
+const isLoading = ref<boolean>(false);
+
 const getComments = async () => {
-  commentsLoading.value = true;
+  isLoading.value = true;
   try {
     const fetchedComments = await commentsApi().fetchComments(+pinId.value);
     console.log(fetchedComments);
-    comments.value = fetchedComments;
+    comments.value = fetchedComments as Comment[];
     console.log(comments.value);
   } catch (error) {
     console.error(error);
   } finally {
-    commentsLoading.value = false;
+    isLoading.value = false;
   }
 };
 
-let confirmModalOpened = ref<boolean>(false);
-let isDeleting = ref<boolean>(false);
+const confirmModalOpened = ref<boolean>(false);
+const isDeleting = ref<boolean>(false);
 const commentToDelete = ref<Comment>();
 
 const openModal = (comment: Comment) => {
@@ -70,7 +69,7 @@ onMounted(async () => {
       :loading="isDeleting"
       :color="'hsl(0, 100%, 62%)'"
       @close="confirmModalOpened = false"
-      @action="deleteComment(commentToDelete.id)"
+      @action="deleteComment(commentToDelete!.id)"
     >
       <template #header>Usuń komentarz</template>
       <template #body>Czy na pewno chcesz usunąć komentarz?</template>
