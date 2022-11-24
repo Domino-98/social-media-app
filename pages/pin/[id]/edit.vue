@@ -19,7 +19,7 @@ const validURL =
 
 const pinSchema = yup.object({
   title: yup.string().required("Tytuł jest wymagany"),
-  destination: yup.lazy((value) =>
+  destination_url: yup.lazy((value) =>
     !value
       ? yup.string()
       : yup.string().matches(validURL, "Adres URL jest nieprawidłowy")
