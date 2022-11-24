@@ -3,7 +3,7 @@ import { TYPE } from "vue-toastification";
 
 const toast = useToast();
 
-export default defineNuxtRouteMiddleware((to, _from) => {
+export default defineNuxtRouteMiddleware(async (to, _from) => {
   const user = useSupabaseUser();
 
   if (!user.value) {
@@ -12,6 +12,14 @@ export default defineNuxtRouteMiddleware((to, _from) => {
         type: TYPE.ERROR,
       });
     }
-    return navigateTo("/auth");
+    if (to.path === "/following" && process.client) {
+      toast(
+        "Musisz się zalogować, by móc przeglądać piny obserwowanych użytkowników!",
+        {
+          type: TYPE.ERROR,
+        }
+      );
+    }
+    return await navigateTo("/auth");
   }
 });
