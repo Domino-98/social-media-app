@@ -416,24 +416,10 @@ definePageMeta({
     }
   }
 
-  &__info,
-  &__edit {
+  &__info {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-  }
-
-  &__edit {
-    & input {
-      background-color: rgba(var(--opacity-color), 0.1);
-      padding: 0.5rem;
-      border-radius: 0.25rem;
-      color: var(--font-color);
-    }
-
-    & button[type="submit"] {
-      align-self: flex-end;
-    }
   }
 
   &__btns {
@@ -469,7 +455,9 @@ definePageMeta({
     margin-top: 0.5rem;
     font-size: 0.9rem;
     cursor: pointer;
-    text-decoration: underline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   &__title {
