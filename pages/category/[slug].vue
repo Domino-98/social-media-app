@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { Pin } from "~~/models/pin";
 import categoriesApi from "~~/services/api_categories";
 
 const { pins } = usePins();
 
-let pinsLoading = ref<boolean>(false);
+const pinsLoading = ref<boolean>(false);
 
 const route = useRoute();
 const slug = route.params.slug;
@@ -14,7 +15,7 @@ const getAllPins = async () => {
     const fetchedPins = await categoriesApi().fetchPinsByCategory(
       slug as string
     );
-    pins.value = fetchedPins;
+    pins.value = fetchedPins as Pin[];
   } catch (error) {
   } finally {
     pinsLoading.value = false;
@@ -36,9 +37,7 @@ definePageMeta({
 
 <template>
   <div class="container">
-    <TransitionGroup name="scale">
-      <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
-    </TransitionGroup>
+    <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
   </div>
 </template>
 

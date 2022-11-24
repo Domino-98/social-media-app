@@ -1,10 +1,12 @@
+import type { Database } from "~~/lib/database.types";
+
 export default () => {
-  const client = useSupabaseClient();
+  const client = useSupabaseClient<Database>();
 
   const fetchCategories = async () => {
     const { data: categories, error } = await client
       .from("categories")
-      .select("id, name, slug, image_url")
+      .select("*")
       .order("created_at");
 
     if (error) throw error;
@@ -13,7 +15,6 @@ export default () => {
   };
 
   const fetchPinsByCategory = async (slug: string) => {
-    console.log(slug);
     const { data: pins, error } = await client
       .from("pins")
       .select(
@@ -30,7 +31,30 @@ export default () => {
       .eq("categories.slug", slug)
       .order("created_at", { ascending: false });
 
-    console.log(pins);
+    if (error) throw error;
+
+    return pins;
+  };
+
+  const fetchSimilarPins = async (pinId: number, categoryId: number) => {
+    const { data: pins, error } = await client
+      .from("pins")
+      .select(
+        `
+          *,
+          author:profiles (
+            id,
+            profile_id,
+            avatar_url,
+            username,
+            full_name
+          )
+        `
+      )
+      .not("id", "eq", pinId)
+      .eq("category_id", categoryId)
+      .order("created_at", { ascending: false });
+
     if (error) throw error;
 
     return pins;
@@ -39,5 +63,6 @@ export default () => {
   return {
     fetchCategories,
     fetchPinsByCategory,
+    fetchSimilarPins,
   };
 };
