@@ -9,10 +9,12 @@ const homeURL = window.location.origin;
 const copyInput = ref<HTMLInputElement>();
 const copied = ref<boolean>(false);
 
+console.log({ homeURL, copyInput, copied });
+
 const copyURL = () => {
   copyInput.value?.select();
   copyInput.value?.setSelectionRange(0, 99999);
-  navigator.clipboard.writeText(copyInput.value?.value as string);
+  navigator.clipboard.writeText(copyInput.value?.value!);
   copied.value = true;
   setTimeout(() => (copied.value = false), 2000);
 };
@@ -20,14 +22,11 @@ const copyURL = () => {
 
 <template>
   <div class="share">
-    <tippy
-      @click="copyURL"
-      class="share__copy"
-      placement="right"
+    <div
+      @click.prevent="copyURL"
+      v-tippy="{ placement: 'right' }"
       content="Skopiuj"
-      delay="0"
-      zIndex="99999"
-      hideOnClick="false"
+      class="share__copy"
     >
       <input
         ref="copyInput"
@@ -41,7 +40,7 @@ const copyURL = () => {
         size="xl"
         class="share__copy-icon"
       />
-    </tippy>
+    </div>
 
     <p v-if="copied" class="share__copied">Skopiowano!</p>
 
@@ -98,7 +97,6 @@ const copyURL = () => {
 </template>
 
 <style lang="scss" scoped>
-// Pin share styles
 .share {
   display: flex;
   flex-direction: column;
@@ -120,6 +118,7 @@ const copyURL = () => {
       color: var(--font-color);
       overflow: hidden;
       text-overflow: ellipsis;
+      pointer-events: none;
     }
 
     &-icon {
