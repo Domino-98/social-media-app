@@ -2,7 +2,6 @@
 import { RealtimeChannel } from "@supabase/realtime-js";
 import { Database } from "~~/lib/database.types";
 import { Message } from "~~/models/chat";
-import chatApi from "~~/services/api_chat";
 
 const client = useSupabaseClient<Database>();
 const user = useSupabaseUser();
@@ -87,33 +86,17 @@ const onResize = () => {
 const isLoading = ref<boolean>(true);
 
 onMounted(async () => {
-  isLoading.value = true;
-  try {
-    const fetchedChats = await chatApi().getChatrooms(user.value!.id);
-    chats.value = fetchedChats;
-    chats.value.sort(
-      (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    );
-
-    if (chats.value.length && !route.params.id && !isMobile.value) {
-      await navigateTo(`/chats/${fetchedChats[0].chatroom_id}`);
-    }
-  } catch (error) {
-    console.error(error);
-  } finally {
-    isLoading.value = false;
-  }
-
   onResize();
   window.addEventListener("resize", onResize, { passive: true });
+  if (chats.value.length) isLoading.value = false;
+  if (chats.value.length && !route.params.id && !isMobile.value) {
+    await navigateTo(`/chats/${chats.value[0].chatroom_id}`);
+  }
 });
 
 onUnmounted(async () => {
   await client.removeChannel(senderChannel);
   window.removeEventListener("resize", onResize);
-  onResize();
-  window.addEventListener("resize", onResize, { passive: true });
 });
 
 definePageMeta({
@@ -133,7 +116,7 @@ definePageMeta({
           />
           <h1 class="chats__heading">Czaty</h1>
         </header>
-        <div v-if="chats.length && !isLoading" class="chats__list">
+        <div v-if="chats.length" class="chats__list">
           <NuxtLink
             :to="`/chats/${chat.chatroom_id}`"
             v-for="chat in chats"
@@ -374,6 +357,7 @@ main {
   &__message-date {
     position: relative;
     display: flex;
+    align-items: center;
     gap: 1rem;
     justify-content: space-between;
     width: 100%;
