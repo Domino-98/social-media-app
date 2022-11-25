@@ -3,6 +3,7 @@ import chatApi from "~~/services/api_chat";
 import { RealtimeChannel } from "@supabase/realtime-js";
 import { Message } from "~~/models/chat";
 import { Database } from "~~/lib/database.types";
+import { User } from "~~/models/user";
 
 const client = useSupabaseClient<Database>();
 const user = useSupabaseUser();
@@ -11,10 +12,16 @@ const chatroomId = computed(() => route.params.id);
 
 const { messages } = useMessages();
 
-const chatEl = ref();
+const chatEl = ref<HTMLUListElement>();
 
-const scrollBottom = () => {
-  setTimeout(() => (chatEl.value.scrollTop = chatEl.value.scrollHeight), 300);
+const scrollBottom = (userId?: string) => {
+  if (
+    chatEl.value!.scrollHeight - chatEl.value!.scrollTop < 1000 ||
+    userId === user.value?.id
+  )
+    setTimeout(() => {
+      chatEl.value!.scrollTop = chatEl.value!.scrollHeight;
+    }, 300);
 };
 
 let messageChannel: RealtimeChannel;
@@ -33,7 +40,6 @@ if (process.client) {
       async (payload) => {
         if (payload.new.receiver_id === user.value?.id) {
           messages.value.push(payload.new as Message);
-          scrollBottom();
           await chatApi().readMessage(payload.new.id, payload.new.receiver_id);
         }
       }
@@ -55,7 +61,17 @@ if (process.client) {
     .subscribe();
 }
 
-const otherUser = ref();
+let typingTimeout: any;
+const isTyping = ref<string>("");
+
+const setUserTyping = (value: string) => {
+  clearTimeout(typingTimeout);
+  isTyping.value = value;
+  if (isTyping.value)
+    typingTimeout = setTimeout(() => (isTyping.value = ""), 1500);
+};
+
+const otherUser = ref<User>();
 
 const goBack = async () => {
   await navigateTo("/chats");
@@ -67,8 +83,8 @@ const getMessages = async (chatroomId: string, userId: string) => {
 
   otherUser.value =
     fetchedMsgs[0]?.receiver_id !== userId
-      ? fetchedMsgs[0]?.receiver
-      : fetchedMsgs[0]?.sender;
+      ? (fetchedMsgs[0]?.receiver as User)
+      : (fetchedMsgs[0]?.sender as User);
 
   setTimeout(
     () =>
@@ -124,12 +140,27 @@ watch(chatroomId, async (newRoom) => {
           v-for="message in messages"
           :key="message.id"
           :message="message"
-          :other-user="otherUser"
+          :other-user="otherUser!"
         />
       </TransitionGroup>
     </ul>
 
-    <ChatMessageInput @scroll-bottom="scrollBottom" :other-user="otherUser" />
+    <Transition name="scale">
+      <div v-if="isTyping" class="message__typing">
+        <span>{{ otherUser?.username }} pisze</span>
+        <div class="tiblock">
+          <div class="tidot"></div>
+          <div class="tidot"></div>
+          <div class="tidot"></div>
+        </div>
+      </div>
+    </Transition>
+
+    <ChatMessageInput
+      @user-typing="setUserTyping"
+      @scroll-bottom="scrollBottom"
+      :other-user="otherUser!"
+    />
   </div>
 </template>
 
@@ -218,6 +249,17 @@ watch(chatroomId, async (newRoom) => {
       background-color: rgba(var(--opacity-color), 0.25);
     }
   }
+
+  &__typing {
+    align-self: flex-start;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 1.25rem;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: gray;
+  }
 }
 
 .icon {
@@ -238,5 +280,45 @@ watch(chatroomId, async (newRoom) => {
   @media only screen and (max-width: 37.5em) {
     display: block;
   }
+}
+
+.tiblock {
+  align-items: flex-end;
+  display: flex;
+  gap: 0.025rem;
+  margin-bottom: 0.4rem;
+  height: 17px;
+}
+
+.tidot {
+  animation: mercuryTypingAnimation 1.5s infinite ease-in-out;
+  border-radius: 2px;
+  display: inline-block;
+  height: 4px;
+  margin-right: 2px;
+  width: 4px;
+  background-color: #90949c;
+}
+
+@keyframes mercuryTypingAnimation {
+  0% {
+    -webkit-transform: translateY(0px);
+  }
+  28% {
+    -webkit-transform: translateY(-5px);
+  }
+  44% {
+    -webkit-transform: translateY(0px);
+  }
+}
+
+.tidot:nth-child(1) {
+  animation-delay: 200ms;
+}
+.tidot:nth-child(2) {
+  animation-delay: 300ms;
+}
+.tidot:nth-child(3) {
+  animation-delay: 400ms;
 }
 </style>

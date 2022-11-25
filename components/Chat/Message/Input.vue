@@ -4,17 +4,22 @@ import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
 import { User } from "~~/models/user";
 import { Message } from "~~/models/chat";
+import { RealtimeChannel } from "@supabase/realtime-js";
 
 const props = defineProps<{
   otherUser: User;
 }>();
 
-const toast = useToast();
+const route = useRoute();
+const chatroomId = computed(() => route.params.id);
+const client = useSupabaseClient();
 const user = useSupabaseUser();
+const toast = useToast();
 const { messages } = useMessages();
 
 const emit = defineEmits<{
-  (e: "scrollBottom"): void;
+  (e: "scrollBottom", userId?: string): void;
+  (e: "userTyping", value: string): void;
 }>();
 
 const message = ref<string>("");
@@ -26,10 +31,9 @@ const sendMessage = async () => {
       props.otherUser.id,
       message.value
     );
-    console.log(msg);
     messages.value.push(msg as Message);
     message.value = "";
-    emit("scrollBottom");
+    emit("scrollBottom", user.value?.id as string);
   } catch (error) {
     if (error instanceof Error)
       toast(error.message, {
@@ -37,11 +41,55 @@ const sendMessage = async () => {
       });
   }
 };
+
+let typingChannel: RealtimeChannel;
+const typingActivated = ref<boolean>(false);
+
+if (process.client) {
+  typingChannel = client.channel(`${chatroomId.value}`, {
+    config: {
+      presence: { key: user.value?.id },
+    },
+  });
+  typingChannel
+    .on("presence", { event: "sync" }, () => {
+      presenceChanged();
+    })
+    .subscribe();
+}
+
+const trackTyping = async (e: Event) => {
+  await typingChannel.track({
+    isTyping: Date.now(),
+  });
+};
+
+// Receive Presence updates
+const presenceChanged = () => {
+  const newState = typingChannel.presenceState();
+  typingChannel;
+  console.log({ newState });
+  if (Object.keys(newState).length !== 0 && typingActivated.value) {
+    const lastUser = Object.keys(newState).reduce((a, b) =>
+      newState[a][0].isTyping > newState[b][0].isTyping ? a : b
+    );
+    if (lastUser !== user.value?.id) {
+      emit("userTyping", lastUser);
+      emit("scrollBottom");
+    }
+  }
+  typingActivated.value = true;
+};
+
+onUnmounted(() => {
+  typingChannel.untrack().then((status) => console.log({ status }));
+});
 </script>
 
 <template>
   <form class="message__send">
     <input
+      @input="trackTyping"
       v-model="message"
       type="text"
       placeholder="Wiadomość..."
