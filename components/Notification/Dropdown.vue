@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Notification } from "~~/models/notification";
 import notificationsApi from "~~/services/api_notifications";
 
 const user = useSupabaseUser();
@@ -11,9 +12,59 @@ const deleteNotification = async (id: number) => {
     (notification) => notification.id === id
   );
   notifications.value.splice(notificationIndex, 1);
+  totalNotifications.value--;
+  if (!notifications.value.length) await getNotifications();
 };
 
+const deleteAllNotifications = async (userId: string) => {
+  await notificationsApi().deleteAllNotifications(userId);
+  notifications.value = [];
+  totalNotifications.value = 0;
+};
+
+const from = ref<number>(0);
+const to = ref<number>(5);
+const take = ref<number>(5);
+const scrolledToBottom = ref<boolean>(false);
+
+const { checkIfScrolledBottom } = useScroll();
+
+const handleInfiniteScroll = async (e: Event) => {
+  const bottom = checkIfScrolledBottom(e.target as HTMLElement);
+  if (bottom && !scrolledToBottom.value) {
+    scrolledToBottom.value = true;
+    from.value = to.value + 1;
+    to.value += take.value + 1;
+    try {
+      const fetchedNotifs = await notificationsApi().getNotifications(
+        user.value?.id!,
+        from.value,
+        to.value
+      );
+      notifications.value.push(...(fetchedNotifs as Notification[]));
+      setTimeout(() => (scrolledToBottom.value = false), 500);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+};
+
+const notificationsEl = ref<HTMLElement>();
+
+const getNotifications = async () => {
+  const fetchedNotifications = await notificationsApi().getNotifications(
+    user.value?.id as string
+  );
+  notifications.value = fetchedNotifications as Notification[];
+};
+
+const totalNotifications = ref<number>(0);
+
 onMounted(async () => {
+  await getNotifications();
+  totalNotifications.value = (await notificationsApi().getTotalNotifications(
+    user.value?.id!
+  )) as number;
   const unreadNotifications = notifications.value.filter(
     (notif) => notif.status === "unread" && user.value?.id === notif.recipent_id
   );
@@ -23,59 +74,75 @@ onMounted(async () => {
       async () => await notificationsApi().readNotifications(user.value!.id),
       200
     );
+  notificationsEl.value?.addEventListener("scroll", handleInfiniteScroll);
+});
+
+onUnmounted(() => {
+  notificationsEl.value?.removeEventListener("scroll", handleInfiniteScroll);
 });
 </script>
 
 <template>
   <div class="notifications__dropdown">
     <header class="notifications__header">
-      <h2 class="notifications__heading">Powiadomienia</h2>
-      <font-awesome-icon icon="fa-regular fa-bell" class="icon icon--bell" />
+      <h2 class="notifications__heading">
+        Powiadomienia ({{ totalNotifications }})
+      </h2>
+      <font-awesome-icon
+        v-if="notifications.length"
+        @click.prevent="deleteAllNotifications(user!.id)"
+        v-tippy
+        content="Usuń wszystkie powiadomienia"
+        icon="fa-solid fa-trash"
+        class="icon icon--delete icon--delete--all"
+      />
     </header>
 
     <p v-if="!notifications.length" class="notifications__alert">
       Brak powiadomień
     </p>
 
-    <TransitionGroup v-else name="scale" tag="ul" class="notifications__list">
-      <li
-        v-for="notification in notifications"
-        :key="notification.id"
-        class="notifications__item"
-      >
-        <RouterLink
-          :to="`/profile/${notification.notifier?.profile_id}`"
-          class="notifications__avatar-link"
+    <ul v-else ref="notificationsEl" class="notifications__list">
+      <TransitionGroup name="scale">
+        <li
+          v-for="notification in notifications"
+          :key="notification.id"
+          class="notifications__item"
         >
-          <img
-            :src="
-              notification.notifier?.avatar_url ||
-              'https://cdn-icons-png.flaticon.com/512/149/149071.png'
-            "
-            class="notifications__avatar"
+          <RouterLink
+            :to="`/profile/${notification.notifier?.profile_id}`"
+            class="notifications__avatar-link"
+          >
+            <img
+              :src="
+                notification.notifier?.avatar_url ||
+                'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+              "
+              class="notifications__avatar"
+            />
+          </RouterLink>
+
+          <div class="notifications__content">
+            <p
+              v-html="notification.notification_content"
+              class="notifications__content"
+            ></p>
+
+            <span class="notifications__date">{{
+              timeFromNow(notification.created_at)
+            }}</span>
+          </div>
+
+          <font-awesome-icon
+            @click.prevent="deleteNotification(notification.id as number)"
+            v-tippy
+            content="Usuń powiadomienie"
+            class="icon icon--delete"
+            icon="fa-solid fa-delete-left"
           />
-        </RouterLink>
-
-        <div class="notifications__content">
-          <p
-            v-html="notification.notification_content"
-            class="notifications__content"
-          ></p>
-
-          <span class="notifications__date">{{
-            timeFromNow(notification.created_at)
-          }}</span>
-        </div>
-
-        <font-awesome-icon
-          @click.prevent="deleteNotification(notification.id as number)"
-          v-tippy
-          content="Usuń powiadomienie"
-          icon="fa-solid fa-trash"
-          class="icon icon--delete"
-        />
-      </li>
-    </TransitionGroup>
+        </li>
+      </TransitionGroup>
+    </ul>
   </div>
 </template>
 
@@ -93,12 +160,18 @@ onMounted(async () => {
   }
 
   &__header {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
     box-shadow: 0 5px 5px -5px var(--shadow-color);
     padding: 0.75rem;
+
+    &:hover .icon--delete {
+      visibility: visible;
+      opacity: 1;
+    }
   }
 
   &__heading {
@@ -179,10 +252,6 @@ onMounted(async () => {
 }
 
 .icon {
-  &--bell {
-    font-size: 1.2rem;
-  }
-
   &--delete {
     position: absolute;
     top: 50%;
@@ -195,6 +264,11 @@ onMounted(async () => {
 
     &:hover {
       color: #ff4040 !important;
+    }
+
+    &--all {
+      right: 1rem;
+      cursor: pointer;
     }
   }
 }

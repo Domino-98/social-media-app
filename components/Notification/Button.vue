@@ -92,7 +92,7 @@ const toggleNotifications = (): void => {
   } else {
     delete query.notifications;
   }
-  setTimeout(() => router.push({ query }), 200);
+  router.push({ query });
 };
 
 const notificationsEl = ref();

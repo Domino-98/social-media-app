@@ -2,6 +2,7 @@
 import { RealtimeChannel } from "@supabase/realtime-js";
 import { Database } from "~~/lib/database.types";
 import { Message } from "~~/models/chat";
+import chatApi from "~~/services/api_chat";
 
 const client = useSupabaseClient<Database>();
 const user = useSupabaseUser();
@@ -85,18 +86,55 @@ const onResize = () => {
 
 const isLoading = ref<boolean>(true);
 
+const from = ref<number>(0);
+const to = ref<number>(23);
+const take = ref<number>(23);
+const scrolledToBottom = ref<boolean>(false);
+
+const { checkIfScrolledBottom } = useScroll();
+
+const handleInfiniteScroll = async (e: Event) => {
+  const bottom = checkIfScrolledBottom(e.target as HTMLElement);
+  if (bottom && !scrolledToBottom.value) {
+    scrolledToBottom.value = true;
+    from.value = to.value + 1;
+    to.value += take.value + 1;
+    try {
+      const fetchedChats = await chatApi().getChatrooms(
+        user.value?.id!,
+        from.value,
+        to.value
+      );
+      chats.value.push(...(fetchedChats as Message[]));
+      setTimeout(() => (scrolledToBottom.value = false), 500);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+};
+
+const getChatrooms = async () => {
+  const fetchedChats = await chatApi().getChatrooms(user.value?.id as string);
+  chats.value = fetchedChats;
+};
+
+const chatsEl = ref<HTMLElement>();
+
 onMounted(async () => {
+  await getChatrooms();
   onResize();
   window.addEventListener("resize", onResize, { passive: true });
   if (chats.value.length) isLoading.value = false;
   if (chats.value.length && !route.params.id && !isMobile.value) {
     await navigateTo(`/chats/${chats.value[0].chatroom_id}`);
   }
+  chatsEl.value?.addEventListener("scroll", handleInfiniteScroll);
 });
 
 onUnmounted(async () => {
   await client.removeChannel(senderChannel);
   window.removeEventListener("resize", onResize);
+  chatsEl.value?.removeEventListener("scroll", handleInfiniteScroll);
 });
 
 definePageMeta({
@@ -116,7 +154,7 @@ definePageMeta({
           />
           <h1 class="chats__heading">Czaty</h1>
         </header>
-        <div v-if="chats.length" class="chats__list">
+        <div v-if="chats.length" ref="chatsEl" class="chats__list">
           <NuxtLink
             :to="`/chats/${chat.chatroom_id}`"
             v-for="chat in chats"
@@ -189,7 +227,7 @@ main {
     margin: 2rem;
   }
 
-  @media only screen and (max-width: 50em) {
+  @media only screen and (max-width: 62.5em) {
     margin: 0 1rem;
   }
 }

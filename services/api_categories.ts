@@ -14,7 +14,7 @@ export default () => {
     return categories;
   };
 
-  const fetchPinsByCategory = async (slug: string) => {
+  const fetchPinsByCategory = async (slug: string, from = 0, to = 23) => {
     const { data: pins, error } = await client
       .from("pins")
       .select(
@@ -29,14 +29,20 @@ export default () => {
       )`
       )
       .eq("categories.slug", slug)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
 
     return pins;
   };
 
-  const fetchSimilarPins = async (pinId: number, categoryId: number) => {
+  const fetchSimilarPins = async (
+    pinId: number,
+    categoryId: number,
+    from = 0,
+    to = 23
+  ) => {
     const { data: pins, error } = await client
       .from("pins")
       .select(
@@ -53,7 +59,8 @@ export default () => {
       )
       .not("id", "eq", pinId)
       .eq("category_id", categoryId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
 

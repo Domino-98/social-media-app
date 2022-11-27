@@ -6,8 +6,8 @@ import notificationsApi from "./api_notifications";
 export default () => {
   const client = useSupabaseClient<Database>();
 
-  const fetchComments = async (pinId: number) => {
-    const { data: comments, error } = await client
+  const fetchComments = async (pinId: number, from = 0, to = 2, take = 2) => {
+    const { data: fetchedComments, error } = await client
       .from("comments")
       .select(
         `
@@ -22,13 +22,39 @@ export default () => {
     `
       )
       .order("created_at")
-      .match({ pin_id: pinId });
-
-    console.log(comments);
+      .match({ pin_id: pinId })
+      .range(from, to);
 
     if (error) throw error;
 
-    return comments;
+    console.log({ from, to, take });
+
+    from = to + 1;
+    to += take + 1;
+
+    const { data: nextComments, error: nextError } = await client
+      .from("comments")
+      .select("*")
+      .eq("pin_id", pinId)
+      .range(from, to);
+
+    if (nextError) throw error;
+
+    return {
+      fetchedComments,
+      nextComments,
+    };
+  };
+
+  const getTotalComments = async (pinId: number) => {
+    const { count, error } = await client
+      .from("comments")
+      .select("*", { count: "exact", head: true })
+      .eq("pin_id", pinId);
+
+    if (error) throw error;
+
+    return count;
   };
 
   const addComment = async (
@@ -50,14 +76,14 @@ export default () => {
 
     if (error) throw error;
 
-    const notificationContent = `<a href="/pin/${pinId}" target="_self" onclick="event.preventDefault(); 
-    router.push(/pin/${pinId});"><span class="notifications__text">Użytkownik <b>${user.username}</b> skomentował twojego pina <b>${pin.title}</b>!</span></a>`;
+    const notificationContent = `<a href="/pin/${pinId}"><span class="notifications__text">Użytkownik <b>${user.username}</b> skomentował twojego pina <b>${pin.title}</b>!</span></a>`;
 
-    await notificationsApi().sendNotification(
-      user.id!,
-      pin.author?.id!,
-      notificationContent
-    );
+    if (user.id !== pin.author?.id)
+      await notificationsApi().sendNotification(
+        user.id,
+        pin.author?.id!,
+        notificationContent
+      );
 
     return comment;
   };
@@ -84,6 +110,7 @@ export default () => {
 
   return {
     fetchComments,
+    getTotalComments,
     addComment,
     editComment,
     deleteComment,

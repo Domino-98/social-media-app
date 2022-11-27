@@ -29,7 +29,7 @@ export default () => {
     return data;
   };
 
-  const getNotifications = async (recipentId: string) => {
+  const getNotifications = async (recipentId: string, from = 0, to = 5) => {
     const { data: notifications, error } = await client
       .from("notifications")
       .select(
@@ -43,7 +43,8 @@ export default () => {
       `
       )
       .eq("recipent_id", recipentId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
 
@@ -52,8 +53,28 @@ export default () => {
     return notifications;
   };
 
+  const getTotalNotifications = async (userId: string) => {
+    const { count, error } = await client
+      .from("notifications")
+      .select("*", { count: "exact", head: true })
+      .eq("recipent_id", userId);
+
+    if (error) throw error;
+
+    return count;
+  };
+
   const deleteNotification = async (id: number) => {
     const { error } = await client.from("notifications").delete().eq("id", id);
+
+    if (error) throw error;
+  };
+
+  const deleteAllNotifications = async (userId: string) => {
+    const { error } = await client
+      .from("notifications")
+      .delete()
+      .eq("recipent_id", userId);
 
     if (error) throw error;
   };
@@ -89,7 +110,9 @@ export default () => {
   return {
     sendNotification,
     getNotifications,
+    getTotalNotifications,
     deleteNotification,
+    deleteAllNotifications,
     readNotifications,
     readNotification,
   };

@@ -8,7 +8,7 @@ export default () => {
   const client = useSupabaseClient<Database>();
   const user = useSupabaseUser();
 
-  const fetchAllPins = async () => {
+  const fetchPins = async (from = 0, to = 23) => {
     const { data: pins, error } = await client
       .from("pins")
       .select(
@@ -23,9 +23,12 @@ export default () => {
           )
         `
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
+
+    console.log({ pins });
 
     return pins;
   };
@@ -57,7 +60,7 @@ export default () => {
     return pin;
   };
 
-  const fetchUserPins = async (userId: string) => {
+  const fetchUserPins = async (userId: string, from = 0, to = 23) => {
     const { data: pin, error } = await client
       .from("pins")
       .select(
@@ -72,14 +75,16 @@ export default () => {
           )
         `
       )
-      .match({ user_id: userId });
+      .match({ user_id: userId })
+      .range(from, to)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
     return pin;
   };
 
-  const fetchSavedPins = async (userId: string) => {
+  const fetchSavedPins = async (userId: string, from = 0, to = 23) => {
     const { data: pins, error } = await client
       .from("saved")
       .select(
@@ -96,7 +101,9 @@ export default () => {
           )
         `
       )
-      .match({ user_id: userId });
+      .match({ user_id: userId })
+      .range(from, to)
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -117,16 +124,16 @@ export default () => {
       user_id: userId,
     });
 
-    const notificationContent = `<a href="/pin/${pin.id}" target="_self" onclick="event.preventDefault(); 
-    router.push(/pin/${pin.id});"><span class="notifications__text">Użytkownik <b>${user.username}</b> zapisał twojego pina <b>${pin.title}</b>!</span></a>`;
-
-    await notificationsApi().sendNotification(
-      userId,
-      recipentId,
-      notificationContent
-    );
-
     if (error) throw error;
+
+    const notificationContent = `<a href="/pin/${pin.id}"><span class="notifications__text">Użytkownik <b>${user.username}</b> zapisał twojego pina <b>${pin.title}</b>!</span></a>`;
+
+    if (user.id !== recipentId)
+      await notificationsApi().sendNotification(
+        userId,
+        recipentId,
+        notificationContent
+      );
   };
 
   const removeFromSaved = async (pinId: number, userId: string) => {
@@ -213,7 +220,7 @@ export default () => {
     if (storageError) throw error;
   };
 
-  const searchPins = async (searchValue: string) => {
+  const searchPins = async (searchValue: string, from = 0, to = 23) => {
     const { data: pins, error } = await client
       .from("pins")
       .select(
@@ -229,7 +236,8 @@ export default () => {
         `
       )
       .ilike("title", `%${searchValue}%`)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
 
@@ -237,7 +245,7 @@ export default () => {
   };
 
   return {
-    fetchAllPins,
+    fetchPins,
     fetchPinById,
     fetchUserPins,
     fetchSavedPins,

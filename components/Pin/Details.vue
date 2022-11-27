@@ -134,15 +134,15 @@ const unfollowUser = async () => {
 const totalComments = ref<number>(0);
 
 onMounted(async () => {
-  totalComments.value = (await commentsApi().getTotalComments(
-    props.pin.id
-  )) as number;
   isOwner.value = props.pin.author?.id === user.value?.id;
   if (user.value)
     isFollowed.value = await relationsApi().checkIfFollowing(
       user.value!.id,
       props.pin.author?.id!
     );
+  totalComments.value = (await commentsApi().getTotalComments(
+    props.pin.id
+  )) as number;
 });
 
 watch(

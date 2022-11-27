@@ -74,14 +74,15 @@ export default () => {
     return false;
   };
 
-  const fetchFollowingPins = async (userId: string) => {
+  const fetchFollowingPins = async (userId: string, from = 0, to = 23) => {
     console.log({ userId });
 
     const { data: pins, error } = await client
       .rpc("get_following_pins", {
         followerid: userId,
       })
-      .select("*");
+      .select("*")
+      .range(from, to);
 
     if (error) throw error;
 

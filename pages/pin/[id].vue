@@ -23,12 +23,44 @@ const getPin = async () => {
   }
 };
 
+const from = ref<number>(0);
+const to = ref<number>(23);
+const take = ref<number>(23);
+const scrolledToBottom = ref<boolean>(false);
+
+const { checkIfScrolledBottom } = useScroll();
+
+const handleInfiniteScroll = async (e: Event) => {
+  const bottom = checkIfScrolledBottom(
+    (e.target as Document).scrollingElement!
+  );
+  if (bottom && !scrolledToBottom.value) {
+    scrolledToBottom.value = true;
+    from.value = to.value + 1;
+    to.value += take.value + 1;
+    try {
+      const fetchedPins = await categoriesApi().fetchSimilarPins(
+        +pinId.value,
+        pin.value!.category_id,
+        from.value,
+        to.value
+      );
+      pins.value.push(...(fetchedPins as Pin[]));
+      setTimeout(() => (scrolledToBottom.value = false), 500);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+};
+
 const getSimilarPins = async () => {
   isLoading.value = true;
   try {
     const fetchedPins = await categoriesApi().fetchSimilarPins(
       +pinId.value,
-      pin.value!.category_id
+      pin.value!.category_id,
+      from.value,
+      to.value
     );
     pins.value = fetchedPins as Pin[];
   } catch (error) {
@@ -42,12 +74,14 @@ onMounted(async () => {
   await getPin();
   if (pin.value) await getSimilarPins();
   window.scrollTo(0, 0);
+  window.document.addEventListener("scroll", handleInfiniteScroll);
 });
 
 onUnmounted(() => {
   pin.value = null;
   pins.value = [];
   comments.value = [];
+  window.document.removeEventListener("scroll", handleInfiniteScroll);
 });
 
 definePageMeta({
@@ -62,7 +96,9 @@ definePageMeta({
     <div v-if="pin && pins?.length" class="pins">
       <h2 class="pins__header">Więcej podobnych</h2>
       <div class="pins__container">
-        <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
+        <TransitionGroup name="scale">
+          <PinCard v-for="pin in pins" :key="pin.id" :pin="pin" />
+        </TransitionGroup>
       </div>
     </div>
 
@@ -85,7 +121,7 @@ main {
   margin: 0 2rem;
   padding-bottom: 1rem;
 
-  @media only screen and (max-width: 50em) {
+  @media only screen and (max-width: 62.5em) {
     margin: 0 1rem;
   }
 }

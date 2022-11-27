@@ -12,15 +12,15 @@ const chatroomId = computed(() => route.params.id);
 
 const { messages } = useMessages();
 
-const chatEl = ref<HTMLUListElement>();
+const messagesEl = ref<HTMLUListElement>();
 
 const scrollBottom = (userId?: string) => {
   if (
-    chatEl.value!.scrollHeight - chatEl.value!.scrollTop < 1000 ||
+    messagesEl.value!.scrollHeight - messagesEl.value!.scrollTop < 1000 ||
     userId === user.value?.id
   )
     setTimeout(() => {
-      chatEl.value!.scrollTop = chatEl.value!.scrollHeight;
+      messagesEl.value!.scrollTop = messagesEl.value!.scrollHeight;
     }, 300);
 };
 
@@ -77,7 +77,12 @@ const goBack = async () => {
   await navigateTo("/chats");
 };
 
-const getMessages = async (chatroomId: string, userId: string) => {
+const getMessages = async (
+  chatroomId: string,
+  userId: string,
+  from?: number,
+  to?: number
+) => {
   const fetchedMsgs = await chatApi().getMessages(chatroomId, userId);
   messages.value = fetchedMsgs as Message[];
 
@@ -88,20 +93,55 @@ const getMessages = async (chatroomId: string, userId: string) => {
 
   setTimeout(
     () =>
-      chatEl.value
-        ? (chatEl.value.scrollTop = chatEl.value?.scrollHeight)
+      messagesEl.value
+        ? (messagesEl.value.scrollTop = messagesEl.value?.scrollHeight)
         : null,
     500
   );
 };
 
+const from = ref<number>(0);
+const to = ref<number>(15);
+const take = ref<number>(15);
+const scrolledToTop = ref<boolean>(false);
+const scrollHeight = ref<number>(0);
+const isLoading = ref<boolean>(false);
+
+const handleChatScroll = async (e: Event) => {
+  if ((e.target as HTMLElement).scrollTop == 0 && !scrolledToTop.value) {
+    isLoading.value = true;
+    try {
+      scrolledToTop.value = true;
+      if (!scrollHeight.value)
+        scrollHeight.value = (e.target as HTMLElement).scrollHeight;
+      from.value = to.value + 1;
+      to.value += take.value + 1;
+      const fetchedMessages = await chatApi().getMessages(
+        chatroomId.value as string,
+        user.value?.id!,
+        from.value,
+        to.value
+      );
+      messages.value.unshift(...(fetchedMessages as Message[]));
+      if (fetchedMessages.length)
+        messagesEl.value?.scroll(0, scrollHeight.value);
+      setTimeout(() => (scrolledToTop.value = false), 500);
+    } catch (error) {
+    } finally {
+      isLoading.value = false;
+    }
+  }
+};
+
 onMounted(async () => {
   await getMessages(chatroomId.value as string, user.value!.id);
+  messagesEl.value?.addEventListener("scroll", handleChatScroll);
 });
 
 onUnmounted(async () => {
   await client.removeChannel(messageChannel);
   messages.value = [];
+  messagesEl.value?.removeEventListener("scroll", handleChatScroll);
 });
 
 watch(chatroomId, async (newRoom) => {
@@ -134,7 +174,7 @@ watch(chatroomId, async (newRoom) => {
 
       <h1>{{ otherUser?.username }}</h1>
     </header>
-    <ul ref="chatEl" class="message__list">
+    <ul ref="messagesEl" class="message__list">
       <TransitionGroup name="fade">
         <ChatMessageItem
           v-for="message in messages"
@@ -320,5 +360,9 @@ watch(chatroomId, async (newRoom) => {
 }
 .tidot:nth-child(3) {
   animation-delay: 400ms;
+}
+
+.loading-spinner {
+  text-align: center;
 }
 </style>

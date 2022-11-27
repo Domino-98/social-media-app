@@ -9,19 +9,54 @@ const route = useRoute();
 const toast = useToast();
 
 const isLoading = ref<boolean>(false);
+const loadedAll = ref<boolean>(true);
 
-const getComments = async () => {
+const getComments = async (from: number, to: number) => {
   isLoading.value = true;
   try {
-    const fetchedComments = await commentsApi().fetchComments(+pinId.value);
-    console.log(fetchedComments);
+    const { fetchedComments, nextComments } = await commentsApi().fetchComments(
+      +pinId.value,
+      from,
+      to
+    );
     comments.value = fetchedComments as Comment[];
-    console.log(comments.value);
+    if (nextComments.length) {
+      loadedAll.value = false;
+    } else {
+      loadedAll.value = true;
+    }
   } catch (error) {
     console.error(error);
   } finally {
     isLoading.value = false;
   }
+};
+
+const from = ref<number>(0);
+const to = ref<number>(2);
+const take = ref<number>(2);
+
+const loadMore = async () => {
+  if (!loadedAll.value)
+    try {
+      from.value = to.value + 1;
+      to.value += take.value + 1;
+      const { fetchedComments, nextComments } =
+        await commentsApi().fetchComments(
+          +pinId.value,
+          from.value,
+          to.value,
+          take.value
+        );
+      comments.value.push(...(fetchedComments as Comment[]));
+      if (!nextComments.length) {
+        loadedAll.value = true;
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      isLoading.value = false;
+    }
 };
 
 const confirmModalOpened = ref<boolean>(false);
@@ -49,7 +84,7 @@ const deleteComment = async (id: number) => {
 };
 
 onMounted(async () => {
-  await getComments();
+  await getComments(from.value, to.value);
 });
 </script>
 
@@ -74,6 +109,10 @@ onMounted(async () => {
       <template #header>Usuń komentarz</template>
       <template #body>Czy na pewno chcesz usunąć komentarz?</template>
     </ConfirmationModal>
+
+    <button v-if="!loadedAll" @click="loadMore" class="btn btn--gray">
+      Wczytaj więcej
+    </button>
   </ul>
 </template>
 
@@ -83,5 +122,10 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
   }
+}
+
+.btn {
+  align-self: flex-start;
+  margin-top: 0.5rem;
 }
 </style>
