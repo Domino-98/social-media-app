@@ -1,21 +1,39 @@
 import type { Database } from "~~/lib/database.types";
+import { User } from "~~/models/user";
+import notificationsApi from "./api_notifications";
 
 export default () => {
   const client = useSupabaseClient<Database>();
 
-  const followUser = async (followerId: string, followingId: string) => {
+  const followUser = async (
+    followerId: string,
+    followingId: string,
+    user: User
+  ) => {
     const { data, error } = await client
       .from("relations")
       .insert({ follower_id: followerId, following_id: followingId });
 
     if (error) throw error;
+
+    const notificationContent = `<a href="/profile/${user.profile_id}"><span class="notifications__text">Użytkownik <b>${user.username}</b> zaczął Cię obserwować!</span></a>`;
+
+    if (followerId !== followingId)
+      await notificationsApi().sendNotification(
+        followerId,
+        followingId,
+        notificationContent
+      );
   };
 
   const unfollowUser = async (followerId: string, followingId: string) => {
     const { data, error } = await client
       .from("relations")
       .delete()
-      .match({ follower_id: followerId, following_id: followingId });
+      .match({ follower_id: followerId, following_id: followingId })
+      .select();
+
+    console.log({ data });
 
     if (error) throw error;
   };
@@ -49,6 +67,8 @@ export default () => {
       .match({ follower_id: followerId, following_id: followingId });
 
     if (error) throw error;
+
+    console.log(follows);
 
     if (follows.length) return true;
     return false;
