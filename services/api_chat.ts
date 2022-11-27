@@ -53,15 +53,20 @@ export default () => {
     return msg[0];
   };
 
-  const getChatrooms = async (userId: string) => {
+  const getChatrooms = async (userId: string, from = 0, to = 15) => {
     const { data: chats, error }: { data: any; error: any } = await client
       .rpc("get_chatrooms", { user_id: userId })
-      .select(`*`);
+      .select("*")
+      .range(from, to);
 
     if (error) throw error;
 
-    console.log({ chats });
-    return chats.map((chats: any) => chats["chat"]) as Message[];
+    return chats
+      .map((chats: any) => chats["chat"])
+      .sort(
+        (a: Message, b: Message) =>
+          +new Date(b.updated_at) - +new Date(a.updated_at)
+      );
   };
 
   const readMessage = async (messageId: string, receiverId: string) => {
@@ -73,8 +78,6 @@ export default () => {
       .eq("id", messageId);
 
     if (error) return error;
-
-    console.log({ message });
 
     return message;
   };
@@ -92,7 +95,12 @@ export default () => {
     return messages;
   };
 
-  const getMessages = async (chatroomId: string, receiverId: string) => {
+  const getMessages = async (
+    chatroomId: string,
+    receiverId: string,
+    from = 0,
+    to = 15
+  ) => {
     const { data: messages, error } = await client
       .from("messages")
       .select(
@@ -103,9 +111,12 @@ export default () => {
       `
       )
       .eq("chatroom_id", chatroomId)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) throw error;
+
+    console.log({ messages });
 
     const unreadMsgs = messages.filter(
       (msg) => msg.status === "unread" && receiverId === msg.receiver_id
@@ -115,7 +126,9 @@ export default () => {
 
     console.log({ messages });
 
-    return messages;
+    return messages.sort(
+      (a, b) => +new Date(a.created_at) - +new Date(b.created_at)
+    );
   };
 
   const deleteMessage = async (messageId: number) => {

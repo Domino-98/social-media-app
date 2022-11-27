@@ -95,10 +95,6 @@ const getChatrooms = async () => {
 onMounted(async () => {
   if (user.value) {
     await getChatrooms();
-    chats.value.sort(
-      (a, b) =>
-        new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-    );
     setChannel();
   }
 });
@@ -112,10 +108,6 @@ watch(
   async () => {
     if (user.value) {
       await getChatrooms();
-      chats.value.sort(
-        (a, b) =>
-          new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
-      );
       setChannel();
     }
   }
