@@ -15,9 +15,7 @@ const { timeFromNow } = useDateTime();
 const deleteMessage = async (id: number) => {
   const mess = await chatApi().deleteMessage(id);
   console.log({ mess });
-  const messIndex = messages.value.findIndex(
-    (message) => message.id === mess.id
-  );
+  const messIndex = messages.value.findIndex((message) => message.id === mess.id);
   if (messIndex) {
     messages.value[messIndex] = mess;
   }
@@ -41,13 +39,9 @@ const deleteMessage = async (id: number) => {
     />
     <font-awesome-icon
       v-show="message.sender_id === user?.id && message.status !== 'deleted'"
-      :icon="`fa-${
-        message.status === 'unread' ? 'regular' : 'solid'
-      } fa-circle-check`"
+      :icon="`fa-${message.status === 'unread' ? 'regular' : 'solid'} fa-circle-check`"
       v-tippy
-      :content="`${
-        message.status === 'unread' ? 'Nie wyświetlono' : 'Wyświetlono'
-      }`"
+      :content="`${message.status === 'unread' ? 'Nie wyświetlono' : 'Wyświetlono'}`"
       class="icon icon--status"
     />
     <NuxtLink
@@ -57,8 +51,7 @@ const deleteMessage = async (id: number) => {
     >
       <img
         :src="
-          otherUser?.avatar_url ||
-          'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+          otherUser?.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
         "
         class="message__avatar message__avatar--sm"
       />
@@ -90,6 +83,10 @@ const deleteMessage = async (id: number) => {
     width: 50%;
     height: 100%;
 
+    @media only screen and (max-width: 62.5em) {
+      width: 75%;
+    }
+
     @media only screen and (max-width: 37.5em) {
       width: 100%;
     }
@@ -117,7 +114,7 @@ const deleteMessage = async (id: number) => {
   &__content {
     padding: 0.5rem;
     border-radius: 1rem;
-    background-color: var(--btn-gray);
+    background-color: rgba(var(--opacity-color), 0.25);
     color: #fff;
     word-wrap: break-word;
     overflow: hidden;
@@ -131,7 +128,8 @@ const deleteMessage = async (id: number) => {
   &__deleted {
     padding: 0.5rem;
     border-radius: 2rem;
-    background-color: rgba(var(--opacity-color), 0.15);
+    background-color: rgba(var(--opacity-color), 0.25);
+    color: #fff;
     font-style: italic;
     font-size: 0.8rem;
     text-align: center;

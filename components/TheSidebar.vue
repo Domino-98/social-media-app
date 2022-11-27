@@ -104,8 +104,8 @@ onMounted(async () => {
   top: 0;
   display: flex;
   flex-direction: column;
-  width: 100%;
   height: 100vh;
+  width: 100%;
   max-width: 15rem;
   box-shadow: 0 0 4px 0 rgba(0, 0, 0, 0.1);
   padding-top: 0.5rem;
@@ -113,14 +113,13 @@ onMounted(async () => {
   z-index: 10;
   transition: 0.2s ease-in-out;
 
-  @media only screen and (max-width: 62.5em) {
-    max-width: 12.5rem;
+  @media only screen and (max-width: 75em) {
+    max-width: 13rem;
   }
 
-  @media only screen and (max-width: 50em) {
+  @media only screen and (max-width: 62.5em) {
     max-width: 100%;
     height: 100%;
-    padding-top: 0;
     flex-direction: row;
     align-items: center;
     padding: 0.25rem 0.5rem;
@@ -135,7 +134,7 @@ onMounted(async () => {
     background-color: transparent;
     z-index: 10;
 
-    @media only screen and (max-width: 50em) {
+    @media only screen and (max-width: 62.5em) {
       display: flex;
     }
   }
@@ -154,7 +153,7 @@ onMounted(async () => {
       filter: var(--font-color-filter);
       margin-right: 0.25rem;
 
-      @media only screen and (max-width: 50em) {
+      @media only screen and (max-width: 62.5em) {
         font-size: 30px;
       }
     }
@@ -165,20 +164,20 @@ onMounted(async () => {
       color: var(--primary-color);
       font-weight: 500;
 
-      @media only screen and (max-width: 50em) {
+      @media only screen and (max-width: 62.5em) {
         font-size: 1.3rem;
       }
 
       & span {
         color: var(--font-color);
 
-        @media only screen and (max-width: 50em) {
+        @media only screen and (max-width: 62.5em) {
           font-size: 1.3rem;
         }
       }
     }
 
-    @media only screen and (max-width: 50em) {
+    @media only screen and (max-width: 62.5em) {
       align-self: center;
       justify-self: center;
       transform: translateX(-1.5rem);
@@ -206,15 +205,16 @@ onMounted(async () => {
     z-index: 10;
     transition: all 0.2s ease-in-out;
 
-    @media only screen and (max-width: 50em) {
+    @media only screen and (max-width: 62.5em) {
       position: absolute;
       transform: translateX(-100%);
       left: 0;
       top: 0;
-      height: 100vh;
+      bottom: 0;
       visibility: hidden;
       width: 100%;
       max-width: 12.5rem;
+      height: calc(100vh - 46.8px);
       margin-top: 46.8px;
     }
   }
@@ -282,7 +282,7 @@ onMounted(async () => {
       cursor: pointer;
     }
 
-    @media only screen and (max-width: 50em) {
+    @media only screen and (max-width: 62.5em) {
       display: flex;
     }
   }

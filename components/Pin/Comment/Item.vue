@@ -159,12 +159,13 @@ const disableEdit = () => {
   }
 
   &__form {
+    position: relative;
     display: flex;
-    align-items: center;
     gap: 0.5rem;
   }
 
   &__input {
+    width: 100%;
     padding: 0.25rem 0.5rem;
     border-radius: 1rem;
     background-color: rgba(var(--opacity-color), 0.09);
@@ -200,6 +201,11 @@ const disableEdit = () => {
     margin-left: auto;
     transition: all 0.3s;
 
+    @media only screen and (max-width: 37.5em) {
+      flex-direction: column;
+      align-self: center;
+    }
+
     @media (hover: hover) {
       visibility: hidden;
       opacity: 0;
@@ -216,6 +222,7 @@ const disableEdit = () => {
   align-self: center;
   color: var(--icon-color);
   cursor: pointer;
+  padding: 0;
 
   &--edit {
     &:hover svg {

@@ -33,16 +33,20 @@
   &--sm {
     padding: 0.5rem 1rem;
   }
+
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 .btn {
   &--gray {
-    font-weight: 500;
     background-color: var(--btn-gray);
     color: var(--btn-color);
+    font-weight: 500;
 
     &:hover {
-      background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
+      background-image: linear-gradient(rgba(0, 0, 0, 0.1) 0 0);
     }
   }
 }

@@ -180,7 +180,7 @@ main {
     margin: 2rem;
   }
 
-  @media only screen and (max-width: 50em) {
+  @media only screen and (max-width: 62.5em) {
     margin: 0 1rem;
   }
 }

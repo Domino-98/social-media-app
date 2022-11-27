@@ -2,6 +2,7 @@
 import { Pin } from "~~/models/pin";
 import { useToast, TYPE } from "vue-toastification";
 import pinsApi from "~~/services/api_pins";
+import commentsApi from "~~/services/api_comments";
 import relationsApi from "~~/services/api_relations";
 import { onClickOutside } from "@vueuse/core";
 
@@ -84,6 +85,12 @@ const deletePin = async (id: number) => {
   }
 };
 
+const chatEl = ref();
+
+onClickOutside(chatEl, (e: Event) => {
+  if ((e.target as HTMLElement).id !== "sendBtn") toggleChat();
+});
+
 const isChatActive = ref<boolean>(false);
 
 const toggleChat = () => {
@@ -99,7 +106,11 @@ const isFollowed = ref<boolean>(false);
 const followUser = async () => {
   if (user.value) {
     try {
-      await relationsApi().followUser(user.value!.id, props.pin.author?.id!);
+      await relationsApi().followUser(
+        user.value!.id,
+        props.pin.author?.id!,
+        userProfile.value!
+      );
       isFollowed.value = true;
     } catch (error) {
       console.error(error);
@@ -120,13 +131,12 @@ const unfollowUser = async () => {
   }
 };
 
-const chatEl = ref();
-
-onClickOutside(chatEl, (e: Event) => {
-  if ((e.target as HTMLElement).id !== "sendBtn") toggleChat();
-});
+const totalComments = ref<number>(0);
 
 onMounted(async () => {
+  totalComments.value = (await commentsApi().getTotalComments(
+    props.pin.id
+  )) as number;
   isOwner.value = props.pin.author?.id === user.value?.id;
   if (user.value)
     isFollowed.value = await relationsApi().checkIfFollowing(
@@ -194,18 +204,18 @@ definePageMeta({
         <button
           v-if="!isSaved && !isOwner"
           @click="addPinToSaved"
-          class="pin__save"
+          class="btn btn--primary"
         >
           Zapisz
         </button>
         <button
           v-else-if="isSaved && !isOwner"
           @click="removePinFromSaved"
-          class="pin__save"
+          class="btn btn--primary"
         >
           Zapisano
         </button>
-        <NuxtLink v-else :to="`/pin/${pin.id}/edit`" class="pin__save">
+        <NuxtLink v-else :to="`/pin/${pin.id}/edit`" class="btn btn--primary">
           Edycja Pina
         </NuxtLink>
       </div>
@@ -282,8 +292,8 @@ definePageMeta({
 
       <div class="pin__comments">
         <h2 class="pin__comments-header">
-          {{ comments?.length
-          }}{{ comments?.length === 1 ? " komentarz" : " komentarzy" }}
+          {{ totalComments
+          }}{{ totalComments === 1 ? " komentarz" : " komentarzy" }}
         </h2>
 
         <font-awesome-icon
@@ -339,34 +349,38 @@ definePageMeta({
   background-color: var(--bg-color-secondary);
   color: var(--font-color);
 
-  @media only screen and (max-width: 37.5em) {
+  @media only screen and (max-width: 50em) {
     flex-direction: column;
     margin-left: 2rem;
     margin-right: 2rem;
   }
 
+  @media only screen and (max-width: 37.5em) {
+    border-radius: 1rem;
+  }
+
   &__img {
     display: block;
     width: 100%;
-    height: auto;
     border-top-left-radius: 2rem;
     border-bottom-left-radius: 2rem;
 
-    @media only screen and (max-width: 37.5em) {
+    @media only screen and (max-width: 50em) {
       border-radius: 0;
-      border-top-left-radius: 2rem;
-      border-top-right-radius: 2rem;
+      border-top-left-radius: 1rem;
+      border-top-right-radius: 1rem;
     }
 
     &-container {
       width: 50%;
+      overflow: hidden;
 
       &:hover .pin__delete {
         visibility: visible;
         opacity: 1;
       }
 
-      @media only screen and (max-width: 37.5em) {
+      @media only screen and (max-width: 50em) {
         width: 100%;
       }
     }
@@ -387,6 +401,11 @@ definePageMeta({
     visibility: visible;
     opacity: 1;
     transition: all 0.3s;
+
+    @media only screen and (max-width: 37.5em) {
+      top: 0.75rem;
+      left: 0.75rem;
+    }
 
     & svg {
       transition: all 0.3s;
@@ -410,7 +429,7 @@ definePageMeta({
     gap: 0.5rem;
     padding: 1.5rem;
 
-    @media only screen and (max-width: 37.5em) {
+    @media only screen and (max-width: 50em) {
       width: 100%;
       padding: 1rem;
     }
@@ -420,6 +439,7 @@ definePageMeta({
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    word-wrap: break-word;
   }
 
   &__btns {
@@ -430,6 +450,10 @@ definePageMeta({
   &__download-share {
     display: flex;
     gap: 2rem;
+
+    @media only screen and (max-width: 37.5em) {
+      gap: 1rem;
+    }
   }
 
   &__download,
@@ -545,21 +569,6 @@ definePageMeta({
       width: 100%;
     }
   }
-
-  &__save {
-    align-self: center;
-    padding: 0.5rem 1rem;
-    border-radius: 2rem;
-    background-color: var(--primary-color);
-    color: #fff;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-
-    &:hover {
-      background-image: linear-gradient(rgba(0, 0, 0, 0.2) 0 0);
-    }
-  }
 }
 
 .rounded {
@@ -568,7 +577,7 @@ definePageMeta({
   border-radius: 1rem;
   transition: all 0.2s;
 
-  @media only screen and (max-width: 37.5em) {
+  @media only screen and (max-width: 50em) {
     max-width: 100%;
     margin: 0;
     border-bottom-left-radius: 0;

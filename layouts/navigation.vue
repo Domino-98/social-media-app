@@ -89,14 +89,15 @@ onBeforeUnmount(() => {
 .wrapper {
   display: flex;
 
-  @media only screen and (max-width: 50em) {
+  @media only screen and (max-width: 62.5em) {
     flex-direction: column;
   }
 }
 
 .wrapper-inner {
   flex-direction: column;
-  width: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
 .scroll-top {

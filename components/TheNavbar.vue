@@ -193,7 +193,7 @@ onMounted(async () => {
   height: 4rem;
   padding: 0.5rem 2rem;
 
-  @media only screen and (max-width: 50em) {
+  @media only screen and (max-width: 62.5em) {
     padding: 0.5rem 1rem;
   }
 
@@ -339,11 +339,15 @@ onMounted(async () => {
 
     &__auth,
     &__profile {
-      @media only screen and (max-width: 50em) {
+      @media only screen and (max-width: 62.5em) {
         position: fixed;
         top: 0.2rem;
-        right: 1rem;
+        right: 2rem;
         z-index: 100;
+      }
+
+      @media only screen and (max-width: 62.5em) {
+        right: 1rem;
       }
 
       @media only screen and (max-width: 37.5em) {
