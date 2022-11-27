@@ -3,6 +3,7 @@ import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
 import { Database } from "~~/lib/database.types";
+import apiAuth from "~~/services/api_auth";
 
 const client = useSupabaseClient<Database>();
 const router = useRouter();
@@ -37,22 +38,7 @@ const handleRegister = async (
   isLoading.value = true;
   const { email, password, username } = values;
   try {
-    const { error } = await client.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username,
-        },
-      },
-    });
-
-    if (error) {
-      toast(error.message, {
-        type: TYPE.ERROR,
-      });
-      throw error;
-    }
+    await apiAuth().registerUser(email, password, username);
 
     toast("Potwierdź swój adres email, aby aktywować konto!", {
       type: TYPE.INFO,
@@ -60,7 +46,12 @@ const handleRegister = async (
     });
     resetForm();
   } catch (error) {
-    console.error(error);
+    if (error instanceof Error) {
+      toast(error.message, {
+        type: TYPE.ERROR,
+      });
+      throw error;
+    }
   } finally {
     isLoading.value = false;
   }

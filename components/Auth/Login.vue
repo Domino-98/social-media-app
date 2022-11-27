@@ -3,6 +3,7 @@ import * as yup from "yup";
 import { useToast } from "vue-toastification";
 import { TYPE } from "vue-toastification";
 import { Database } from "~~/lib/database.types";
+import authApi from "~~/services/api_auth";
 
 const client = useSupabaseClient<Database>();
 const router = useRouter();
@@ -22,21 +23,17 @@ const handleLogin = async (values: any): Promise<void> => {
   isLoading.value = true;
   const { email, password } = values;
   try {
-    const { error } = await client.auth.signInWithPassword({
-      email,
-      password,
-    });
+    await authApi().loginUser(email, password);
 
-    if (error) {
+    await navigateTo("/");
+    toast("Pomyślnie zalogowano!");
+  } catch (error) {
+    if (error instanceof Error) {
       toast(error.message, {
         type: TYPE.ERROR,
       });
       throw error;
     }
-    await navigateTo("/");
-    toast("Pomyślnie zalogowano!");
-  } catch (error) {
-    console.error(error);
   } finally {
     isLoading.value = false;
   }
