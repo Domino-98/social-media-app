@@ -11,7 +11,7 @@ const user = useSupabaseUser();
 const route = useRoute();
 const router = useRouter();
 
-const { notifications } = useNotifications();
+const { notifications, totalNotifications } = useNotifications();
 
 const unreadNotifications = computed(() =>
   notifications.value.filter((notification) => notification.status === "unread")
@@ -33,11 +33,9 @@ const setChannel = () => {
         filter: `recipent_id=eq.${user.value?.id}`,
       },
       async (payload) => {
-        console.log(payload);
         const profile = await profilesApi().getCurrentUser(
           payload.new.notifier_id
         );
-        console.log(notifications.value);
         notifications.value.unshift({
           ...(payload.new as Notification),
           notifier: {
@@ -45,6 +43,7 @@ const setChannel = () => {
             avatar_url: profile.avatar_url as string,
           },
         });
+        totalNotifications.value++;
         if (route.query.notifications)
           await notificationsApi().readNotification(
             payload.new.id,

@@ -12,7 +12,7 @@ const route = useRoute();
 const pinId = computed(() => route.params.id);
 
 const { pin } = usePins();
-const { comments } = useComments();
+const { comments, totalComments } = useComments();
 
 const user = useSupabaseUser();
 const userProfile = useUser();
@@ -59,6 +59,7 @@ if (process.client) {
             profile.username
           );
         }
+        totalComments.value++;
       }
     )
     .on(
@@ -101,6 +102,7 @@ if (process.client) {
 
           comments.value.splice(commentIndex, 1);
         }
+        totalComments.value--;
       }
     )
     .subscribe();

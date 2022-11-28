@@ -13,7 +13,7 @@ const props = defineProps<{
 const router = useRouter();
 const user = useSupabaseUser();
 const isOwner = ref<boolean>(false);
-const { comments } = useComments();
+const { comments, totalComments } = useComments();
 const { $download } = useNuxtApp();
 const toast = useToast();
 
@@ -130,8 +130,6 @@ const unfollowUser = async () => {
     console.error(error);
   }
 };
-
-const totalComments = ref<number>(0);
 
 onMounted(async () => {
   isOwner.value = props.pin.author?.id === user.value?.id;

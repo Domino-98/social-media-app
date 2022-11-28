@@ -3,7 +3,7 @@ import { Notification } from "~~/models/notification";
 import notificationsApi from "~~/services/api_notifications";
 
 const user = useSupabaseUser();
-const { notifications } = useNotifications();
+const { notifications, totalNotifications } = useNotifications();
 const { timeFromNow } = useDateTime();
 
 const deleteNotification = async (id: number) => {
@@ -57,8 +57,6 @@ const getNotifications = async () => {
   );
   notifications.value = fetchedNotifications as Notification[];
 };
-
-const totalNotifications = ref<number>(0);
 
 onMounted(async () => {
   await getNotifications();
