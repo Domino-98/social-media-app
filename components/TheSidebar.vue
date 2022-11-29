@@ -122,7 +122,11 @@ onMounted(async () => {
     height: 100%;
     flex-direction: row;
     align-items: center;
-    padding: 0.25rem 0.5rem;
+    padding: 0.4rem;
+  }
+
+  @media only screen and (max-width: 50em) {
+    padding: 0.25rem;
   }
 
   &__hamburger {

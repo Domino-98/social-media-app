@@ -268,8 +268,8 @@ onMounted(async () => {
     pointer-events: none;
 
     @media only screen and (max-width: 50em) {
-      width: 2.4rem;
-      height: 2.4rem;
+      width: 2.5rem;
+      height: 2.5rem;
     }
   }
 
@@ -331,8 +331,8 @@ onMounted(async () => {
       }
 
       @media only screen and (max-width: 50em) {
-        width: 2.4rem;
-        height: 2.4rem;
+        width: 2.5rem;
+        height: 2.5rem;
         padding: 1rem;
       }
     }
@@ -347,11 +347,8 @@ onMounted(async () => {
       }
 
       @media only screen and (max-width: 62.5em) {
+        top: 0.25rem;
         right: 1rem;
-      }
-
-      @media only screen and (max-width: 37.5em) {
-        top: 0.35rem;
       }
     }
   }

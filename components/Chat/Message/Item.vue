@@ -15,7 +15,9 @@ const { timeFromNow } = useDateTime();
 const deleteMessage = async (id: number) => {
   const mess = await chatApi().deleteMessage(id);
   console.log({ mess });
-  const messIndex = messages.value.findIndex((message) => message.id === mess.id);
+  const messIndex = messages.value.findIndex(
+    (message) => message.id === mess.id
+  );
   if (messIndex) {
     messages.value[messIndex] = mess;
   }
@@ -39,9 +41,13 @@ const deleteMessage = async (id: number) => {
     />
     <font-awesome-icon
       v-show="message.sender_id === user?.id && message.status !== 'deleted'"
-      :icon="`fa-${message.status === 'unread' ? 'regular' : 'solid'} fa-circle-check`"
+      :icon="`fa-${
+        message.status === 'unread' ? 'regular' : 'solid'
+      } fa-circle-check`"
       v-tippy
-      :content="`${message.status === 'unread' ? 'Nie wyświetlono' : 'Wyświetlono'}`"
+      :content="`${
+        message.status === 'unread' ? 'Nie wyświetlono' : 'Wyświetlono'
+      }`"
       class="icon icon--status"
     />
     <NuxtLink
@@ -51,7 +57,8 @@ const deleteMessage = async (id: number) => {
     >
       <img
         :src="
-          otherUser?.avatar_url || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'
+          otherUser?.avatar_url ||
+          'https://cdn-icons-png.flaticon.com/512/149/149071.png'
         "
         class="message__avatar message__avatar--sm"
       />
@@ -141,7 +148,7 @@ const deleteMessage = async (id: number) => {
   display: flex;
   justify-content: flex-end;
 
-  & .message__content {
+  & p {
     order: 1;
     background-color: var(--primary-color);
   }

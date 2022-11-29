@@ -343,7 +343,7 @@ definePageMeta({
   max-width: 62.5rem;
   margin-top: 0.5rem;
   border-radius: 2rem;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 12px;
   background-color: var(--bg-color-secondary);
   color: var(--font-color);
 
@@ -362,6 +362,7 @@ definePageMeta({
     width: 100%;
     border-top-left-radius: 2rem;
     border-bottom-left-radius: 2rem;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 3px 12px;
 
     @media only screen and (max-width: 50em) {
       border-radius: 0;
@@ -371,7 +372,6 @@ definePageMeta({
 
     &-container {
       width: 50%;
-      overflow: hidden;
 
       &:hover .pin__delete {
         visibility: visible;

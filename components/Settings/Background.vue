@@ -150,6 +150,7 @@ const removeBackground = async () => {
           <span>{{ !backgroundUrl ? "Dodaj" : "Zmień" }}</span>
         </label>
         <button
+          type="button"
           :disabled="isLoading"
           v-if="backgroundUrl"
           @click.prevent="removeBackground"

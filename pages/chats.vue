@@ -114,8 +114,14 @@ const handleInfiniteScroll = async (e: Event) => {
 };
 
 const getChatrooms = async () => {
-  const fetchedChats = await chatApi().getChatrooms(user.value?.id as string);
-  chats.value = fetchedChats;
+  try {
+    const fetchedChats = await chatApi().getChatrooms(user.value?.id as string);
+    chats.value = fetchedChats;
+  } catch (error) {
+    console.error(error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const chatsEl = ref<HTMLElement>();
@@ -124,7 +130,6 @@ onMounted(async () => {
   await getChatrooms();
   onResize();
   window.addEventListener("resize", onResize, { passive: true });
-  if (chats.value.length) isLoading.value = false;
   if (chats.value.length && !route.params.id && !isMobile.value) {
     await navigateTo(`/chats/${chats.value[0].chatroom_id}`);
   }
@@ -207,7 +212,7 @@ definePageMeta({
 
         <span v-else-if="isLoading" class="loading-spinner"></span>
 
-        <p v-else-if="!chats.length" class="chats__alert">
+        <p v-else-if="!chats.length && !isLoading" class="chats__alert">
           Brak <span>wiadomości</span>
         </p>
       </div>
@@ -271,7 +276,7 @@ main {
   &__alert {
     margin-top: 1.5rem;
     border-radius: 0.5rem;
-    color: var(--btn-gray);
+    color: rgba(var(--opacity-color), 0.5);
     text-align: center;
     font-size: 500;
 
