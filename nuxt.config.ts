@@ -43,6 +43,7 @@ export default defineNuxtConfig({
   supabase: {
     client: {
       auth: {
+        autoRefreshToken: true,
         persistSession: true,
       },
     },
