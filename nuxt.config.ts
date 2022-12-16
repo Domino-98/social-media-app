@@ -5,9 +5,6 @@ export default defineNuxtConfig({
     "@fortawesome/fontawesome-svg-core/styles.css",
   ],
   modules: ["@nuxtjs/color-mode", "@nuxtjs/supabase"],
-  alias: {
-    yup: "yup/lib/index.js",
-  },
   build: {
     transpile: [
       "@fortawesome/vue-fontawesome",
