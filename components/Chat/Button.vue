@@ -96,7 +96,8 @@ onMounted(async () => {
 });
 
 onUnmounted(async () => {
-  await client.removeChannel(chatChannel);
+  if (user.value)
+    await client.removeChannel(chatChannel);
 });
 
 watch(

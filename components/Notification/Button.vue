@@ -117,7 +117,8 @@ onMounted(async () => {
 });
 
 onUnmounted(async () => {
-  await client.removeChannel(notificationsChannel);
+  if (user.value)
+    await client.removeChannel(notificationsChannel);
 });
 
 watch(
