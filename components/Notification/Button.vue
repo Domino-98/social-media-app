@@ -39,8 +39,8 @@ const setChannel = () => {
         notifications.value.unshift({
           ...(payload.new as Notification),
           notifier: {
-            id: profile.id,
-            avatar_url: profile.avatar_url as string,
+            id: profile?.id,
+            avatar_url: profile?.avatar_url as string,
           },
         });
         totalNotifications.value++;
@@ -105,8 +105,7 @@ const getNotifications = async () => {
   const fetchedNotifications = await notificationsApi().getNotifications(
     user.value?.id as string
   );
-  notifications.value = fetchedNotifications as Notification[];
-  console.log("get notifications");
+  notifications.value = fetchedNotifications;
 };
 
 onMounted(async () => {

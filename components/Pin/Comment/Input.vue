@@ -55,8 +55,8 @@ if (process.client) {
           pushComment(
             payload.new,
             payload.new.user_id,
-            profile.avatar_url!,
-            profile.username
+            profile?.avatar_url!,
+            profile?.username!
           );
         }
         totalComments.value++;
@@ -78,7 +78,6 @@ if (process.client) {
           const commentIndex = comments.value.findIndex(
             (comment) => comment.id === payload.new.id
           );
-          console.log({ senderProfile });
           comments.value[commentIndex] = {
             ...comments.value[commentIndex],
             ...(payload.new as Comment),
@@ -116,9 +115,8 @@ const addComment = async () => {
       pin.value as Pin,
       userProfile.value as User
     );
-    console.log({ addedComment });
     pushComment(
-      addedComment[0],
+      addedComment![0],
       user.value!.id,
       user.value?.user_metadata.avatar_to_display,
       userProfile.value?.username!

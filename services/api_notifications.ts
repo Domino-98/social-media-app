@@ -1,4 +1,5 @@
 import type { Database } from "~~/lib/database.types";
+import { Notification } from "~~/models/notification";
 
 export default () => {
   const client = useSupabaseClient<Database>();
@@ -8,7 +9,6 @@ export default () => {
     recipentId: string,
     notificationContent: string
   ) => {
-    console.log({ notifierId, recipentId });
 
     const { data, error } = await client
       .from("notifications")
@@ -23,8 +23,6 @@ export default () => {
       .select();
 
     if (error) throw error;
-
-    console.log({ data });
 
     return data;
   };
@@ -48,9 +46,7 @@ export default () => {
 
     if (error) throw error;
 
-    console.log({ notifications });
-
-    return notifications;
+    return notifications as Notification[];
   };
 
   const getTotalNotifications = async (userId: string) => {
@@ -101,8 +97,6 @@ export default () => {
       .eq("id", notificationId);
 
     if (error) return error;
-
-    console.log({ notification });
 
     return notification;
   };

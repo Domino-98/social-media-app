@@ -9,7 +9,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "updateBackground", url: string | null): void;
+  (e: "updateBackground", url: string): void;
 }>();
 
 const toast = useToast();
@@ -103,7 +103,7 @@ const removeBackground = async () => {
 
     if (error) throw error;
 
-    emit("updateBackground", null);
+    emit("updateBackground", "");
     file.value.value = "";
 
     toast("Pomyślnie usunięto tło profilowe");

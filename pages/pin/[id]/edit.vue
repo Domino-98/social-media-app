@@ -10,10 +10,10 @@ const emit = defineEmits<{
 }>();
 
 const pin = ref<Pin>();
-const user = useSupabaseUser();
-console.log(pin);
 
+const user = useSupabaseUser();
 const toast = useToast();
+
 const validURL =
   /(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g;
 
@@ -32,10 +32,7 @@ const pinId = route.params.id;
 const isEditing = ref<boolean>(false);
 
 const handlePinEdit = async (values: any) => {
-  let { title, description, destination_url, category_id } = values;
-
-  description ||= "";
-  destination_url ||= "";
+  let { title, description = "", destination_url = "", category_id } = values;
 
   const id = pin.value?.id;
 
@@ -72,8 +69,7 @@ const getPin = async () => {
   isLoading.value = true;
   try {
     const fetchedPin = await pinsApi().fetchPinById(+pinId);
-    pin.value = fetchedPin as Pin;
-    console.log(fetchedPin);
+    pin.value = fetchedPin;
   } catch (error) {
     console.error(error);
   } finally {

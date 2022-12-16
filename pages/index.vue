@@ -16,10 +16,10 @@ const getPins = async (from: number, to: number) => {
         from,
         to
       );
-      pins.value = fetchedPins as Pin[];
+      pins.value = fetchedPins;
     } else {
       const fetchedPins = await pinsApi().fetchPins(from, to);
-      pins.value.push(...(fetchedPins as Pin[]));
+      pins.value.push(...fetchedPins);
     }
   } catch (error) {
   } finally {

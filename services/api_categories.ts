@@ -1,4 +1,6 @@
 import type { Database } from "~~/lib/database.types";
+import { Category } from "~~/models/category";
+import { Pin } from "~~/models/pin";
 
 export default () => {
   const client = useSupabaseClient<Database>();
@@ -11,7 +13,7 @@ export default () => {
 
     if (error) throw error;
 
-    return categories;
+    return categories as Category[];
   };
 
   const fetchPinsByCategory = async (slug: string, from = 0, to = 23) => {
@@ -34,7 +36,7 @@ export default () => {
 
     if (error) throw error;
 
-    return pins;
+    return pins as Pin[];
   };
 
   const fetchSimilarPins = async (
@@ -64,7 +66,7 @@ export default () => {
 
     if (error) throw error;
 
-    return pins;
+    return pins as Pin[];
   };
 
   return {

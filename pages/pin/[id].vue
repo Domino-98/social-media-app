@@ -45,7 +45,7 @@ const handleInfiniteScroll = async (e: Event) => {
         from.value,
         to.value
       );
-      pins.value.push(...(fetchedPins as Pin[]));
+      pins.value.push(...fetchedPins);
       setTimeout(() => (scrolledToBottom.value = false), 500);
     } catch (error) {
       console.error(error);

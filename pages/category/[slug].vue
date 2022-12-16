@@ -17,7 +17,7 @@ const getAllPins = async () => {
       from.value,
       to.value
     );
-    pins.value = fetchedPins as Pin[];
+    pins.value = fetchedPins;
   } catch (error) {
   } finally {
     pinsLoading.value = false;

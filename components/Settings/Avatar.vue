@@ -9,7 +9,7 @@ defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "updateAvatar", url: string | null): void;
+  (e: "updateAvatar", url: string): void;
 }>();
 
 const toast = useToast();
@@ -72,7 +72,6 @@ const updateAvatar = async (e: Event) => {
     if (updateError) throw updateError;
 
     updateAvatarMetadata(publicUrl);
-    console.log({ publicUrl });
     emit("updateAvatar", publicUrl);
 
     toast("Pomyślnie zaktualizowano awatar!");
@@ -110,7 +109,7 @@ const removeAvatar = async () => {
 
     if (error) throw error;
 
-    emit("updateAvatar", null);
+    emit("updateAvatar", "");
     file.value.value = "";
     updateAvatarMetadata(null);
 

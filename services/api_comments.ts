@@ -2,6 +2,7 @@ import type { User } from "~~/models/user";
 import type { Pin } from "~~/models/pin";
 import type { Database } from "~~/lib/database.types";
 import notificationsApi from "./api_notifications";
+import { Comment } from "~~/models/comment";
 
 export default () => {
   const client = useSupabaseClient<Database>();
@@ -27,8 +28,6 @@ export default () => {
 
     if (error) throw error;
 
-    console.log({ from, to, take });
-
     from = to + 1;
     to += take + 1;
 
@@ -41,8 +40,8 @@ export default () => {
     if (nextError) throw error;
 
     return {
-      fetchedComments,
-      nextComments,
+      fetchedComments: fetchedComments as Comment[],
+      nextComments: nextComments as Comment[] | [],
     };
   };
 
@@ -72,8 +71,6 @@ export default () => {
       })
       .select();
 
-    console.log(comment);
-
     if (error) throw error;
 
     const notificationContent = `<a href="/pin/${pinId}"><span class="notifications__text">Użytkownik <b>${user.username}</b> skomentował twojego pina <b>${pin.title}</b>!</span></a>`;
@@ -89,8 +86,6 @@ export default () => {
   };
 
   const editComment = async (message: string, commentId: number) => {
-    console.log({ message, commentId });
-
     const { data, error } = await client
       .from("comments")
       .update({ message, updated_at: new Date() })

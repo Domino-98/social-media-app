@@ -28,9 +28,7 @@ export default () => {
 
     if (error) throw error;
 
-    console.log({ pins });
-
-    return pins;
+    return pins as Pin[];
   };
 
   const fetchPinById = async (id: number) => {
@@ -57,7 +55,7 @@ export default () => {
 
     if (error) throw error;
 
-    return pin;
+    return pin as Pin;
   };
 
   const fetchUserPins = async (userId: string, from = 0, to = 23) => {
@@ -81,7 +79,7 @@ export default () => {
 
     if (error) throw error;
 
-    return pin;
+    return pin as Pin[];
   };
 
   const fetchSavedPins = async (userId: string, from = 0, to = 23) => {
@@ -178,8 +176,6 @@ export default () => {
       .from("pins")
       .getPublicUrl(`${user.value?.id}/${imgFile.name}`);
 
-    console.log(publicUrl);
-
     const { error: insertError } = await client
       .from("pins")
       .insert({
@@ -241,7 +237,7 @@ export default () => {
 
     if (error) throw error;
 
-    return pins;
+    return pins as Pin[];
   };
 
   return {

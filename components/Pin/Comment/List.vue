@@ -19,7 +19,7 @@ const getComments = async (from: number, to: number) => {
       from,
       to
     );
-    comments.value = fetchedComments as Comment[];
+    comments.value = fetchedComments;
     if (nextComments.length) {
       loadedAll.value = false;
     } else {
