@@ -14,7 +14,6 @@ const { timeFromNow } = useDateTime();
 
 const deleteMessage = async (id: number) => {
   const mess = await chatApi().deleteMessage(id);
-  console.log({ mess });
   const messIndex = messages.value.findIndex(
     (message) => message.id === mess.id
   );

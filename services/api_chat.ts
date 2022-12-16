@@ -20,8 +20,6 @@ export default () => {
     receiverId: string,
     message: string
   ) => {
-    console.log({ senderId, receiverId });
-
     const { data, error } = await client
       .from("messages")
       .select("chatroom_id")
@@ -116,15 +114,11 @@ export default () => {
 
     if (error) throw error;
 
-    console.log({ messages });
-
     const unreadMsgs = messages.filter(
       (msg) => msg.status === "unread" && receiverId === msg.receiver_id
     );
-    console.log({ unreadMsgs });
-    if (unreadMsgs.length) await readMessages(receiverId, chatroomId);
 
-    console.log({ messages });
+    if (unreadMsgs.length) await readMessages(receiverId, chatroomId);
 
     return messages.sort(
       (a, b) => +new Date(a.created_at) - +new Date(b.created_at)
@@ -132,7 +126,6 @@ export default () => {
   };
 
   const deleteMessage = async (messageId: number) => {
-    console.log({ messageId });
     const { data: message, error } = await client
       .from("messages")
       .update({ status: "deleted", updated_at: new Date() })

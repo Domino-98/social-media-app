@@ -26,7 +26,6 @@ const imgFile = ref<File>();
 const isLoading = ref<boolean>();
 
 const handlePinSubmit = async (values: any) => {
-  console.log({ values });
   const { title, description, destination_url, category_id } = values;
   isLoading.value = true;
   try {

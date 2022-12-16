@@ -85,7 +85,6 @@ async function getFileFromUrl(url: string, defaultType = "image/jpeg") {
         "Akceptowalne są tylko pliki o rozszerzeniach JPG/JPEG, PNG, GIF"
       );
 
-    console.log(data);
     let randomId = Math.floor(Math.random() * Date.now());
     let ext =
       data.type === "image/jpeg"

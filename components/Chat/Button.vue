@@ -8,7 +8,7 @@ import { User } from "~~/models/user";
 
 const client = useSupabaseClient<Database>();
 const user = useSupabaseUser();
-
+const profile = useUser();
 const { chats } = useMessages();
 
 const unreadChats = computed(() =>
@@ -16,8 +16,6 @@ const unreadChats = computed(() =>
     (chat) => chat.status === "unread" && chat.receiver_id === user.value?.id
   )
 );
-
-const profile = useUser();
 
 const handleNewMessage = async (message: Message) => {
   const chatIndex = chats.value.findIndex(
@@ -34,7 +32,6 @@ const handleNewMessage = async (message: Message) => {
     };
   } else {
     const senderProfile = await profilesApi().getCurrentUser(message.sender_id);
-    console.log(message);
     chats.value.unshift({
       ...message,
       sender: senderProfile as User,
@@ -61,7 +58,6 @@ const setChannel = () => {
         filter: `receiver_id=eq.${user.value?.id}`,
       },
       async (payload) => {
-        console.log(payload);
         handleNewMessage(payload.new as any);
       }
     )

@@ -33,8 +33,6 @@ export default () => {
       .match({ follower_id: followerId, following_id: followingId })
       .select();
 
-    console.log({ data });
-
     if (error) throw error;
   };
 
@@ -68,15 +66,11 @@ export default () => {
 
     if (error) throw error;
 
-    console.log(follows);
-
     if (follows.length) return true;
     return false;
   };
 
   const fetchFollowingPins = async (userId: string, from = 0, to = 23) => {
-    console.log({ userId });
-
     const { data: pins, error } = await client
       .rpc("get_following_pins", {
         followerid: userId,

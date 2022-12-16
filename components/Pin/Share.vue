@@ -9,8 +9,6 @@ const homeURL = window.location.origin;
 const copyInput = ref<HTMLInputElement>();
 const copied = ref<boolean>(false);
 
-console.log({ homeURL, copyInput, copied });
-
 const copyURL = () => {
   copyInput.value?.select();
   copyInput.value?.setSelectionRange(0, 99999);

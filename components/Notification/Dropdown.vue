@@ -66,7 +66,6 @@ onMounted(async () => {
   const unreadNotifications = notifications.value.filter(
     (notif) => notif.status === "unread" && user.value?.id === notif.recipent_id
   );
-  console.log({ unreadNotifications });
   if (unreadNotifications.length)
     setTimeout(
       async () => await notificationsApi().readNotifications(user.value!.id),

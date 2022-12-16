@@ -10,7 +10,6 @@ const { chats } = useMessages();
 const { timeFromNow } = useDateTime();
 
 const handleNewMessage = (message: Message) => {
-  console.log(message);
   const chatIndex = chats.value.findIndex(
     (chat) => chat.chatroom_id === message.chatroom_id
   );
@@ -54,7 +53,6 @@ if (process.client) {
         filter: `sender_id=eq.${user.value?.id}`,
       },
       async (payload) => {
-        console.log({ payload });
         if (payload.new.length) {
           chats.value = payload.new.map((chatObj: Message) => {
             return {
@@ -108,7 +106,7 @@ const handleInfiniteScroll = async (e: Event) => {
       chats.value.push(...(fetchedChats as Message[]));
       setTimeout(() => (scrolledToBottom.value = false), 500);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 };

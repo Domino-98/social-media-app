@@ -67,8 +67,6 @@ const trackTyping = async (e: Event) => {
 // Receive Presence updates
 const presenceChanged = () => {
   const newState = typingChannel.presenceState();
-  typingChannel;
-  console.log({ newState });
   if (Object.keys(newState).length !== 0 && typingActivated.value) {
     const lastUser = Object.keys(newState).reduce((a, b) =>
       newState[a][0].isTyping > newState[b][0].isTyping ? a : b

@@ -19,9 +19,8 @@ const getUserProfile = async () => {
   userLoading.value = true;
   try {
     const fetchedProfile = await profilesApi().getUser(+profileId);
-    console.log(fetchedProfile);
     userInfo.value = fetchedProfile as User;
-    isOwner.value = fetchedProfile.id === user.value?.id ? true : false;
+    isOwner.value = fetchedProfile?.id === user.value?.id ? true : false;
   } catch (error) {
     console.error(error);
   } finally {
