@@ -25,7 +25,6 @@ if (typeof window !== "undefined") {
   // @ts-expect-error using arbitrary window key
   if (!window.__vue5513) {
     window.addEventListener("error", (event) => {
-      console.log({ event });
       if (messages.includes(event.message)) {
         event.preventDefault();
         console.warn(
@@ -72,6 +71,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div :key="key" class="wrapper">
+  <NuxtLoadingIndicator color="var(--primary-color)" />
     <TheSidebar />
     <main class="wrapper-inner">
       <TheNavbar />
