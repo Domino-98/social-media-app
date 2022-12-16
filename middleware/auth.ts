@@ -3,7 +3,7 @@ import { TYPE } from "vue-toastification";
 
 const toast = useToast();
 
-export default defineNuxtRouteMiddleware(async (to, _from) => {
+export default defineNuxtRouteMiddleware((to, _from) => {
   const user = useSupabaseUser();
 
   if (!user.value) {
@@ -20,6 +20,6 @@ export default defineNuxtRouteMiddleware(async (to, _from) => {
         }
       );
     }
-    return await navigateTo("/auth");
+    return navigateTo("/auth");
   }
 });
