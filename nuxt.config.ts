@@ -12,6 +12,7 @@ export default defineNuxtConfig({
       "@fortawesome/free-brands-svg-icons",
       "@fortawesome/free-regular-svg-icons",
       "@fortawesome/free-solid-svg-icons",
+      "vue-toastification",
     ],
   },
   app: {
