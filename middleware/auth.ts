@@ -20,6 +20,6 @@ export default defineNuxtRouteMiddleware((to, _from) => {
         }
       );
     }
-    return navigateTo("/auth");
+    return navigateTo("/auth/login");
   }
 });

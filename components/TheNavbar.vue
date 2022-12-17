@@ -38,7 +38,7 @@ const handleLogout = async () => {
     userProfile.value = null;
     await client.removeAllChannels();
     toast("Pomyślnie wylogowano!");
-    window.location.href = "/auth";
+    window.location.href = "/auth/login";
   } catch (error) {
     console.error(error);
   }
@@ -116,7 +116,7 @@ onMounted(async () => {
       <NuxtLink
         v-show="!user"
         ref="authEl"
-        to="/auth"
+        to="/auth/login"
         class="navbar__auth"
         content="Logowanie / Rejestracja"
         v-tippy

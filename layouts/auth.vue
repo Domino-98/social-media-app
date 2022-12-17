@@ -1,12 +1,4 @@
 <script setup lang="ts">
-type AuthState = "login" | "register";
-
-const authState = ref<AuthState>("login");
-
-const toggleAuthState = (state: AuthState) => {
-  authState.value = state;
-};
-
 const user = useSupabaseUser();
 
 onBeforeMount(async () => {
@@ -26,8 +18,7 @@ onBeforeMount(async () => {
       <h1 class="logo__text">We<span>Share</span></h1>
     </NuxtLink>
     <div class="auth">
-      <AuthLogin v-if="authState === 'login'" @auth-state="toggleAuthState" />
-      <AuthRegister v-else @auth-state="toggleAuthState" />
+        <slot />
     </div>
   </main>
 </template>

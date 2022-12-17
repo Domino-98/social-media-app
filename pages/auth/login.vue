@@ -59,23 +59,18 @@ const providerLogin = async (provider: "google" | "facebook") => {
 };
 
 const passVisible = ref<boolean>(false);
+
+definePageMeta({
+  layout: "auth",
+});
 </script>
 
 <template>
   <div>
     <h1 class="auth__header">Zaloguj się</h1>
-    <VForm
-      @submit="handleLogin"
-      :validation-schema="loginSchema"
-      class="auth__form"
-    >
+    <VForm @submit="handleLogin" :validation-schema="loginSchema" class="auth__form">
       <div class="auth__form-group">
-        <VField
-          name="email"
-          type="email"
-          class="auth__form-input"
-          placeholder=" "
-        />
+        <VField name="email" type="email" class="auth__form-input" placeholder=" " />
         <font-awesome-icon icon="fa-solid fa-envelope" class="icon" />
         <label for="login" class="auth__form-label">Email</label>
         <VErrorMessage name="email" class="error" />
@@ -137,9 +132,9 @@ const passVisible = ref<boolean>(false);
     </div>
     <div class="auth__signup">
       <p class="auth__signup-text">Nie masz konta?</p>
-      <a @click="$emit('auth-state', 'register')" class="auth__signup-switch"
+      <NuxtLink to="/auth/register" class="auth__signup-switch"
         >Zarejestruj się
-      </a>
+      </NuxtLink>
     </div>
   </div>
 </template>
